@@ -2,15 +2,6 @@ import os
 import shutil
 
 
-def _copyfile_patched(fsrc, fdst, length=16 * 1024 * 1024):
-    """Patches shutil method to hugely improve copy speed"""
-    while 1:
-        buf = fsrc.read(length)
-        if not buf:
-            break
-        fdst.write(buf)
-
-
 def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
     """Get relevant fMRIprep files, rename.
 

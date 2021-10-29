@@ -4,7 +4,6 @@ Desc.
 
 """
 import subprocess
-import time
 
 
 def submit_hpc_subprocess(bash_command):
@@ -20,9 +19,13 @@ def submit_hpc_subprocess(bash_command):
 
     Returns
     -------
+    (job_out, job_err) : tuple of str
+        job_out = subprocess stdout
+        job_out = subprocess stderr
 
     Example
     -------
+    submit_hpc_subprocess("afni -ver")
 
     """
     h_cmd = f"""
@@ -60,12 +63,14 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
 
     Returns
     -------
+    (job_name, job_id) : tuple of str
+        job_name = scheduled job name
+        job_id = scheduled job ID
 
     Example
     -------
-
+    submit_hpc_sbatch("afni -ver")
     """
-    # set stdout/err string, submit job
     sbatch_job = f"""
         sbatch \
         -J {job_name} \
@@ -76,27 +81,11 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
         -o {out_dir}/sbatch_{job_name}.out \
         -e {out_dir}/sbatch_{job_name}.err \
         --account iacc_madlab --qos pq_madlab \
+        --wait \
         --wrap="module load afni-20.2.06
             {command}
         "
     """
     sbatch_response = subprocess.Popen(sbatch_job, shell=True, stdout=subprocess.PIPE)
     job_id = sbatch_response.communicate()[0].decode("utf-8")
-    print(f"Submitted {job_name} as {job_id}")
-
-    # wait (forever) until job finishes
-    while_count = 0
-    continue_status = True
-    while continue_status:
-
-        check_cmd = "squeue -u $(whoami)"
-        sq_check = subprocess.Popen(check_cmd, shell=True, stdout=subprocess.PIPE)
-        out_lines = sq_check.communicate()[0]
-        b_decode = out_lines.decode("utf-8")
-
-        if job_name not in b_decode:
-            continue_status = False
-        else:
-            while_count += 1
-            print(f"Wait count for {job_name}: {while_count}")
-            time.sleep(3)
+    return (job_name, job_id)
