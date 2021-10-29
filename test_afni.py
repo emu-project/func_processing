@@ -13,7 +13,7 @@ Examples
 --------
 func2_finish_preproc.py \\
     -p sub-4020 \\
-    -t test \\
+    -t task-test \\
     -s sess-S2 \\
     -n 3 \\
     -d /scratch/madlab/emu_UNC/derivatives \\
@@ -23,7 +23,7 @@ func2_finish_preproc.py \\
 import os
 import sys
 from argparse import ArgumentParser, RawTextHelpFormatter
-from resources.afni.copy_data import copy_data
+from resources.afni import copy, process, masks
 
 
 # %%
@@ -89,7 +89,7 @@ def main():
     deriv_dir = "/scratch/madlab/emu_test/derivatives"
     subj = "sub-4002"
     sess = "ses-S2"
-    task = "test"
+    task = "task-test"
     num_runs = 3
     tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
@@ -109,20 +109,19 @@ def main():
     if not os.path.exists(work_dir):
         os.makedirs(work_dir)
 
-    # get fMRIprep data
-    if not os.path.exists(os.path.join(work_dir, "struct_head.nii.gz")):
-        afni_data = copy_data(
-            prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str
-        )
+    # get fMRIprep data, check
+    afni_data = copy.copy_data(
+        prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str
+    )
+    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
 
-    # # blur data
-    # subj_num = subj.split("-")[-1]
-    # if not os.path.exists(os.path.join(work_dir, f"run-1_{task}_blur+tlrc.HEAD")):
-    #     blur_epi(work_dir, subj_num)
+    # blur data
+    subj_num = subj.split("-")[-1]
+    afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 
-    # # make subject intersection mask
-    # if not os.path.exists(os.path.join(work_dir, "final_mask_WM_eroded+tlrc.HEAD")):
-    #     make_masks(work_dir, subj_num)
+    # make masks
+    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
+    afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
 
     # # scale data
     # if not os.path.exists(os.path.join(work_dir, f"run-1_{task}_scale+tlrc.HEAD")):

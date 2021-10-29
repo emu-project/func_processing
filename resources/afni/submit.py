@@ -1,7 +1,9 @@
 """Functions to submit Bash commands as subprocesses.
 
-Desc.
-
+Submit bash commands as a subprocess, either on the same
+node (submit_hpc_subprocess) or on a scheduled node
+(submit_hpc_sbatch). Used for wrapping AFNI and c3d
+commands.
 """
 import subprocess
 
@@ -44,7 +46,7 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
 
     Sbatch submit a larger job with scheduled resources. Waits for
     job_name to no longer be found in squeue. Stderr/out written to
-    out_dir/sbatch_<job_name>.err/out. Supports AFNI commands only
+    out_dir/sbatch_<job_name>.err/out. Supports AFNI and c3d commands.
 
     Parameters
     ----------
@@ -83,6 +85,7 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
         --account iacc_madlab --qos pq_madlab \
         --wait \
         --wrap="module load afni-20.2.06
+            module load c3d-1.0.0-gcc-8.2.0
             {command}
         "
     """
