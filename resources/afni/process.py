@@ -16,7 +16,7 @@ from . import submit
 def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     """Blur EPI data.
 
-    Blur pre-processed EPI runs.
+    Blur pre-processed EPI runs with AFNI's 3dmerge.
 
     Parameters
     ----------
@@ -76,6 +76,8 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
 def scale_epi(work_dir, subj_num, sess, task, afni_data):
     """Scale EPI runs.
+
+    Scale timeseries to center = 100 using AFNI's 3dcalc.
 
     Parameters
     ----------
