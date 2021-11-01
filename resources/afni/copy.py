@@ -45,10 +45,10 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
     file_dict keys:
         struct-t1 = T1w structural
         mask-brain = brain mask
-        mask-pGM = probability gray matter mask
-        mask-pWM = probability white matter mask
-        epi-p? = fMRIprep preprocessed EPI for run-?
-        mot-f? = confounds (motion) file for EPI data for run-?
+        mask-probGM = probability gray matter mask
+        mask-probWM = probability white matter mask
+        epi-preproc? = fMRIprep preprocessed EPI for run-?
+        mot-confound? = confounds (motion) file for EPI data for run-?
     """
 
     # set vars, dict
@@ -59,8 +59,8 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
     file_name_switch = {
         f"{anat_str}_desc-preproc_T1w.nii.gz": "struct-t1",
         f"{anat_str}_desc-brain_mask.nii.gz": "mask-brain",
-        f"{anat_str}_label-GM_probseg.nii.gz": "mask-pGM",
-        f"{anat_str}_label-WM_probseg.nii.gz": "mask-pWM",
+        f"{anat_str}_label-GM_probseg.nii.gz": "mask-probGM",
+        f"{anat_str}_label-WM_probseg.nii.gz": "mask-probWM",
     }
 
     # organize copy_dict by BIDS scan type
@@ -83,10 +83,12 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
             f"{subj}_{sess}_{task}_run-{run_num}_desc-confounds_timeseries.tsv"
         )
 
-        file_name_switch[f"{run_str}_desc-preproc_bold.nii.gz"] = f"epi-p{run_num}"
+        file_name_switch[
+            f"{run_str}_desc-preproc_bold.nii.gz"
+        ] = f"epi-preproc{run_num}"
         file_name_switch[
             f"{subj}_{sess}_{task}_run-{run_num}_desc-confounds_timeseries.tsv"
-        ] = f"mot-f{run_num}"
+        ] = f"mot-confound{run_num}"
 
     # copy data
     file_dict = {}

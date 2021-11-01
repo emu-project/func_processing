@@ -26,8 +26,8 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         updated with mask key "mask-int"
     """
 
-    # get list of smoothed EPI data, determine mask strings
-    epi_list = [x for k, x in afni_data.items() if "epi-s" in k]
+    # get list of smoothed/blurred EPI data, determine mask strings
+    epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
     intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
 
@@ -89,13 +89,13 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     Returns
     -------
     afni_data : dict
-        updated with "mask-eGM", "mask-eWM" keys
+        updated with "mask-erodedGM", "mask-erodedWM" keys
         for eroded, binary masks
     """
 
     # determine GM, WM tissue list, mask string, set up switch
     # for mask naming
-    tiss_list = [x for k, x in afni_data.items() if "mask-p" in k]
+    tiss_list = [x for k, x in afni_data.items() if "mask-prob" in k]
     mask_str = afni_data["mask-brain"]
     switch_name = {
         "GM": mask_str.replace("desc-brain", "desc-GMe"),
@@ -132,8 +132,8 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         # fill dict
         if os.path.exists(os.path.join(work_dir, mask_file)):
-            afni_data[f"mask-e{tiss_type}"] = mask_file
+            afni_data[f"mask-eroded{tiss_type}"] = mask_file
         else:
-            afni_data[f"mask-e{tiss_type}"] = "Missing"
+            afni_data[f"mask-eroded{tiss_type}"] = "Missing"
 
     return afni_data

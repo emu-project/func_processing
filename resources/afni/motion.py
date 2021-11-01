@@ -73,7 +73,7 @@ def mot_files(work_dir, afni_data):
     deriv_cat = []
     censor_cat = []
 
-    mot_list = [x for k, x in afni_data.items() if "mot-f" in k]
+    mot_list = [x for k, x in afni_data.items() if "mot-confound" in k]
     mot_str = mot_list[0].replace("run-1_", "")
     if not os.path.exists(
         os.path.join(work_dir, mot_str.replace("confounds", "censor"))
@@ -151,6 +151,6 @@ def mot_files(work_dir, afni_data):
     # update afni_data
     afni_data["mot-mean"] = f"""{mot_str.replace("confounds", "mean")}"""
     afni_data["mot-deriv"] = f"""{mot_str.replace("confounds", "deriv")}"""
-    afni_data["mot-cens"] = f"""{mot_str.replace("confounds", "censor")}"""
+    afni_data["mot-censor"] = f"""{mot_str.replace("confounds", "censor")}"""
 
     return afni_data

@@ -35,11 +35,11 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     -------
     afni_data : dict
         updated with names of blurred data,
-        epi-b? = blurred/smoothed EPI data of run-?
+        epi-blur? = blurred/smoothed EPI data of run-?
     """
 
     # get list of pre-processed EPI files
-    epi_list = [x for k, x in afni_data.items() if "epi-p" in k]
+    epi_list = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     # determine voxel dim i, calc blur size
     h_cmd = f"3dinfo -dk {work_dir}/{epi_list[0]}"
@@ -68,9 +68,9 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
         # update afni_data
         if os.path.exists(os.path.join(work_dir, epi_blur)):
-            afni_data[f"epi-b{run_num}"] = epi_blur
+            afni_data[f"epi-blur{run_num}"] = epi_blur
         else:
-            afni_data[f"epi-b{run_num}"] = "Missing"
+            afni_data[f"epi-blur{run_num}"] = "Missing"
 
     return afni_data
 
@@ -96,11 +96,11 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
     afni_dict : dict
         updated with mask, epi keys
         mask-min = mask of minimum value for task
-        epi-s? = scaled EPI for run-?
+        epi-scale? = scaled EPI for run-?
     """
 
     # make masks of voxels where some data exists
-    epi_pre = [x for k, x in afni_data.items() if "epi-p" in k]
+    epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     mask_str = afni_data["mask-brain"]
     mask_min = mask_str.replace("desc-brain", "desc-minval")
@@ -153,7 +153,7 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
         afni_data["mask-min"] = "Missing"
 
     # scale data timeseries
-    epi_blur = [x for k, x in afni_data.items() if "epi-b" in k]
+    epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
 
     for run in epi_blur:
         epi_scale = run.replace("desc-smoothed", "desc-scaled")
@@ -177,8 +177,8 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
         if os.path.exists(os.path.join(work_dir, epi_scale)):
-            afni_data[f"epi-s{run_num}"] = epi_scale
+            afni_data[f"epi-scale{run_num}"] = epi_scale
         else:
-            afni_data[f"epi-s{run_num}"] = "Missing"
+            afni_data[f"epi-scale{run_num}"] = "Missing"
 
     return afni_data

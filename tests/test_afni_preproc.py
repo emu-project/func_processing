@@ -1,4 +1,3 @@
-# %%
 """Finish pre-processing on EPI data.
 
 Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -24,6 +23,7 @@ test_afni_preproc.py \\
 import os
 import sys
 import glob
+import json
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -132,6 +132,8 @@ def main():
     afni_data = process.scale_epi(work_dir, subj_num, sess, task, afni_data)
 
     # check for files
+    with open(os.path.join(work_dir, "afni_data.json"), "w") as jf:
+        json.dump(afni_data, jf)
     assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
 
     # clean
@@ -143,7 +145,7 @@ def main():
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
 
-    return afni_data
+    print(afni_data)
 
 
 if __name__ == "__main__":

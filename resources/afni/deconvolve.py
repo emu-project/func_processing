@@ -50,7 +50,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     """
 
     # get pre-processed runs
-    epi_list = [x for k, x in afni_data.items() if "epi-s" in k]
+    epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
 
     # set regressors - baseline
     reg_base = [
@@ -85,7 +85,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
             -x1D_stop \\
             -GOFORIT \\
             -input {" ".join(epi_list)} \\
-            -censor {afni_data["mot-mean"]} \\
+            -censor {afni_data["mot-censor"]} \\
             {" ".join(reg_base)} \\
             -polort A \\
             -float \\
@@ -120,60 +120,3 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
         afni_data[f"dcn-{decon_str}"] = "Missing"
 
     return afni_data
-
-
-def run_reml(work_dir, task, sub_num):
-    """Deconvolve EPI timeseries
-
-    Generate an idea of nuissance signal from the white matter and
-    include this in the generated 3dREMLfit command.
-
-    Parameters
-    ----------
-    work_dir : str
-        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
-    task : str
-        test for task-test
-    sub_num : int/str
-        subject identifier for sbatch job
-
-    Notes
-    -----
-    MRI output : functional
-        <task>_WMe_rall+tlrc
-        <task>_decon_cbucket_REML+tlrc
-        <task>_decon_errts_REML+tlrc
-        <task>_decon_stats_REML+tlrc
-        <task>_decon_stats_REMLvar+tlrc
-    """
-    # generate WM timeseries
-    if not os.path.exists(os.path.join(work_dir, f"{task}_WMe_rall+tlrc.HEAD")):
-        h_cmd = f"""
-            cd {work_dir}
-
-            3dTcat -prefix tmp_allRuns_{task} run-*{task}_scale+tlrc.HEAD
-
-            3dcalc \
-                -a tmp_allRuns_{task}+tlrc \
-                -b final_mask_WM_eroded+tlrc \
-                -expr 'a*bool(b)' \
-                -datum float \
-                -prefix tmp_allRuns_{task}_WMe
-
-            3dmerge \
-                -1blur_fwhm 20 \
-                -doall \
-                -prefix {task}_WMe_rall \
-                tmp_allRuns_{task}_WMe+tlrc
-        """
-        func_sbatch(h_cmd, 1, 4, 1, f"{sub_num}wts", work_dir)
-
-    # run REML for each task of session
-    h_cmd = f"""
-        cd {work_dir}
-        tcsh \
-            -x {task}_decon_stats.REML_cmd \
-            -dsort {task}_WMe_rall+tlrc \
-            -GOFORIT
-    """
-    func_sbatch(h_cmd, 25, 4, 6, f"{sub_num}rml", work_dir)
