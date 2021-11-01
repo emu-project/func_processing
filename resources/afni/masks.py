@@ -26,8 +26,8 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         updated with mask key "mask-int"
     """
 
-    # get list of smoothed EPI data, determine mask strings
-    epi_list = [x for k, x in afni_data.items() if "epi-s" in k]
+    # get list of smoothed/blurred EPI data, determine mask strings
+    epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
     intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
 
@@ -36,6 +36,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         # automask across all runs
         for run_file in epi_list:
             if not os.path.exists(os.path.join(work_dir, f"tmp_mask.{run_file}")):
+                print("Making EPI mask ...")
                 h_cmd = f"""
                     cd {work_dir}
                     3dAutomask -prefix tmp_mask.{run_file} {run_file}
@@ -43,6 +44,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
                 h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
         # combine run masks, make inter mask
+        print("Making intersection mask ...")
         h_cmd = f"""
             cd {work_dir}
 
@@ -87,13 +89,13 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     Returns
     -------
     afni_data : dict
-        updated with "mask-eGM", "mask-eWM" keys
+        updated with "mask-erodedGM", "mask-erodedWM" keys
         for eroded, binary masks
     """
 
     # determine GM, WM tissue list, mask string, set up switch
     # for mask naming
-    tiss_list = [x for k, x in afni_data.items() if "mask-p" in k]
+    tiss_list = [x for k, x in afni_data.items() if "mask-prob" in k]
     mask_str = afni_data["mask-brain"]
     switch_name = {
         "GM": mask_str.replace("desc-brain", "desc-GMe"),
@@ -109,6 +111,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         # work
         if not os.path.exists(os.path.join(work_dir, mask_file)):
+            print(f"Making binary tissue mask for {tiss} ...")
             h_cmd = f"""
                 cd {work_dir}
 
@@ -129,8 +132,8 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         # fill dict
         if os.path.exists(os.path.join(work_dir, mask_file)):
-            afni_data[f"mask-e{tiss_type}"] = mask_file
+            afni_data[f"mask-eroded{tiss_type}"] = mask_file
         else:
-            afni_data[f"mask-e{tiss_type}"] = "Missing"
+            afni_data[f"mask-eroded{tiss_type}"] = "Missing"
 
     return afni_data
