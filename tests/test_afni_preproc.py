@@ -25,6 +25,10 @@ import os
 import sys
 import glob
 from argparse import ArgumentParser, RawTextHelpFormatter
+
+proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(proj_dir)
+
 from resources.afni import copy, process, masks, motion
 
 
