@@ -27,7 +27,7 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         BIDS task string (task-test)
     num_runs : int
         number of EPI runs
-    tplflow_str = str
+    tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
 

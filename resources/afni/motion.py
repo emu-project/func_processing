@@ -42,10 +42,12 @@ def mot_files(work_dir, afni_data):
     for each run are concatenated into a single file rather than managing
     zero padding.
 
+    Writes 1D files - AFNI reads tsv as containing a header!
+
     Writes:
-        <fMRIprep_desc-mean_timeseries.tsv
-        <fMRIprep_desc-deriv_timeseries.tsv
-        <fMRIprep_desc-censor_timeseries.tsv
+        <fMRIprep_desc-mean_timeseries.1D
+        <fMRIprep_desc-deriv_timeseries.1D
+        <fMRIprep_desc-censor_timeseries.1D
         info_censored_volumes.json
     """
 
@@ -76,7 +78,9 @@ def mot_files(work_dir, afni_data):
     mot_list = [x for k, x in afni_data.items() if "mot-confound" in k]
     mot_str = mot_list[0].replace("run-1_", "")
     if not os.path.exists(
-        os.path.join(work_dir, mot_str.replace("confounds", "censor"))
+        os.path.join(
+            work_dir, mot_str.replace("confounds", "censor").replace(".tsv", ".1D")
+        )
     ):
         print("Making motion mean, derivative, censor files ...")
         for mot_file in mot_list:
@@ -116,21 +120,30 @@ def mot_files(work_dir, afni_data):
         # determine BIDS string, write tsvs, make sure
         # output value is float (not scientific notation)
         df_mean_cat.to_csv(
-            os.path.join(work_dir, f"""{mot_str.replace("confounds", "mean")}"""),
+            os.path.join(
+                work_dir,
+                f"""{mot_str.replace("confounds", "mean").replace(".tsv", ".1D")}""",
+            ),
             sep="\t",
             index=False,
             header=False,
             float_format="%.6f",
         )
         df_deriv_cat.to_csv(
-            os.path.join(work_dir, f"""{mot_str.replace("confounds", "deriv")}"""),
+            os.path.join(
+                work_dir,
+                f"""{mot_str.replace("confounds", "deriv").replace(".tsv", ".1D")}""",
+            ),
             sep="\t",
             index=False,
             header=False,
             float_format="%.6f",
         )
         df_censor_cat.to_csv(
-            os.path.join(work_dir, f"""{mot_str.replace("confounds", "censor")}"""),
+            os.path.join(
+                work_dir,
+                f"""{mot_str.replace("confounds", "censor").replace(".tsv", ".1D")}""",
+            ),
             sep="\t",
             index=False,
             header=False,
@@ -149,8 +162,14 @@ def mot_files(work_dir, afni_data):
             json.dump(cen_dict, jfile)
 
     # update afni_data
-    afni_data["mot-mean"] = f"""{mot_str.replace("confounds", "mean")}"""
-    afni_data["mot-deriv"] = f"""{mot_str.replace("confounds", "deriv")}"""
-    afni_data["mot-censor"] = f"""{mot_str.replace("confounds", "censor")}"""
+    afni_data[
+        "mot-mean"
+    ] = f"""{mot_str.replace("confounds", "mean").replace(".tsv", ".1D")}"""
+    afni_data[
+        "mot-deriv"
+    ] = f"""{mot_str.replace("confounds", "deriv").replace(".tsv", ".1D")}"""
+    afni_data[
+        "mot-censor"
+    ] = f"""{mot_str.replace("confounds", "censor").replace(".tsv", ".1D")}"""
 
     return afni_data
