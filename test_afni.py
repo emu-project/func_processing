@@ -3,7 +3,8 @@
 
 Copy relevant files from derivatives/fmriprep to derivatives/afni,
 then blur and scale EPI data. Also creates EPI-T1 intersection
-and tissue class masks.
+and tissue class masks. Finally, generate motion mean, derivative,
+and censor files.
 
 Notes
 -----
@@ -14,7 +15,7 @@ Examples
 func2_finish_preproc.py \\
     -p sub-4020 \\
     -t task-test \\
-    -s sess-S2 \\
+    -s ses-S2 \\
     -n 3 \\
     -d /scratch/madlab/emu_UNC/derivatives \\
     -r space-MNIPediatricAsym_cohort-5_res-2
@@ -70,7 +71,7 @@ def get_args():
     requiredNamed.add_argument(
         "-r",
         "--ref-tpl",
-        help="tplflow ID string",
+        help="tplflow ID reference string",
         type=str,
         required=True,
     )
@@ -86,22 +87,22 @@ def get_args():
 def main():
     """Move data through AFNI pre-processing."""
 
-    # For testing
-    deriv_dir = "/scratch/madlab/emu_test/derivatives"
-    subj = "sub-4002"
-    sess = "ses-S2"
-    task = "task-test"
-    num_runs = 3
-    tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    # # For testing
+    # deriv_dir = "/scratch/madlab/emu_test/derivatives"
+    # subj = "sub-4002"
+    # sess = "ses-S2"
+    # task = "task-test"
+    # num_runs = 3
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
-    # # get passed arguments
-    # args = get_args().parse_args()
-    # subj = args.part_id
-    # sess = args.sess_str
-    # task = args.task_str
-    # num_runs = args.num_runs
-    # deriv_dir = args.deriv_dir
-    # tplflow_str = args.ref_tpl
+    # get passed arguments
+    args = get_args().parse_args()
+    subj = args.part_id
+    sess = args.sess_str
+    task = args.task_str
+    num_runs = args.num_runs
+    deriv_dir = args.deriv_dir
+    tplflow_str = args.ref_tpl
 
     # setup directories
     prep_dir = os.path.join(deriv_dir, "fmriprep")
