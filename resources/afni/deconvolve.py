@@ -107,9 +107,10 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
         script.write(cmd_decon)
 
     # run
+    print(f"Running 3dDeconvolve for {decon_str}")
     h_cmd = f"""
         cd {work_dir}
-        {cmd_decon}
+        source {decon_script}
     """
     h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
