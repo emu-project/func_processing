@@ -2,6 +2,10 @@
 
 Use AFNI's 3dDeconvolve and 3dREMLfit to deconvolve
 pre-processed EPI data.
+
+Notes
+-----
+Requires "submit" module at same level.
 """
 
 import os
@@ -21,8 +25,6 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
 
     Parameters
     ----------
-    task : str
-        test for task-test
     dur : int/float
         duration of event to model
     decon_str: str
@@ -32,6 +34,8 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     tf_dict : dict
         timing files dictionary, behavior string is key
         e.g. {"lureFA": "/path/to/tf_task-test_lureFA.txt"}
+    afni_data : dict
+        contains names for various files
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
 
@@ -110,7 +114,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     print(f"Running 3dDeconvolve for {decon_str}")
     h_cmd = f"""
         cd {work_dir}
-        source {decon_script}
+        {cmd_decon}
     """
     h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
@@ -119,5 +123,94 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
         afni_data[f"dcn-{decon_str}"] = f"{out_str}_stats.REML_cmd"
     else:
         afni_data[f"dcn-{decon_str}"] = "Missing"
+
+    return afni_data
+
+
+def run_reml(work_dir, afni_data):
+    """Deconvolve EPI timeseries.
+
+    Generate an idea of nuissance signal from the white matter and
+    include this in the generated 3dREMLfit command.
+
+    Parameters
+    ----------
+    work_dir : str
+        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+    afni_data : dict
+        contains names for various files
+
+    Returns
+    -------
+    afni_data : dict
+        updated for nuissance, deconvolved files
+        epi-nuiss = nuissance signal file
+        rml-<decon_str> = deconvolved file (<decon_str>_stats_REML+tlrc)
+    """
+    # generate WM timeseries (nuissance file) for task
+    epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
+    eroded_mask = afni_data["mask-erodedWM"]
+    nuiss_file = (
+        epi_list[0].replace("_run-1", "").replace("desc-scaled", "desc-nuissance")
+    )
+    subj_num = epi_list[0].split("_")[0].split("-")[-1]
+
+    if not os.path.exists(os.path.join(work_dir, nuiss_file)):
+        print(f"Making nuissance file {nuiss_file} ...")
+        tcat_file = nuiss_file.replace("nuissance", "tcat")
+        h_cmd = f"""
+            cd {work_dir}
+
+            3dTcat -prefix tmp_{tcat_file} {" ".join(epi_list)}
+
+            3dcalc \
+                -a tmp_{tcat_file} \
+                -b {eroded_mask} \
+                -expr 'a*bool(b)' \
+                -datum float \
+                -prefix tmp_epi_{eroded_mask}
+
+            3dmerge \
+                -1blur_fwhm 20 \
+                -doall \
+                -prefix {nuiss_file} \
+                tmp_epi_{eroded_mask}
+
+            if [ -f {nuiss_file} ]; then
+                rm tmp*
+            fi
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 4, 1, f"{subj_num}wts", work_dir
+        )
+        if os.path.exists(os.path.join(work_dir, nuiss_file)):
+            afni_data["epi-nuiss"] = nuiss_file
+        else:
+            afni_data["epi-nuiss"] = "Missing"
+
+    # check that we are ready for deconvolution
+    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
+
+    # run each planned deconvolution
+    reml_list = [x for k, x in afni_data.items() if "dcn-" in k]
+    for reml_script in reml_list:
+        decon_str = reml_script.split("_")[2]
+        reml_out = reml_script.replace(".REML_cmd", "_REML+tlrc.HEAD")
+        if not os.path.exists(os.path.join(work_dir, reml_out)):
+            print(f"Starting 3dREMLfit for {decon_str} ...")
+            h_cmd = f"""
+                cd {work_dir}
+                tcsh \
+                    -x {reml_script} \
+                    -dsort {afni_data["epi-nuiss"]} \
+                    -GOFORIT
+            """
+            job_name, job_id = submit.submit_hpc_sbatch(
+                h_cmd, 25, 4, 6, f"{subj_num}rml", work_dir
+            )
+        if os.path.exists(os.path.join(work_dir, reml_out)):
+            afni_data[f"rml-{decon_str}"] = reml_out.split(".")[0]
+        else:
+            afni_data[f"rml-{decon_str}"] = "Missing"
 
     return afni_data
