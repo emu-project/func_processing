@@ -36,6 +36,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         # automask across all runs
         for run_file in epi_list:
             if not os.path.exists(os.path.join(work_dir, f"tmp_mask.{run_file}")):
+                print("Making EPI mask ...")
                 h_cmd = f"""
                     cd {work_dir}
                     3dAutomask -prefix tmp_mask.{run_file} {run_file}
@@ -43,6 +44,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
                 h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
         # combine run masks, make inter mask
+        print("Making intersection mask ...")
         h_cmd = f"""
             cd {work_dir}
 
@@ -109,6 +111,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         # work
         if not os.path.exists(os.path.join(work_dir, mask_file)):
+            print(f"Making binary tissue mask for {tiss} ...")
             h_cmd = f"""
                 cd {work_dir}
 

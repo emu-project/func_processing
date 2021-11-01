@@ -12,7 +12,7 @@ Requires AFNI and c3d.
 
 Examples
 --------
-func2_finish_preproc.py \\
+test_afni_preproc.py \\
     -p sub-4020 \\
     -t task-test \\
     -s ses-S2 \\
@@ -142,6 +142,8 @@ def main():
 
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
+
+    return afni_data
 
 
 if __name__ == "__main__":

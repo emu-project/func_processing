@@ -78,6 +78,7 @@ def mot_files(work_dir, afni_data):
     if not os.path.exists(
         os.path.join(work_dir, mot_str.replace("confounds", "censor"))
     ):
+        print("Making motion mean, derivative, censor files ...")
         for mot_file in mot_list:
 
             # read in data

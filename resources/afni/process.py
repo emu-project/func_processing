@@ -52,6 +52,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
         epi_blur = epi_file.replace("desc-preproc", "desc-smoothed")
         run_num = epi_file.split("run-")[1].split("_")[0]
         if not os.path.exists(os.path.join(work_dir, epi_blur)):
+            print(f"Starting blur for {epi_file} ...")
             h_cmd = f"""
                 cd {work_dir}
                 3dmerge \
@@ -110,6 +111,7 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
         for run in epi_pre:
             min_list.append(f"tmp_mask_min.{run}")
             if not os.path.exists(os.path.join(work_dir, f"tmp_mask_min.{run}")):
+                print("Making various masks ...")
                 h_cmd = f"""
                     cd {work_dir}
 
@@ -126,6 +128,7 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
                 """
                 h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
+        print("Making minimum value mask ...")
         h_cmd = f"""
             cd {work_dir}
 
@@ -156,6 +159,7 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
         epi_scale = run.replace("desc-smoothed", "desc-scaled")
         run_num = run.split("run-")[1].split("_")[0]
         if not os.path.exists(os.path.join(work_dir, epi_scale)):
+            print(f"Starting scaling for {run} ...")
             h_cmd = f"""
                 cd {work_dir}
 
