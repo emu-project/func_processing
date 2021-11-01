@@ -24,7 +24,7 @@ import os
 import sys
 import glob
 from argparse import ArgumentParser, RawTextHelpFormatter
-from resources.afni import copy, process, masks
+from resources.afni import copy, process, masks, motion
 
 
 # %%
@@ -86,22 +86,22 @@ def get_args():
 def main():
     """Move data through AFNI pre-processing."""
 
-    # # For testing
-    # deriv_dir = "/scratch/madlab/emu_test/derivatives"
-    # subj = "sub-4002"
-    # sess = "ses-S2"
-    # task = "task-test"
-    # num_runs = 3
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    # For testing
+    deriv_dir = "/scratch/madlab/emu_test/derivatives"
+    subj = "sub-4002"
+    sess = "ses-S2"
+    task = "task-test"
+    num_runs = 3
+    tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
-    # get passed arguments
-    args = get_args().parse_args()
-    subj = args.part_id
-    sess = args.sess_str
-    task = args.task_str
-    num_runs = args.num_runs
-    deriv_dir = args.deriv_dir
-    tplflow_str = args.ref_tpl
+    # # get passed arguments
+    # args = get_args().parse_args()
+    # subj = args.part_id
+    # sess = args.sess_str
+    # task = args.task_str
+    # num_runs = args.num_runs
+    # deriv_dir = args.deriv_dir
+    # tplflow_str = args.ref_tpl
 
     # setup directories
     prep_dir = os.path.join(deriv_dir, "fmriprep")
@@ -134,6 +134,9 @@ def main():
         os.remove(tmp_file)
     for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
         os.remove(sbatch_file)
+
+    # make mean, deriv, censor motion files
+    afni_data = motion.mot_files(work_dir, afni_data)
 
 
 if __name__ == "__main__":

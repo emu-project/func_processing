@@ -48,7 +48,7 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         mask-pGM = probability gray matter mask
         mask-pWM = probability white matter mask
         epi-p? = fMRIprep preprocessed EPI for run-?
-        mot-c? = confounds (motion) tsv for EPI data for run-?
+        mot-f? = confounds (motion) file for EPI data for run-?
     """
 
     # set vars, dict
@@ -86,7 +86,7 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         file_name_switch[f"{run_str}_desc-preproc_bold.nii.gz"] = f"epi-p{run_num}"
         file_name_switch[
             f"{subj}_{sess}_{task}_run-{run_num}_desc-confounds_timeseries.tsv"
-        ] = f"mot-c{run_num}"
+        ] = f"mot-f{run_num}"
 
     # copy data
     file_dict = {}

@@ -10,13 +10,13 @@ import json
 import pandas as pd
 
 
-def mot_files(work_dir, num_runs, subj, task, sess, afni_data):
+def mot_files(work_dir, afni_data):
     """Constuct motion and censor files
 
-    Mine <run>_motion_all.tsv for motion events, make
-    motion files for mean (6df) and derivative (6df)
-    motion events. Also, create motion censor file.
-    Finally, report the number of censored volumes.
+    Mine <fMRIprep>_desc-confounds_timeseries.tsv for motion events, make
+    motion files for mean (6df) and derivative (6df) motion events. Also,
+    create motion censor file. Volume preceding a motion event is also
+    censored. Finally, report the number of censored volumes.
 
     I'm not sure if motion is demeaned or not, given that
     it is output by fMRIprep (mined from confounds.tsv file).
@@ -25,10 +25,6 @@ def mot_files(work_dir, num_runs, subj, task, sess, afni_data):
     ----------
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
-    num_runs : int
-        number of EPI runs
-    task : str
-        task identifier - test for task-test
     afni_data : dict
         contains names for various files
 
@@ -45,6 +41,12 @@ def mot_files(work_dir, num_runs, subj, task, sess, afni_data):
     As runs do not have an equal number of volumes, motion/censor files
     for each run are concatenated into a single file rather than managing
     zero padding.
+
+    Writes:
+        <fMRIprep_desc-mean_timeseries.tsv
+        <fMRIprep_desc-deriv_timeseries.tsv
+        <fMRIprep_desc-censor_timeseries.tsv
+        info_censored_volumes.json
     """
 
     # determine relevant col labels
@@ -71,86 +73,83 @@ def mot_files(work_dir, num_runs, subj, task, sess, afni_data):
     deriv_cat = []
     censor_cat = []
 
-    mot_list = [x for k, x in afni_data.items() if "mot-c" in k]
-
-    for mot_file in mot_list:
-
-        # read in data
-        df_all = pd.read_csv(os.path.join(work_dir, mot_file), sep="\t")
-
-        # make motion mean file, write for review
-        # mot_mean = mot_file.replace(
-        #     "desc-confounds_timeseries.tsv", "desc-mean_motion.1D"
-        # )
-        df_mean = df_all[mean_labels].copy()
-        df_mean = df_mean.round(6)
-        # df_mean.to_csv(
-        #     os.path.join(work_dir, f"tmp_{mot_mean}"),
-        #     sep=" ",
-        #     index=False,
-        #     header=False,
-        # )
-        mean_cat.append(df_mean)
-
-        # make motion deriv file
-        df_drv = df_all[drv_labels].copy()
-        df_drv = df_drv.fillna(0)
-        df_drv = df_drv.round(6)
-        deriv_cat.append(df_drv)
-
-        # make motion censor file
-        # invert binary, exclude preceding volume also
-        df_cen = df_all.filter(regex="motion_outlier")
-        df_cen["sum"] = df_cen.sum(axis=1)
-        df_cen = df_cen.astype(int)
-        df_cen = df_cen.replace({0: 1, 1: 0})
-        zero_pos = df_cen.index[df_cen["sum"] == 0].tolist()
-        zero_fill = [x - 1 for x in zero_pos]
-        if -1 in zero_fill:
-            zero_fill.remove(-1)
-        df_cen.loc[zero_fill, "sum"] = 0
-        censor_cat.append(df_cen)
-
-    # cat files into singule file rather than pad zeros for e/run
-    df_mean_cat = pd.concat(mean_cat, ignore_index=True)
-    df_deriv_cat = pd.concat(deriv_cat, ignore_index=True)
-    df_censor_cat = pd.concat(censor_cat, ignore_index=True)
-
-    # determine BIDS string, write tsvs
+    mot_list = [x for k, x in afni_data.items() if "mot-f" in k]
     mot_str = mot_list[0].replace("run-1_", "")
+    if not os.path.exists(
+        os.path.join(work_dir, mot_str.replace("confounds", "censor"))
+    ):
+        for mot_file in mot_list:
 
-    df_mean_cat.to_csv(
-        os.path.join(work_dir, f"""{mot_str.replace("confounds", "mean")}"""),
-        sep=" ",
-        index=False,
-        header=False,
-    )
-    df_deriv_cat.to_csv(
-        os.path.join(work_dir, f"""{mot_str.replace("confounds", "deriv")}"""),
-        sep=" ",
-        index=False,
-        header=False,
-    )
-    df_censor_cat.to_csv(
-        os.path.join(work_dir, f"""{mot_str.replace("confounds", "censor")}"""),
-        sep=" ",
-        index=False,
-        header=False,
-        columns=["sum"],
-    )
+            # read in data
+            df_all = pd.read_csv(os.path.join(work_dir, mot_file), sep="\t")
+
+            # make motion mean file, round to 6 sig figs
+            df_mean = df_all[mean_labels].copy()
+            df_mean = df_mean.round(6)
+            mean_cat.append(df_mean)
+
+            # make motion deriv file
+            df_drv = df_all[drv_labels].copy()
+            df_drv = df_drv.fillna(0)
+            df_drv = df_drv.round(6)
+            deriv_cat.append(df_drv)
+
+            # make motion censor file - sum columns,
+            # invert binary, exclude preceding volume
+            df_cen = df_all.filter(regex="motion_outlier")
+            df_cen["sum"] = df_cen.iloc[:, :].sum(1)
+            df_cen = df_cen.astype(int)
+            df_cen = df_cen.replace({0: 1, 1: 0})
+            zero_pos = df_cen.index[df_cen["sum"] == 0].tolist()
+            zero_fill = [x - 1 for x in zero_pos]
+            if -1 in zero_fill:
+                zero_fill.remove(-1)
+            df_cen.loc[zero_fill, "sum"] = 0
+            censor_cat.append(df_cen)
+
+        # cat files into singule file rather than pad zeros for e/run
+        df_mean_cat = pd.concat(mean_cat, ignore_index=True)
+        df_deriv_cat = pd.concat(deriv_cat, ignore_index=True)
+        df_censor_cat = pd.concat(censor_cat, ignore_index=True)
+
+        # determine BIDS string, write tsvs, make sure
+        # output value is float (not scientific notation)
+        df_mean_cat.to_csv(
+            os.path.join(work_dir, f"""{mot_str.replace("confounds", "mean")}"""),
+            sep="\t",
+            index=False,
+            header=False,
+            float_format="%.6f",
+        )
+        df_deriv_cat.to_csv(
+            os.path.join(work_dir, f"""{mot_str.replace("confounds", "deriv")}"""),
+            sep="\t",
+            index=False,
+            header=False,
+            float_format="%.6f",
+        )
+        df_censor_cat.to_csv(
+            os.path.join(work_dir, f"""{mot_str.replace("confounds", "censor")}"""),
+            sep="\t",
+            index=False,
+            header=False,
+            columns=["sum"],
+        )
+
+        # determine number censored volumes
+        num_vol = df_censor_cat["sum"].sum()
+        num_tot = len(df_censor_cat)
+        cen_dict = {
+            "total_volumes": int(num_tot),
+            "included_volumes": int(num_vol),
+            "proportion_excluded": round(1 - (num_vol / num_tot), 3),
+        }
+        with open(os.path.join(work_dir, "info_censored_volumes.json"), "w") as jfile:
+            json.dump(cen_dict, jfile)
 
     # update afni_data
     afni_data["mot-mean"] = f"""{mot_str.replace("confounds", "mean")}"""
     afni_data["mot-deriv"] = f"""{mot_str.replace("confounds", "deriv")}"""
     afni_data["mot-cens"] = f"""{mot_str.replace("confounds", "censor")}"""
 
-    # determine number censored volumes
-    num_vol = df_censor_cat["sum"].sum()
-    num_tot = len(df_censor_cat)
-    cen_dict = {
-        "total_volumes": int(num_tot),
-        "included_volumes": int(num_vol),
-        "proportion_excluded": round(1 - (num_vol / num_tot), 3),
-    }
-    with open(os.path.join(work_dir, "info_volumes.json"), "w") as jfile:
-        json.dump(cen_dict, jfile)
+    return afni_data
