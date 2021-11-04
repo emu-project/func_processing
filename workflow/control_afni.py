@@ -164,7 +164,7 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
     afni_dir = os.path.join(deriv_dir, "afni")
     work_dir = os.path.join(afni_dir, subj, sess)
 
-    with open(os.path.join(work_dir, decon_json)) as jf:
+    with open(os.path.join(decon_json)) as jf:
         decon_plan = json.load(jf)
 
     # write deconvolution
@@ -174,5 +174,10 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
 
     # run deconvolution
     afni_data = deconvolve.run_reml(work_dir, afni_data)
+
+    # check for files, clean
+    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
+    for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
+        os.remove(sbatch_file)
 
     return afni_data
