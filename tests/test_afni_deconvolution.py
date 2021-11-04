@@ -39,7 +39,7 @@ from resources.afni import deconvolve
 
 
 # %%
-# # For testing
+# For testing
 deriv_dir = "/scratch/madlab/emu_test/derivatives"
 subj = "sub-4002"
 sess = "ses-S2"
