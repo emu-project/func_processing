@@ -5,5 +5,5 @@ COPY ashs-fastashs_beta /ashs_bin/ashs-fastashs_beta
 COPY do_ashs.sh /app
 ENV ASHS_ROOT=/ashs_bin/ashs-fastashs_beta
 
-ENTRYPOINT [ "./app/do_ashs.sh" ]
+ENTRYPOINT [ "/app/do_ashs.sh" ]
 CMD [ "-h" ]
