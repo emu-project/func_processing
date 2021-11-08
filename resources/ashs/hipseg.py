@@ -25,7 +25,8 @@ def run_ashs(
     """Run automatic hippocampal subfield segmentation.
 
     Use singularity image of docker://nmuncy/ashs to generate
-    HC subfield labels.
+    HC subfield labels. Relevant output copied from work_dir
+    to deriv_dir.
 
     Parameters
     ----------
