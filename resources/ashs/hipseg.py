@@ -12,7 +12,8 @@ from afni import submit
 
 # %%
 def run_ashs(
-    anat_dir,
+    t1_dir,
+    t2_dir,
     deriv_dir,
     work_dir,
     atlas_dir,
@@ -30,26 +31,25 @@ def run_ashs(
 
     Parameters
     ----------
-    anat_dir : str
-        /path/to/BIDS/dset/sub-1234/ses-A/anat
+    t1_dir : str
+        absolute path to directory containing T1-weighted file
+    t2_dir : str
+        absolute path to directory containing T2-weighted file
     deriv_dir : str
-        /path/to/BIDS/derivatives/ashs/sub-1234/ses-A
+        absolute path to desired output location
     work_dir : str
-        /path/to/BIDS/derivatives/temporary/sub-1234/ses-A
-        temp dir for writing ASHS output, relevant files are
-        copied to deriv_dir
+        absolute path to desired working directory,
+        relevant files are copied to deriv_dir
     atlas_dir : str
-        /path/to/atlas/parent/dir
+        absolute path to directory containing ASHS atlas
     sing_img : str
         /path/to/ashs_singularity.simg
     subj : str
         BIDs subject (sub-1234)
     t1_file : str
         file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)
-        found within anat_dir
     t2_file : str
         file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)
-        found within anat_dir
     atlas_str : str
         ASHS atlas directory, found within atlas_dir
         (ashs_atlas_magdeburg)
@@ -77,7 +77,8 @@ def run_ashs(
         h_cmd = f"""
             module load singularity-3.8.2
             singularity run --cleanenv \
-                --bind {anat_dir}:/data_dir \
+                --bind {t1_dir}:/t1_dir \
+                --bind {t2_dir}:/t2_dir \
                 --bind {work_dir}:/work_dir \
                 --bind {atlas_dir}:/atlas_dir \
                 {sing_img} \
