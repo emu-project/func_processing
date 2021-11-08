@@ -17,7 +17,7 @@ t1_file = f"{subj}_ses-S1_run-2_T1w.nii.gz"
 t2_file = f"{subj}_ses-S1_PD.nii.gz"
 atlas_dir = "/home/data/madlab/atlases"
 atlas_str = "ashs_atlas_magdeburg"
-sing_img = "/home/nmuncy/bin/singularities/ashs_test.simg"
+sing_img = "/home/nmuncy/bin/singularities/ashs_latest.simg"
 
 ashs_out = control_ashs.control_hipseg(
     t1_dir,
@@ -31,3 +31,5 @@ ashs_out = control_ashs.control_hipseg(
     t2_file,
     atlas_str,
 )
+
+# %%

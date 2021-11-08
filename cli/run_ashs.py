@@ -60,6 +60,11 @@ def main():
     scratch_dir = "/scratch/madlab/emu_ashs"
     sess = "ses-S1"
     batch_num = 3
+    t1_search = "T1w"
+    t2_search = "PD"
+    atlas_dir = "/home/data/madlab/atlases"
+    sing_img = "/home/nmuncy/bin/singularities/ashs_latest.simg"
+    atlas_str = "ashs_atlas_magdeburg"
 
     # # receive passed args
     # args = get_args().parse_args()
@@ -86,14 +91,20 @@ def main():
                     deriv_dir, subj, sess, f"{subj}_left_lfseg_corr_usegray.nii.gz"
                 )
             )
-            t1_files = glob.glob(f"{dset_dir}/{subj}/**/*T1w.nii.gz", recursive=True)
-            t2_files = glob.glob(f"{dset_dir}/{subj}/**/*PD.nii.gz", recursive=True)
+            t1_files = glob.glob(
+                f"{dset_dir}/{subj}/**/*{t1_search}.nii*", recursive=True
+            )
+            t2_files = glob.glob(
+                f"{dset_dir}/{subj}/**/*{t2_search}.nii*", recursive=True
+            )
             if t1_files and t2_files and not ashs_exists:
 
                 # give list item in list for field map correction, multiple acquisitions
                 subj_dict[subj] = {}
                 subj_dict[subj]["t1-file"] = t1_files[-1].split("/")[-1]
+                subj_dict[subj]["t1-dir"] = t1_files[-1].rsplit("/", 1)[0]
                 subj_dict[subj]["t2-file"] = t2_files[-1].split("/")[-1]
+                subj_dict[subj]["t2-dir"] = t2_files[-1].rsplit("/", 1)[0]
 
         # kill while loop if all subjects have output, also don't
         # let job run longer than a few days
@@ -110,16 +121,18 @@ def main():
 
         # submit jobs for N subjects that don't have output in deriv_dir
         for subj in list(subj_dict)[:batch_num]:
-            # anat_dir = os.path.join(dset_dir, subj)
+            subj_work = os.path.join(scratch_dir, subj, sess)
+            subj_deriv = os.path.join(deriv_dir, subj, sess)
             control_ashs.control_hipseg(
-                anat_dir,
-                deriv_dir,
-                work_dir,
+                subj_dict[subj]["t1-dir"],
+                subj_dict[subj]["t2-dir"],
+                subj_deriv,
+                subj_work,
                 atlas_dir,
                 sing_img,
                 subj,
-                t1_file,
-                t2_file,
+                subj_dict[subj]["t1-file"],
+                subj_dict[subj]["t2-file"],
                 atlas_str,
             )
 
