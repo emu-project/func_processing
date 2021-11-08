@@ -106,8 +106,8 @@ cat << EOF
 
     -I (subject) = $subj
     -a (atlas) = /atlas_dir/$ashs_atlas
-    -g (t1_file) = ls /t1_dir
-    -f (t2_file) = ls /t2_dir
+    -g (t1_file) = /t1_dir/$t1_file
+    -f (t2_file) = /t2_dir/$t2_file
     -w (work_dir) = /work_dir
     -B (skip bootstrap)
 
