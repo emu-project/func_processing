@@ -2,6 +2,7 @@
 # %%
 import os
 import sys
+import shutil
 
 resource_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(resource_dir)
@@ -11,7 +12,15 @@ from afni import submit
 
 # %%
 def run_ashs(
-    anat_dir, deriv_dir, atlas_dir, sing_img, subj, t1_file, t2_file, atlas_str
+    anat_dir,
+    deriv_dir,
+    work_dir,
+    atlas_dir,
+    sing_img,
+    subj,
+    t1_file,
+    t2_file,
+    atlas_str,
 ):
     """Run automatic hippocampal subfield segmentation.
 
@@ -24,6 +33,10 @@ def run_ashs(
         /path/to/BIDS/dset/sub-1234/ses-A/anat
     deriv_dir : str
         /path/to/BIDS/derivatives/ashs/sub-1234/ses-A
+    work_dir : str
+        /path/to/BIDS/derivatives/temporary/sub-1234/ses-A
+        temp dir for writing ASHS output, relevant files are
+        copied to deriv_dir
     atlas_dir : str
         /path/to/atlas/parent/dir
     sing_img : str
@@ -40,21 +53,31 @@ def run_ashs(
         ASHS atlas directory, found within atlas_dir
         (ashs_atlas_magdeburg)
 
+    Raises
+    ------
+    FileNotFoundError
+        If ASHS is run but files are not detected in work_dir/final.
+
     Returns
     -------
     list
-        ASHS output, contents of deriv_dir/final.
+        final ASHS files
     """
-    final_dir = os.path.join(deriv_dir, "final")
+    # set up
+    for h_dir in [deriv_dir, work_dir]:
+        if not os.path.exists(h_dir):
+            os.makedirs(h_dir)
+
+    # run ASHS if needed
     if not os.path.exists(
-        os.path.join(final_dir, f"{subj}_left_lfseg_corr_usegray.nii.gz")
+        os.path.join(deriv_dir, f"{subj}_left_lfseg_corr_usegray.nii.gz")
     ):
         subj_num = subj.split("-")[1]
         h_cmd = f"""
             module load singularity-3.8.2
             singularity run --cleanenv \
                 --bind {anat_dir}:/data_dir \
-                --bind {deriv_dir}:/work_dir \
+                --bind {work_dir}:/work_dir \
                 --bind {atlas_dir}:/atlas_dir \
                 {sing_img} \
                 -i {subj} \
@@ -66,7 +89,27 @@ def run_ashs(
             h_cmd, 2, 4, 6, f"ashs{subj_num}", deriv_dir
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
-    return os.listdir(final_dir)
+
+        # move relevant files
+        ashs_out = [x for x in os.listdir(os.path.join(work_dir, "final"))]
+        if len(ashs_out) == 0:
+            raise FileNotFoundError(f"No files found in {work_dir}/final.")
+        for ashs_file in ashs_out:
+            shutil.copyfile(
+                os.path.join(work_dir, "final", ashs_file),
+                os.path.join(deriv_dir, ashs_file),
+            )
+
+    # clean up
+    if os.path.exists(
+        os.path.join(deriv_dir, f"{subj}_left_lfseg_corr_usegray.nii.gz")
+    ) and os.path.exists(
+        os.path.join(work_dir, "final", f"{subj}_left_lfseg_corr_usegray.nii.gz")
+    ):
+        shutil.rmtree(work_dir)
+
+    # return list of ASHS output
+    return os.listdir(deriv_dir)
 
 
 # %%
