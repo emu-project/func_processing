@@ -112,6 +112,3 @@ def run_ashs(
 
     # return list of ASHS output
     return os.listdir(deriv_dir)
-
-
-# %%
