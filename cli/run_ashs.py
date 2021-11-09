@@ -3,12 +3,10 @@
 # SBATCH --job-name=runAshs
 # SBATCH --output=runAshs_log
 # SBATCH --time=75:00:00
-# SBATCH --ntasks-per-node=1
 # SBATCH --mem-per-cpu=4000
 # SBATCH --partition=IB_44C_512G
 # SBATCH --account=iacc_madlab
 # SBATCH --qos=pq_madlab
-# SBATCH --nodes=1
 
 """CLI for runnings project data through ASHS.
 
@@ -56,9 +54,44 @@ def submit_jobs(
     slurm_dir,
     code_dir,
 ):
-    """Title.
+    """Run workflow.control_ashs for each subject.
 
-    Desc.
+    Generate a parent job for each subject (p1234) to
+    govern child ashs jobs (ashs1234).
+
+    Parameters
+    ----------
+    subj : str
+        BIDs subject string (sub-1234)
+    subj_dict : dict
+        {sub-1234:
+            {
+                t1-file: t1.nii.gz,
+                t1-dir: /path/to/anat,
+                t2-file: t2.nii.gz,
+                t2-dir: /path/to/anat,
+            }
+        }
+    subj_deriv : str
+        path to desired output dir
+    subj_work : str
+        path to ashs working dir
+    atlas_str : str
+        ASHS atlas dir
+    atlas_dir : str
+        location of ASHS atlas dir
+    sing_img : str
+        singularity image of docker://nmuncy/ashs
+    slurm_dir : str
+        output location for stdout/err
+    code_dir : str
+        location of this script
+
+    Returns
+    -------
+    (h_out, h_err) : duple
+        stdout, stderr from sbatch subprocess submission of
+        subject control script
     """
 
     subj_num = subj.split("-")[-1]
@@ -69,12 +102,10 @@ def submit_jobs(
         #SBATCH --job-name=p{subj_num}
         #SBATCH --output={slurm_dir}/out_{subj_num}.txt
         #SBATCH --time=01:00:00
-        #SBATCH --ntasks-per-node=1
-        #SBATCH --mem-per-cpu=4000
+        #SBATCH --mem=4000
         #SBATCH --partition=IB_44C_512G
         #SBATCH --account=iacc_madlab
         #SBATCH --qos=pq_madlab
-        #SBATCH --nodes=1
 
         import sys
         sys.path.append("{code_dir}")
