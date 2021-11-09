@@ -1,12 +1,4 @@
-#!/bin/env python
-
-# SBATCH --job-name=runAshs
-# SBATCH --output=runAshs_log
-# SBATCH --time=75:00:00
-# SBATCH --mem-per-cpu=4000
-# SBATCH --partition=IB_44C_512G
-# SBATCH --account=iacc_madlab
-# SBATCH --qos=pq_madlab
+#!/usr/bin/env python
 
 """CLI for runnings project data through ASHS.
 
@@ -27,8 +19,16 @@ characters in squeue falls below 3 (header + this job = 2).
 
 Examples
 --------
-sbatch run_ashs.py \\
-    -s /home/nmuncy/bin/singularities/ashs_latest.simg
+sbatch --job-name=runAshs \\
+    --output=runAshs_log \\
+    --time=75:00:00 \\
+    --mem-per-cpu=4000 \\
+    --partition=IB_44C_512G \\
+    --account=iacc_madlab \\
+    --qos=pq_madlab \\
+    run_ashs.py \\
+    -s /home/nmuncy/bin/singularities/ashs_latest.simg \\
+    -c /home/nmuncy/compute/func_processing
 """
 # %%
 import os
@@ -85,7 +85,7 @@ def submit_jobs(
     slurm_dir : str
         output location for stdout/err
     code_dir : str
-        location of this script
+        location of this project
 
     Returns
     -------
@@ -205,6 +205,13 @@ def get_args():
         type=str,
         required=True,
     )
+    required_args.add_argument(
+        "-c",
+        "--code-dir",
+        help="Path to clone of github.com/emu-project/func_processing.git",
+        type=str,
+        required=True,
+    )
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -238,8 +245,9 @@ def main():
     atlas_dir = args.atlas_dir
     atlas_str = args.atlas_str
     sing_img = args.sing_img
+    code_dir = args.code_dir
 
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    # code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives/ashs")
     wait_time = 3600
