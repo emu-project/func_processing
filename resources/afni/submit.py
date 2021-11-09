@@ -77,8 +77,8 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
         sbatch \
         -J {job_name} \
         -t {wall_hours}:00:00 \
-        --mem={mem_gig}000 \
-        --ntasks-per-node={num_proc} \
+        --cpus-per-task={num_proc} \
+        --mem-per-cpu={mem_gig}000 \
         -p IB_44C_512G \
         -o {out_dir}/sbatch_{job_name}.out \
         -e {out_dir}/sbatch_{job_name}.err \

@@ -9,7 +9,8 @@ function Usage {
     Usage:
 
         docker run \\
-	        -v </path/to/dset>:/data_dir \\
+	        -v </path/to/dset/t1_dir>:/t1_dir \\
+            -v </path/to/dset/t2_dir>:/t2_dir \\
             -v </path/to/derivatives>:/work_dir \\
             -v </path/to/atlas/dir>:/atlas_dir \\
             nmuncy/ashs \\
@@ -20,24 +21,26 @@ function Usage {
 
     Required Arguments:
 
-    	-v </path/to/dset> = absolute path to localhost dset/subject/session/anat directory
+    	-v </path/to/dset/t1_dir> = absolute path to localhost directory containing T1-weighted file
+        -v </path/to/dset/t2_dir> = absolute path to localhost directory containing T2-weighted file
         -v </path/to/derivatives> = absolute path to localhost derivatives directory
         -v </path/to/atlas/dir> = absolute path to localhost parent directory of ASHS atlas
         -i = subject string
-        -g = absolute path to localhost T1-weighted NIfTI
-        -f = absolute path to localhost T2-weighted NIfTI
+        -g = file name of T1-weighted NIfTI
+        -f = file name of T2-weighted NIfTI
         -a = ASHS atlas name
 
     Example Usage:
 
         docker run \\
-	        -v /home/data/dset/sub-1234/ses-A/anat:/data_dir \\
+	        -v /home/data/dset/sub-1234/ses-A/anat:/t1_dir \\
+            -v /home/data/dset/sub-1234/ses-B/anat:/t2_dir \\
             -v /home/data/derivatives/ashs/sub-1234/ses-A:/work_dir \\
             -v /home/atlases:/atlas_dir \\
             nmuncy/ashs \\
             -i sub-1234 \\
             -g sub-1234_ses-A_T1w.nii.gz \\
-            -f sub-1234_ses-A_T2w.nii.gz \\
+            -f sub-1234_ses-B_T2w.nii.gz \\
             -a ashs_atlas_magdeburg
 USAGE
 }
@@ -103,8 +106,8 @@ cat << EOF
 
     -I (subject) = $subj
     -a (atlas) = /atlas_dir/$ashs_atlas
-    -g (t1_file) = /data_file/$t1_file
-    -f (t2_file) = /data_file/$t2_file
+    -g (t1_file) = /t1_dir/$t1_file
+    -f (t2_file) = /t2_dir/$t2_file
     -w (work_dir) = /work_dir
     -B (skip bootstrap)
 
@@ -115,7 +118,7 @@ echo -e "\n Running ASHS, capturing stderr/out to /work_dir/ashs_log. \n"
 ${ASHS_ROOT}/bin/ashs_main.sh \
 	-I $subj \
 	-a /atlas_dir/$ashs_atlas \
-	-g /data_dir/$t1_file \
-	-f /data_dir/$t2_file \
+	-g /t1_dir/$t1_file \
+	-f /t2_dir/$t2_file \
     -B \
 	-w /work_dir |& tee /work_dir/ashs_log
