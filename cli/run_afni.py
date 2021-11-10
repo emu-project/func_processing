@@ -58,10 +58,10 @@ def submit_jobs(
             "{decon_json}",
         )
 
-        print(afni_data)
+        print(f"Finished with \\n {{afni_data}}")
     """
     cmd_dedent = textwrap.dedent(h_cmd)
-    py_script = os.path.join(slurm_dir, f"preproc_{subj_num}.py")
+    py_script = os.path.join(slurm_dir, f"preproc_decon_{subj_num}.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
 
@@ -99,8 +99,8 @@ def main():
     # make list of subjects who have fmriprep output and are
     # missing afni output
     subj_list = []
-    # for subj in subj_list_all:
-    for subj in subj_list_all[1]:
+    decon_dict = {}
+    for subj in subj_list_all[1:2]:
 
         # check for fmriprep output
         anat_check = glob.glob(
@@ -114,8 +114,9 @@ def main():
 
         # check whether each planned decon exists
         afni_check = []
-        decon_json = glob.glob(os.path.join(timing_dir, f"{subj}*.json"))[0]
-        with open(decon_json) as jf:
+        decon_glob = glob.glob(os.path.join(timing_dir, f"{subj}*.json"))
+        assert decon_glob, f"No decon plan found for {subj} in {timing_dir}"
+        with open(decon_glob[0]) as jf:
             decon_plan = json.load(jf)
         for decon_str in decon_plan.keys():
             afni_check.append(
@@ -133,6 +134,7 @@ def main():
         # decon is missing
         if anat_check and func_check and False in afni_check:
             subj_list.append(subj)
+            decon_dict[subj] = decon_glob[0]
 
     # do preproc/decon for each subject
     current_time = datetime.now()
@@ -144,18 +146,12 @@ def main():
         os.makedirs(slurm_dir)
 
     for subj in subj_list:
-        num_runs = len(
-            glob.glob(
-                f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
-                recursive=True,
-            )
-        )
         submit_jobs(
             deriv_dir,
             subj,
             sess,
-            num_runs,
-            decon_json,
+            task,
+            decon_dict[subj],
             tplflow_str,
             code_dir,
             slurm_dir,
