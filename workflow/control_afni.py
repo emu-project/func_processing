@@ -16,7 +16,7 @@ from resources.afni import copy, process, masks, motion, deconvolve
 
 
 # %%
-def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
+def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -34,8 +34,6 @@ def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
         BIDS session string (ses-S1)
     task : str
         BIDS task string (task-test)
-    num_runs : int
-        number of EPI runs for session (3)
     tplflow_str = str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
@@ -70,9 +68,7 @@ def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
         os.makedirs(work_dir)
 
     # get fMRIprep data
-    afni_data = copy.copy_data(
-        prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str
-    )
+    afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
 
     # blur data
     subj_num = subj.split("-")[-1]

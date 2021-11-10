@@ -33,14 +33,14 @@ tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
 
 # setup directories
-prep_dir = os.path.join(deriv_dir, "fmriprep")
+prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
 afni_dir = os.path.join(deriv_dir, "afni")
 work_dir = os.path.join(afni_dir, subj, sess)
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
 # get fMRIprep data
-afni_data = copy.copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str)
+afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
 
 # blur data
 subj_num = subj.split("-")[-1]

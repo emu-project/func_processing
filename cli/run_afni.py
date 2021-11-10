@@ -18,7 +18,7 @@ import subprocess
 
 # %%
 def submit_jobs(
-    deriv_dir, subj, sess, num_runs, decon_json, tplflow_str, code_dir, slurm_dir
+    deriv_dir, subj, sess, task, decon_json, tplflow_str, code_dir, slurm_dir
 ):
     """Title.
 
@@ -46,7 +46,7 @@ def submit_jobs(
             "{deriv_dir}",
             "{subj}",
             "{sess}",
-            "{num_runs}",
+            "{task}",
             "{tplflow_str}",
         )
 
