@@ -64,7 +64,9 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     anat_files = []
     for anat in desired_anat:
         anat_files.extend(glob.glob(f"{prep_dir}/{subj}/**/{anat}", recursive=True))
-    assert len(desired_anat) == len(anat_files), "Missing desired_anat files."
+    assert len(desired_anat) == len(
+        anat_files
+    ), "Missing desired_anat files, check resources.afni.copy."
 
     # switch for assigning anat file_dict keys
     file_name_switch = {
@@ -83,6 +85,9 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         if not os.path.exists(out_file):
             print(f"Copying {anat_name} ...")
             shutil.copyfile(anat, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
 
     # find EPI, motion files
     epi_files = glob.glob(
@@ -99,7 +104,7 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
 
     assert len(epi_files) == len(
         mot_files
-    ), "Number of task EPI files != condound files."
+    ), "Number of task EPI files != condound files, check resources.afni.copy."
 
     # copy EPI files, update dict
     for count, epi in enumerate(epi_files):
@@ -109,6 +114,9 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(epi, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
 
     # copy mot files, update dict
     for count, mot in enumerate(mot_files):
@@ -118,5 +126,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(epi, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
 
     return file_dict

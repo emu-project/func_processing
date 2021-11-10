@@ -119,10 +119,10 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
     # update afni_data
-    if os.path.exists(os.path.join(work_dir, f"{out_str}_stats.REML_cmd")):
-        afni_data[f"dcn-{decon_str}"] = f"{out_str}_stats.REML_cmd"
-    else:
-        afni_data[f"dcn-{decon_str}"] = "Missing"
+    assert os.path.exists(
+        os.path.join(work_dir, f"{out_str}_stats.REML_cmd")
+    ), f"{out_str}_stats.REML_cmd failed to write, check resources.afni.deconvolve.write_decon."
+    afni_data[f"dcn-{decon_str}"] = f"{out_str}_stats.REML_cmd"
 
     return afni_data
 
@@ -183,13 +183,10 @@ def run_reml(work_dir, afni_data):
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 1, 4, 1, f"{subj_num}wts", work_dir
         )
-        if os.path.exists(os.path.join(work_dir, nuiss_file)):
-            afni_data["epi-nuiss"] = nuiss_file
-        else:
-            afni_data["epi-nuiss"] = "Missing"
-
-    # check that we are ready for deconvolution
-    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
+        assert os.path.exists(
+            os.path.join(work_dir, nuiss_file)
+        ), f"{nuiss_file} failed to write, check resources.afni.deconvolve.run_reml."
+        afni_data["epi-nuiss"] = nuiss_file
 
     # run each planned deconvolution
     reml_list = [x for k, x in afni_data.items() if "dcn-" in k]
@@ -208,9 +205,9 @@ def run_reml(work_dir, afni_data):
             job_name, job_id = submit.submit_hpc_sbatch(
                 h_cmd, 25, 4, 6, f"{subj_num}rml", work_dir
             )
-        if os.path.exists(os.path.join(work_dir, reml_out)):
-            afni_data[f"rml-{decon_str}"] = reml_out.split(".")[0]
-        else:
-            afni_data[f"rml-{decon_str}"] = "Missing"
+        assert os.path.exists(
+            os.path.join(work_dir, reml_out)
+        ), f"{reml_out} failed to write, check resources.afni.deconvolve.run_reml."
+        afni_data[f"rml-{decon_str}"] = reml_out.split(".")[0]
 
     return afni_data

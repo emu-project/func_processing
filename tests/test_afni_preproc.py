@@ -28,7 +28,6 @@ deriv_dir = "/scratch/madlab/emu_test/derivatives"
 subj = "sub-4002"
 sess = "ses-S2"
 task = "task-test"
-num_runs = 3
 tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
 
@@ -56,7 +55,6 @@ afni_data = process.scale_epi(work_dir, subj_num, sess, task, afni_data)
 # check for files
 with open(os.path.join(work_dir, "afni_data.json"), "w") as jf:
     json.dump(afni_data, jf)
-assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
 
 # clean
 for tmp_file in glob.glob(f"{work_dir}/tmp*"):

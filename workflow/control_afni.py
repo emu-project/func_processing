@@ -84,9 +84,6 @@ def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
 
-    # check for files
-    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
-
     # clean
     for tmp_file in glob.glob(f"{work_dir}/tmp*"):
         os.remove(tmp_file)
@@ -171,8 +168,7 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
     # run deconvolution
     afni_data = deconvolve.run_reml(work_dir, afni_data)
 
-    # check for files, clean
-    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
+    # clean
     for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
         os.remove(sbatch_file)
 

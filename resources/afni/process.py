@@ -36,6 +36,10 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     afni_data : dict
         updated with names of blurred data,
         epi-blur? = blurred/smoothed EPI data of run-?
+
+    Notes
+    -----
+    Determining blur multiplier based off voxel's dimension K.
     """
 
     # get list of pre-processed EPI files
@@ -67,10 +71,10 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
         # update afni_data
-        if os.path.exists(os.path.join(work_dir, epi_blur)):
-            afni_data[f"epi-blur{run_num}"] = epi_blur
-        else:
-            afni_data[f"epi-blur{run_num}"] = "Missing"
+        assert os.path.exists(
+            os.path.join(work_dir, epi_blur)
+        ), f"{epi_blur} failed to write, check resources.afni.process.blur_epi."
+        afni_data[f"epi-blur{run_num}"] = epi_blur
 
     return afni_data
 
@@ -147,10 +151,10 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
-    if os.path.exists(os.path.join(work_dir, mask_min)):
-        afni_data["mask-min"] = mask_min
-    else:
-        afni_data["mask-min"] = "Missing"
+    assert os.path.exists(
+        os.path.join(work_dir, mask_min)
+    ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
+    afni_data["mask-min"] = mask_min
 
     # scale data timeseries
     epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
@@ -176,9 +180,9 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
-        if os.path.exists(os.path.join(work_dir, epi_scale)):
-            afni_data[f"epi-scale{run_num}"] = epi_scale
-        else:
-            afni_data[f"epi-scale{run_num}"] = "Missing"
+        assert os.path.exists(
+            os.path.join(work_dir, epi_scale)
+        ), f"{epi_scale} failed to write, check resources.afni.process.scale_epi."
+        afni_data[f"epi-scale{run_num}"] = epi_scale
 
     return afni_data

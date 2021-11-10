@@ -64,10 +64,10 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
     # fill dict
-    if os.path.exists(os.path.join(work_dir, intersect_mask)):
-        afni_data["mask-int"] = intersect_mask
-    else:
-        afni_data["mask-int"] = "Missing"
+    assert os.path.exists(
+        os.path.join(work_dir, intersect_mask)
+    ), f"{intersect_mask} failed to write, check resources.afni.masks.make_intersect_mask."
+    afni_data["mask-int"] = intersect_mask
 
     return afni_data
 
@@ -131,9 +131,9 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
         # fill dict
-        if os.path.exists(os.path.join(work_dir, mask_file)):
-            afni_data[f"mask-eroded{tiss_type}"] = mask_file
-        else:
-            afni_data[f"mask-eroded{tiss_type}"] = "Missing"
+        assert os.path.exists(
+            os.path.join(work_dir, mask_file)
+        ), f"{mask_file} failed to write, check resources.afni.masks.make_tissue_masks."
+        afni_data[f"mask-eroded{tiss_type}"] = mask_file
 
     return afni_data
