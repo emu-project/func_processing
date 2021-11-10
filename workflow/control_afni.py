@@ -16,7 +16,7 @@ from resources.afni import copy, process, masks, motion, deconvolve
 
 
 # %%
-def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
+def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -26,8 +26,10 @@ def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
 
     Parameters
     ----------
-    deriv_dir : str
-        /path/to/BIDS/project/derivatives
+    prep_dir : str
+        /path/to/BIDS/project/derivatives/fmriprep
+    afni_dir : str
+        /path/to/BIDS/project/derivatives/afni
     subj : str
         BIDS subject string (sub-1234)
     sess : str
@@ -61,8 +63,6 @@ def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
     """
 
     # setup directories
-    prep_dir = os.path.join(deriv_dir, "fmriprep")
-    afni_dir = os.path.join(deriv_dir, "afni")
     work_dir = os.path.join(afni_dir, subj, sess)
     if not os.path.exists(work_dir):
         os.makedirs(work_dir)
@@ -93,7 +93,7 @@ def control_preproc(deriv_dir, subj, sess, task, tplflow_str):
     return afni_data
 
 
-def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
+def control_deconvolution(afni_dir, subj, sess, afni_data, decon_json, dur=2):
     """Generate and run planned deconvolutions.
 
     Use AFNI's 3dDeconvolve and 3dREMLfit to deconvolve EPI
@@ -110,8 +110,8 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
 
     Parameters
     ----------
-    deriv_dir : str
-        /path/to/BIDS/project/derivatives
+    afni_dir : str
+        /path/to/BIDS/project/derivatives/afni
     subj : str
         BIDS subject string (sub-1234)
     sess : str
@@ -154,7 +154,6 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
     """
 
     # setup directories
-    afni_dir = os.path.join(deriv_dir, "afni")
     work_dir = os.path.join(afni_dir, subj, sess)
 
     with open(os.path.join(decon_json)) as jf:

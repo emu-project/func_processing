@@ -24,7 +24,7 @@ from resources.afni import copy, process, masks, motion
 
 # %%
 # For testing
-deriv_dir = "/scratch/madlab/emu_test/derivatives"
+deriv_dir = "/home/data/madlab/McMakin_EMUR01/derivatives"
 subj = "sub-4002"
 sess = "ses-S2"
 task = "task-test"
@@ -51,16 +51,6 @@ afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
 
 # scale data
 afni_data = process.scale_epi(work_dir, subj_num, sess, task, afni_data)
-
-# check for files
-with open(os.path.join(work_dir, "afni_data.json"), "w") as jf:
-    json.dump(afni_data, jf)
-
-# clean
-for tmp_file in glob.glob(f"{work_dir}/tmp*"):
-    os.remove(tmp_file)
-for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
-    os.remove(sbatch_file)
 
 # make mean, deriv, censor motion files
 afni_data = motion.mot_files(work_dir, afni_data)

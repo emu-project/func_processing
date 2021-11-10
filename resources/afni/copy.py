@@ -125,7 +125,7 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         out_file = os.path.join(work_dir, mot_name)
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
-            shutil.copyfile(epi, out_file)
+            shutil.copyfile(mot, out_file)
         assert os.path.exists(
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
