@@ -9,6 +9,8 @@ Requires "submit" module at same level.
 """
 
 import os
+import pandas as pd
+import glob
 from . import submit
 
 
@@ -211,3 +213,45 @@ def run_reml(work_dir, afni_data):
         afni_data[f"rml-{decon_str}"] = reml_out.split(".")[0]
 
     return afni_data
+
+
+def timing_files(subj, sess, task, decon_name, timing_dir, dset_dir):
+
+    # For testing
+    subj = "sub-4002"
+    sess = "ses-S2"
+    task = "task-test"
+    decon_name = "UniqueBehs"
+    timing_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/afni/timing_files"
+    dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
+
+    # Structure subject output and input Paths based on subject and session (if specified)
+    afni_output = os.path.join(timing_dir, subj, sess)
+    source_dir = os.path.join(dset_dir, subj, sess, "func")
+    if not os.path.exists(afni_output):
+        os.makedirs(afni_output)
+
+    # If events files are present in source_dir, produce combined events file from all runs
+    events_files = sorted(glob.glob(f"{source_dir}/*{task}*_events.tsv"))
+    if not events_files:
+        raise ValueError(f"""Task name: "{task}" returned no files""")
+    events_data = [pd.read_table(x) for x in events_files]
+    for idx, _ in enumerate(events_data):
+        events_data[idx]["run"] = idx + 1
+    events_data = pd.concat(events_data)
+
+    # Once events file is complete, iterate across trial_types to produce AFNI style events file
+    for trial_type, type_frame in events_data.groupby("trial_type"):
+        valence, ttype, outcome = trial_type.split("_")
+        trunc_name = valence + ttype[0].upper() + outcome[0].upper()
+        if trial_type == "non_resp_tr":
+            trunc_name = "NR"
+        wf = open(afni_output / f"tf_{task}_{decon_name}_{trunc_name}.txt")
+        for _, run_frame in type_frame.groupby("run"):
+            if run_frame.empty():
+                wf.writelines("*")
+            else:
+                wf.writelines(" ".join(run_frame["onset"].round().tolist()))
+        wf.close()
+
+    print(events_data)
