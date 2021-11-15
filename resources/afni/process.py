@@ -138,7 +138,7 @@ def scale_epi(work_dir, subj_num, afni_data):
                     -prefix {epi_scale}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{work_dir}/sbatch"
+                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{work_dir}/sbatch_out"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 

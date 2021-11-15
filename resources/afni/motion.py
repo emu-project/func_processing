@@ -71,9 +71,10 @@ def mot_files(work_dir, afni_data):
     deriv_cat = []
     censor_cat = []
 
-    assert afni_data[
-        "mot-confound"
-    ], "ERROR: afni_data['mot-confound?'] not found. Check resources.afni.copy.copy_data."
+    num_mot = len([y for x, y in afni_data.items() if "mot-confound" in x])
+    assert (
+        num_mot > 0
+    ), "ERROR: afni_data['mot-confound?'] not found. Check resources.afni.copy.copy_data"
 
     mot_list = [x for k, x in afni_data.items() if "mot-confound" in k]
     mot_str = mot_list[0].replace("run-1_", "")

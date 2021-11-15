@@ -17,7 +17,7 @@ import json
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
 
-from resources.afni import copy, process, masks, motion
+from resources.afni import copy, process, masks, motion, deconvolve
 
 
 # %%
@@ -64,7 +64,16 @@ afni_data = process.scale_epi(work_dir, subj_num, afni_data)
 
 # make mean, deriv, censor motion files
 afni_data = motion.mot_files(work_dir, afni_data)
-with open(os.path.join(work_dir, "afni_data.json"), "w") as jf:
-    json.dump(afni_data, jf)
 
-print(afni_data)
+# %%
+dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
+deriv_dir = "/scratch/madlab/emu_test/derivatives/afni"
+decon_plan = deconvolve.timing_files(dset_dir, deriv_dir, subj, sess, task)
+
+# %%
+for decon_name, tf_dict in decon_plan.items():
+    afni_data = deconvolve.write_decon(decon_name, tf_dict, afni_data, work_dir)
+
+# %%
+afni_data = deconvolve.run_reml(work_dir, afni_data)
+# %%

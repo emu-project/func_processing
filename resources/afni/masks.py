@@ -206,18 +206,16 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
     mask_str = afni_data["mask-brain"]
     mask_min = mask_str.replace("desc-brain", "desc-minval")
-    mask_min = mask_min.replace(sess, f"{sess}_{task}")
+    mask_min = mask_min.replace(f"_{sess}", f"_{sess}_{task}")
 
     if not os.path.exists(mask_min):
         min_list = []
         for run in epi_pre:
-            # tmp_min_file = f"""func/tmp_mask_min.{run.split("/")[1]}"""
             tmp_min_file = "tmp_mask_min.sub".join(run.rsplit("sub", 1))
             min_list.append(tmp_min_file)
             if not os.path.exists(tmp_min_file):
-                # tmp_bin_file = f"""func/tmp_mask_bin.{run.split("/")[1]}"""
                 tmp_bin_file = "tmp_mask_bin.sub".join(run.rsplit("sub", 1))
-                print("Making various masks ...")
+                print("Making various tmp_masks ...")
                 h_cmd = f"""
                     3dcalc \
                         -overwrite \
@@ -242,7 +240,7 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
                 {" ".join(min_list)}
 
             3dcalc \
-                -a func/tmp_mask_mean_{task}.nii.gz \
+                -a tmp_mask_mean_{task}.nii.gz \
                 -expr 'step(a-0.999)' \
                 -prefix {mask_min}
         """

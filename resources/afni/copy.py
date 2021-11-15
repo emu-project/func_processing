@@ -92,15 +92,19 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         ), f"{out_file} failed to copy, check resources.afni.copy."
 
     # find EPI, motion files
-    epi_files = glob.glob(
-        f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
-        recursive=True,
+    epi_files = sorted(
+        glob.glob(
+            f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
+            recursive=True,
+        )
     )
     epi_files.sort()
 
-    mot_files = glob.glob(
-        f"{prep_dir}/{subj}/**/*{task}*desc-confounds_timeseries.tsv",
-        recursive=True,
+    mot_files = sorted(
+        glob.glob(
+            f"{prep_dir}/{subj}/**/*{task}*desc-confounds_timeseries.tsv",
+            recursive=True,
+        )
     )
     mot_files.sort()
 

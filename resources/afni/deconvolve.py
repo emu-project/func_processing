@@ -14,7 +14,7 @@ import glob
 from . import submit
 
 
-def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
+def write_decon(decon_name, tf_dict, afni_data, work_dir, dur=2):
     """Generate deconvolution script.
 
     Write a deconvolution script using the pre-processed data, motion, and
@@ -27,8 +27,6 @@ def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
 
     Parameters
     ----------
-    dur : int/float
-        duration of event to model
     decon_name: str
         name of deconvolution, useful when conducting multiple
         deconvolutions on same session. Will be appended to
@@ -40,6 +38,8 @@ def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
         contains names for various files
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+    dur : int/float
+        duration of event to model [default=2]
 
     Returns
     -------
@@ -57,8 +57,14 @@ def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
             decon_<bids-task>_<decon_name>
     """
 
-    # get pre-processed runs
-    epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
+    # check for req files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-scale?'] not found. Check resources.afni.process.scale_epi."
+    assert (
+        afni_data["mot-mean"] and afni_data["mot-deriv"] and afni_data["mot-censor"]
+    ), "ERROR: missing afni_data[mot-*] files, check resources.afni.motion.mot_files."
 
     # set regressors - baseline
     reg_base = [
@@ -84,10 +90,12 @@ def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
         reg_beh.append(beh)
 
     # set output str
-    task_str = epi_list[0].split("_")[2]
+    epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
+    task_str = "task-" + epi_list[0].split("task-")[1].split("_")[0]
     out_str = f"decon_{task_str}_{decon_name}"
 
     # build full decon command
+    func_dir = os.path.join(work_dir, "func")
     cmd_decon = f"""
         3dDeconvolve \\
             -x1D_stop \\
@@ -101,32 +109,30 @@ def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
             -num_stimts {len(tf_dict.keys())} \\
             {" ".join(reg_beh)} \\
             -jobs 1 \\
-            -x1D X.{out_str}.xmat.1D \\
-            -xjpeg X.{out_str}.jpg \\
-            -x1D_uncensored X.{out_str}.nocensor.xmat.1D \\
-            -bucket {out_str}_stats \\
-            -cbucket {out_str}_cbucket \\
-            -errts {out_str}_errts
+            -x1D {func_dir}/X.{out_str}.xmat.1D \\
+            -xjpeg {func_dir}/X.{out_str}.jpg \\
+            -x1D_uncensored {func_dir}/X.{out_str}.nocensor.xmat.1D \\
+            -bucket {func_dir}/{out_str}_stats \\
+            -cbucket {func_dir}/{out_str}_cbucket \\
+            -errts {func_dir}/{out_str}_errts
     """
 
     # write for review
-    decon_script = os.path.join(work_dir, f"{out_str}.sh")
+    decon_script = os.path.join(func_dir, f"{out_str}.sh")
     with open(decon_script, "w") as script:
         script.write(cmd_decon)
 
-    # run
-    print(f"Running 3dDeconvolve for {decon_name}")
-    h_cmd = f"""
-        cd {work_dir}
-        {cmd_decon}
-    """
-    h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+    # generate x-matrices, reml command
+    out_file = os.path.join(func_dir, f"{out_str}_stats.REML_cmd")
+    if not os.path.exists(out_file):
+        print(f"Running 3dDeconvolve for {decon_name}")
+        h_out, h_err = submit.submit_hpc_subprocess(cmd_decon)
 
     # update afni_data
     assert os.path.exists(
-        os.path.join(work_dir, f"{out_str}_stats.REML_cmd")
-    ), f"{out_str}_stats.REML_cmd failed to write, check resources.afni.deconvolve.write_decon."
-    afni_data[f"dcn-{decon_name}"] = f"{out_str}_stats.REML_cmd"
+        out_file
+    ), f"{out_file} failed to write, check resources.afni.deconvolve.write_decon."
+    afni_data[f"dcn-{decon_name}"] = out_file
 
     return afni_data
 
@@ -151,66 +157,75 @@ def run_reml(work_dir, afni_data):
         epi-nuiss = nuissance signal file
         rml-<decon_name> = deconvolved file (<decon_name>_stats_REML+tlrc)
     """
+    # check for files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-scale?'] not found. Check resources.afni.process.scale_epi."
+
+    assert afni_data[
+        "mask-erodedWM"
+    ], "ERROR: afni_data['mask-erodedWM'] not found. Check resources.afni.masks.make_tissue_masks."
+
     # generate WM timeseries (nuissance file) for task
     epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
     eroded_mask = afni_data["mask-erodedWM"]
     nuiss_file = (
         epi_list[0].replace("_run-1", "").replace("desc-scaled", "desc-nuissance")
     )
-    subj_num = epi_list[0].split("_")[0].split("-")[-1]
+    subj_num = epi_list[0].split("sub-")[-1].split("_")[0]
 
-    if not os.path.exists(os.path.join(work_dir, nuiss_file)):
+    if not os.path.exists(nuiss_file):
         print(f"Making nuissance file {nuiss_file} ...")
-        tcat_file = nuiss_file.replace("nuissance", "tcat")
+        tcat_file = "tmp_tcat.sub".join(nuiss_file.rsplit("sub", 1))
+        epi_eroded = "tmp_epi.sub".join(eroded_mask.rsplit("sub", 1))
         h_cmd = f"""
-            cd {work_dir}
-
-            3dTcat -prefix tmp_{tcat_file} {" ".join(epi_list)}
+            3dTcat -prefix {tcat_file} {" ".join(epi_list)}
 
             3dcalc \
-                -a tmp_{tcat_file} \
+                -a {tcat_file} \
                 -b {eroded_mask} \
                 -expr 'a*bool(b)' \
                 -datum float \
-                -prefix tmp_epi_{eroded_mask}
+                -prefix {epi_eroded}
 
             3dmerge \
                 -1blur_fwhm 20 \
                 -doall \
                 -prefix {nuiss_file} \
-                tmp_epi_{eroded_mask}
-
-            if [ -f {nuiss_file} ]; then
-                rm tmp*
-            fi
+                {epi_eroded}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 4, 1, f"{subj_num}wts", work_dir
+            h_cmd, 1, 4, 1, f"{subj_num}wts", f"{work_dir}/sbatch_out"
         )
         assert os.path.exists(
-            os.path.join(work_dir, nuiss_file)
+            nuiss_file
         ), f"{nuiss_file} failed to write, check resources.afni.deconvolve.run_reml."
         afni_data["epi-nuiss"] = nuiss_file
 
     # run each planned deconvolution
+    num_dcn = len([y for x, y in afni_data.items() if "dcn-" in x])
+    assert (
+        num_dcn > 0
+    ), "ERROR: afni_data['dcn-*'] not found. Check resources.afni.deconvolve.write_decon."
+
     reml_list = [x for k, x in afni_data.items() if "dcn-" in k]
     for reml_script in reml_list:
-        decon_name = reml_script.split("_")[2]
+        decon_name = reml_script.split("decon_")[1].split("_")[1]
         reml_out = reml_script.replace(".REML_cmd", "_REML+tlrc.HEAD")
-        if not os.path.exists(os.path.join(work_dir, reml_out)):
+        if not os.path.exists(reml_out):
             print(f"Starting 3dREMLfit for {decon_name} ...")
             h_cmd = f"""
-                cd {work_dir}
                 tcsh \
                     -x {reml_script} \
                     -dsort {afni_data["epi-nuiss"]} \
                     -GOFORIT
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 25, 4, 6, f"{subj_num}rml", work_dir
+                h_cmd, 25, 4, 6, f"{subj_num}rml", f"{work_dir}/sbatch_out"
             )
         assert os.path.exists(
-            os.path.join(work_dir, reml_out)
+            reml_out
         ), f"{reml_out} failed to write, check resources.afni.deconvolve.run_reml."
         afni_data[f"rml-{decon_name}"] = reml_out.split(".")[0]
 
