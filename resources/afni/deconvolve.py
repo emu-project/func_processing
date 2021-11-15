@@ -14,7 +14,7 @@ import glob
 from . import submit
 
 
-def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
+def write_decon(dur, decon_name, tf_dict, afni_data, work_dir):
     """Generate deconvolution script.
 
     Write a deconvolution script using the pre-processed data, motion, and
@@ -29,10 +29,10 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     ----------
     dur : int/float
         duration of event to model
-    decon_str: str
+    decon_name: str
         name of deconvolution, useful when conducting multiple
         deconvolutions on same session. Will be appended to
-        BIDS task name (decon_<task-name>_<decon_str>).
+        BIDS task name (decon_<task-name>_<decon_name>).
     tf_dict : dict
         timing files dictionary, behavior string is key
         e.g. {"lureFA": "/path/to/tf_task-test_lureFA.txt"}
@@ -45,14 +45,16 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     -------
     afni_data : dict
         updated with REML commands
-        {"dcn-<decon_str>": foo_stats.REML_cmd}
+        {"dcn-<decon_name>": foo_stats.REML_cmd}
 
     Notes
     -----
+    Requires afni_data["epi-scale*"], afni_data["mot-mean"],
+        afni_data["mot-deriv"], and afni_data["mot-censor"].
     Deconvolution files will be written in AFNI format, rather
-    than BIDS. This includes the X.files (cue spooky theme), script,
-    and deconvolved output. Files names will have the format:
-        decon_<bids-task>_<decon_str>
+        than BIDS. This includes the X.files (cue spooky theme), script,
+        and deconvolved output. Files names will have the format:
+            decon_<bids-task>_<decon_name>
     """
 
     # get pre-processed runs
@@ -83,7 +85,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
 
     # set output str
     task_str = epi_list[0].split("_")[2]
-    out_str = f"decon_{task_str}_{decon_str}"
+    out_str = f"decon_{task_str}_{decon_name}"
 
     # build full decon command
     cmd_decon = f"""
@@ -113,7 +115,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
         script.write(cmd_decon)
 
     # run
-    print(f"Running 3dDeconvolve for {decon_str}")
+    print(f"Running 3dDeconvolve for {decon_name}")
     h_cmd = f"""
         cd {work_dir}
         {cmd_decon}
@@ -124,7 +126,7 @@ def write_decon(dur, decon_str, tf_dict, afni_data, work_dir):
     assert os.path.exists(
         os.path.join(work_dir, f"{out_str}_stats.REML_cmd")
     ), f"{out_str}_stats.REML_cmd failed to write, check resources.afni.deconvolve.write_decon."
-    afni_data[f"dcn-{decon_str}"] = f"{out_str}_stats.REML_cmd"
+    afni_data[f"dcn-{decon_name}"] = f"{out_str}_stats.REML_cmd"
 
     return afni_data
 
@@ -147,7 +149,7 @@ def run_reml(work_dir, afni_data):
     afni_data : dict
         updated for nuissance, deconvolved files
         epi-nuiss = nuissance signal file
-        rml-<decon_str> = deconvolved file (<decon_str>_stats_REML+tlrc)
+        rml-<decon_name> = deconvolved file (<decon_name>_stats_REML+tlrc)
     """
     # generate WM timeseries (nuissance file) for task
     epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
@@ -193,10 +195,10 @@ def run_reml(work_dir, afni_data):
     # run each planned deconvolution
     reml_list = [x for k, x in afni_data.items() if "dcn-" in k]
     for reml_script in reml_list:
-        decon_str = reml_script.split("_")[2]
+        decon_name = reml_script.split("_")[2]
         reml_out = reml_script.replace(".REML_cmd", "_REML+tlrc.HEAD")
         if not os.path.exists(os.path.join(work_dir, reml_out)):
-            print(f"Starting 3dREMLfit for {decon_str} ...")
+            print(f"Starting 3dREMLfit for {decon_name} ...")
             h_cmd = f"""
                 cd {work_dir}
                 tcsh \
@@ -210,48 +212,88 @@ def run_reml(work_dir, afni_data):
         assert os.path.exists(
             os.path.join(work_dir, reml_out)
         ), f"{reml_out} failed to write, check resources.afni.deconvolve.run_reml."
-        afni_data[f"rml-{decon_str}"] = reml_out.split(".")[0]
+        afni_data[f"rml-{decon_name}"] = reml_out.split(".")[0]
 
     return afni_data
 
 
-def timing_files(subj, sess, task, decon_name, timing_dir, dset_dir):
+def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs"):
+    """Generate AFNI timing files.
 
-    # For testing
-    subj = "sub-4002"
-    sess = "ses-S2"
-    task = "task-test"
-    decon_name = "UniqueBehs"
-    timing_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/afni/timing_files"
-    dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
+    Use dset/func events.tsv files to generate AFNI-style timing files
+    for each unique behavior (trial_type).
+
+    Parameters
+    ----------
+    dset_dir : str
+        /path/to/BIDS/dset
+    deriv_dir : str
+        /path/to/BIDS/derivatives/afni
+    subj : str
+        BIDS subject string (sub-1234)
+    sess : str
+        BIDS session string (ses-A)
+    task : str
+        BIDS task string (task-test)
+    decon_name : str
+        name of deconvolution given all unique behaviors [default=UniqueBehs]
+
+    Returns
+    -------
+    decon_plan : dict
+        Matches behaviors to timing file
+        {<decon_name>: {
+            beh-A: /path/to/*_desc-behA_events.1D,
+            beh-B: /path/to/*_desc-behB_events.1D,
+            }
+        }
+
+    Notes
+    -----
+    Currently only writes onset time, not married duration.
+    Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.
+    """
 
     # Structure subject output and input Paths based on subject and session (if specified)
-    afni_output = os.path.join(timing_dir, subj, sess)
+    work_dir = os.path.join(deriv_dir, subj, sess, "func")
     source_dir = os.path.join(dset_dir, subj, sess, "func")
-    if not os.path.exists(afni_output):
-        os.makedirs(afni_output)
 
     # If events files are present in source_dir, produce combined events file from all runs
     events_files = sorted(glob.glob(f"{source_dir}/*{task}*_events.tsv"))
     if not events_files:
-        raise ValueError(f"""Task name: "{task}" returned no files""")
+        raise ValueError(
+            f"""Task name: "{task}" returned no events.tsv files in {source_dir}"""
+        )
     events_data = [pd.read_table(x) for x in events_files]
     for idx, _ in enumerate(events_data):
         events_data[idx]["run"] = idx + 1
     events_data = pd.concat(events_data)
 
     # Once events file is complete, iterate across trial_types to produce AFNI style events file
+    decon_plan = {decon_name: {}}
     for trial_type, type_frame in events_data.groupby("trial_type"):
+
+        # determine description name
         valence, ttype, outcome = trial_type.split("_")
         trunc_name = valence + ttype[0].upper() + outcome[0].upper()
         if trial_type == "non_resp_tr":
             trunc_name = "NR"
-        wf = open(afni_output / f"tf_{task}_{decon_name}_{trunc_name}.txt")
+
+        # Write timing file, make sure to start with empty file
+        # since runs will be appended as new lines.
+        timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{trunc_name}_events.1D"
+        open(timing_file, "w").close()
+
+        wf = open(timing_file, "a")
         for _, run_frame in type_frame.groupby("run"):
-            if run_frame.empty():
+            if run_frame.empty:
                 wf.writelines("*")
             else:
-                wf.writelines(" ".join(run_frame["onset"].round().tolist()))
+                h_line = run_frame["onset"].round().tolist()
+                wf.writelines(" ".join(map(str, h_line)))
+            wf.write("\n")
         wf.close()
 
-    print(events_data)
+        decon_plan[decon_name][trunc_name] = timing_file
+
+    return decon_plan

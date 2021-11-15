@@ -77,15 +77,16 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
     # make masks
     afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
+    afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
     # scale data
-    afni_data = process.scale_epi(work_dir, subj_num, sess, task, afni_data)
+    afni_data = process.scale_epi(work_dir, subj_num, afni_data)
 
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
 
     # clean
-    for tmp_file in glob.glob(f"{work_dir}/tmp*"):
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
         os.remove(tmp_file)
     for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
         os.remove(sbatch_file)
@@ -93,7 +94,16 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
     return afni_data
 
 
-def control_deconvolution(afni_dir, subj, sess, afni_data, decon_json, dur=2):
+def control_deconvolution(
+    deriv_dir,
+    dset_dir,
+    subj,
+    sess,
+    task,
+    afni_data,
+    decon_plan=False,
+    dur=2,
+):
     """Generate and run planned deconvolutions.
 
     Use AFNI's 3dDeconvolve and 3dREMLfit to deconvolve EPI
@@ -110,16 +120,21 @@ def control_deconvolution(afni_dir, subj, sess, afni_data, decon_json, dur=2):
 
     Parameters
     ----------
-    afni_dir : str
+    deriv_dir : str
         /path/to/BIDS/project/derivatives/afni
+    dset_dir : str
+        /path/to/BIDS/project/dset
     subj : str
         BIDS subject string (sub-1234)
     sess : str
         BIDS session string (ses-S1)
+    task : str
+        BIDS task string (task-test)
     afni_data : dict
         mapping of AFNI data, returned by control_preproc
-    decon_json : str
-        /path/to/decon/plan.json
+    decon_plan : dict
+        mapping of behvavior to timing files for planned
+        deconvolutions, see notes below
     dur : int/float
         duration of task to model [default=2]
 
@@ -136,7 +151,7 @@ def control_deconvolution(afni_dir, subj, sess, afni_data, decon_json, dur=2):
     Only onset timing files accepted, not married onset:duration! Timing files
     must be AFNI formatted, (one row/run for each beahvior).
 
-    decon_plan.json should have the following format:
+    decon_plan should have the following format:
         {"Decon Tile": {
             "BehA": "/path/to/timing_behA.txt",
             "BehB": "/path/to/timing_behB.txt",
@@ -151,13 +166,16 @@ def control_deconvolution(afni_dir, subj, sess, afni_data, decon_json, dur=2):
             "negLC": "/path/to/negative_lure_cr.txt",
             }
         }
+
+    [decon_plan=False] yields decon_<task>_UniqueBehs*
     """
 
     # setup directories
-    work_dir = os.path.join(afni_dir, subj, sess)
+    work_dir = os.path.join(deriv_dir, subj, sess)
 
-    with open(os.path.join(decon_json)) as jf:
-        decon_plan = json.load(jf)
+    # get default timing files if none supplied
+    if not decon_plan:
+        decon_plan = deconvolve.timing_files(dset_dir, deriv_dir, subj, sess, task)
 
     # write deconvolution
     for decon_str in decon_plan:

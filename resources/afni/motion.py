@@ -154,7 +154,9 @@ def mot_files(work_dir, afni_data):
             "included_volumes": int(num_vol),
             "proportion_excluded": round(1 - (num_vol / num_tot), 3),
         }
-        with open(os.path.join(work_dir, "info_censored_volumes.json"), "w") as jfile:
+        with open(
+            os.path.join(work_dir, "func/info_censored_volumes.json"), "w"
+        ) as jfile:
             json.dump(cen_dict, jfile)
 
     # update afni_data

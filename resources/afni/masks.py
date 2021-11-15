@@ -31,19 +31,27 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
     """
 
     # get list of smoothed/blurred EPI data, determine mask strings
+    num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi"
+
+    assert afni_data[
+        "mask-brain"
+    ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
+
     epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
     intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
 
-    if not os.path.exists(os.path.join(work_dir, intersect_mask)):
+    if not os.path.exists(intersect_mask):
 
         # automask across all runs
         for run_file in epi_list:
-            out_file = f"""func/tmp_mask.{run_file.split("/")[1]}"""
-            if not os.path.exists(os.path.join(work_dir, out_file)):
-                print("Making EPI mask ...")
+            out_file = "tmp_mask.sub".join(run_file.rsplit("sub", 1))
+            if not os.path.exists(out_file):
+                print(f"Making {out_file} ...")
                 h_cmd = f"""
-                    cd {work_dir}
                     3dAutomask -prefix {out_file} {run_file}
                 """
                 h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
@@ -51,26 +59,26 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         # combine run masks, make inter mask
         print("Making intersection mask ...")
         h_cmd = f"""
-            cd {work_dir}
+            cd {work_dir}/func
 
             3dmask_tool \
-                -inputs func/tmp_mask.*.nii.gz \
+                -inputs tmp_mask.*.nii.gz \
                 -union \
-                -prefix func/tmp_mask_allRuns.nii.gz
+                -prefix tmp_mask_allRuns.nii.gz
 
             3dmask_tool \
-                -input func/tmp_mask_allRuns.nii.gz {brain_mask} \
+                -input tmp_mask_allRuns.nii.gz {brain_mask} \
                 -inter \
                 -prefix {intersect_mask}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}uni", work_dir
+            h_cmd, 1, 1, 1, f"{subj_num}uni", f"{work_dir}/sbatch_out"
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
     # fill dict
     assert os.path.exists(
-        os.path.join(work_dir, intersect_mask)
+        intersect_mask
     ), f"{intersect_mask} failed to write, check resources.afni.masks.make_intersect_mask."
     afni_data["mask-int"] = intersect_mask
 
@@ -104,6 +112,15 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
     # determine GM, WM tissue list, mask string, set up switch
     # for mask naming
+    num_prob = len([y for x, y in afni_data.items() if "mask-prob" in x])
+    assert (
+        num_prob > 0
+    ), "ERROR: afni_data['mask-prob*'] not found. Check resources.afni.copy.copy_data."
+
+    assert afni_data[
+        "mask-brain"
+    ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
+
     tiss_list = [x for k, x in afni_data.items() if "mask-prob" in k]
     mask_str = afni_data["mask-brain"]
     switch_name = {
@@ -119,12 +136,10 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
         mask_file = switch_name[tiss_type]
 
         # work
-        if not os.path.exists(os.path.join(work_dir, mask_file)):
-            tmp_file = f"""anat/tmp_bin_{tiss.split("/")[1]}"""
+        if not os.path.exists(mask_file):
+            tmp_file = "tmp_bin.sub".join(tiss.rsplit("sub", 1))
             print(f"Making binary tissue mask for {tiss} ...")
             h_cmd = f"""
-                cd {work_dir}
-
                 c3d \
                     {tiss} \
                     -thresh {thresh} 1 1 0 \
@@ -136,13 +151,13 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
                     -prefix {mask_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}tiss", work_dir
+                h_cmd, 1, 1, 1, f"{subj_num}tiss", f"{work_dir}/sbatch_out"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
         # fill dict
         assert os.path.exists(
-            os.path.join(work_dir, mask_file)
+            mask_file
         ), f"{mask_file} failed to write, check resources.afni.masks.make_tissue_masks."
         afni_data[f"mask-eroded{tiss_type}"] = mask_file
 
@@ -179,23 +194,31 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     """
 
     # make masks of voxels where some data exists (mask_min)
-    epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
+    num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.copy.copy_data"
 
+    assert afni_data[
+        "mask-brain"
+    ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
+
+    epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
     mask_str = afni_data["mask-brain"]
     mask_min = mask_str.replace("desc-brain", "desc-minval")
     mask_min = mask_min.replace(sess, f"{sess}_{task}")
 
-    if not os.path.exists(os.path.join(work_dir, mask_min)):
+    if not os.path.exists(mask_min):
         min_list = []
         for run in epi_pre:
-            tmp_min_file = f"""func/tmp_mask_min.{run.split("/")[1]}"""
+            # tmp_min_file = f"""func/tmp_mask_min.{run.split("/")[1]}"""
+            tmp_min_file = "tmp_mask_min.sub".join(run.rsplit("sub", 1))
             min_list.append(tmp_min_file)
-            if not os.path.exists(os.path.join(work_dir, f"tmp_mask_min.{run}")):
-                tmp_bin_file = f"""func/tmp_mask_bin.{run.split("/")[1]}"""
+            if not os.path.exists(tmp_min_file):
+                # tmp_bin_file = f"""func/tmp_mask_bin.{run.split("/")[1]}"""
+                tmp_bin_file = "tmp_mask_bin.sub".join(run.rsplit("sub", 1))
                 print("Making various masks ...")
                 h_cmd = f"""
-                    cd {work_dir}
-
                     3dcalc \
                         -overwrite \
                         -a {run} \
@@ -211,11 +234,11 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
 
         print("Making minimum value mask ...")
         h_cmd = f"""
-            cd {work_dir}
+            cd {work_dir}/func
 
             3dMean \
                 -datum short \
-                -prefix func/tmp_mask_mean_{task}.nii.gz \
+                -prefix tmp_mask_mean_{task}.nii.gz \
                 {" ".join(min_list)}
 
             3dcalc \
@@ -224,12 +247,12 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
                 -prefix {mask_min}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}min", work_dir
+            h_cmd, 1, 1, 1, f"{subj_num}min", f"{work_dir}/sbatch_out"
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
     assert os.path.exists(
-        os.path.join(work_dir, mask_min)
+        mask_min
     ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
     afni_data["mask-min"] = mask_min
 

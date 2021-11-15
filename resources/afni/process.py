@@ -44,10 +44,14 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     """
 
     # get list of pre-processed EPI files
+    num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-preproc?'] not found. Check resources.afni.copy.copy_data"
     epi_list = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     # determine voxel dim i, calc blur size
-    h_cmd = f"3dinfo -dk {work_dir}/{epi_list[0]}"
+    h_cmd = f"3dinfo -dk {epi_list[0]}"
     h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
     grid_size = h_out.decode("utf-8").strip()
     blur_size = math.ceil(blur_mult * float(grid_size))
@@ -56,10 +60,9 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     for epi_file in epi_list:
         epi_blur = epi_file.replace("desc-preproc", "desc-smoothed")
         run_num = epi_file.split("run-")[1].split("_")[0]
-        if not os.path.exists(os.path.join(work_dir, epi_blur)):
+        if not os.path.exists(epi_blur):
             print(f"Starting blur for {epi_file} ...")
             h_cmd = f"""
-                cd {work_dir}
                 3dmerge \
                     -1blur_fwhm {blur_size} \
                     -doall \
@@ -67,13 +70,13 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
                     {epi_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", work_dir
+                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", f"{work_dir}/sbatch_out"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
         # update afni_data
         assert os.path.exists(
-            os.path.join(work_dir, epi_blur)
+            epi_blur
         ), f"{epi_blur} failed to write, check resources.afni.process.blur_epi."
         afni_data[f"epi-blur{run_num}"] = epi_blur
 
@@ -105,6 +108,15 @@ def scale_epi(work_dir, subj_num, afni_data):
     """
 
     # determine relevant files
+    num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi."
+
+    assert afni_data[
+        "mask-min"
+    ], "ERROR: afni_data['mask-min'] not found. Check resources.afni.masks.make_minimum_masks."
+
     epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
     mask_min = afni_data["mask-min"]
 
@@ -129,7 +141,7 @@ def scale_epi(work_dir, subj_num, afni_data):
                     -prefix {epi_scale}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", work_dir
+                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{work_dir}/sbatch"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 

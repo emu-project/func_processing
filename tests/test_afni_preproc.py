@@ -35,7 +35,8 @@ afni_dir = os.path.join(deriv_dir, "afni")
 work_dir = os.path.join(afni_dir, subj, sess)
 anat_dir = os.path.join(work_dir, "anat")
 func_dir = os.path.join(work_dir, "func")
-for h_dir in [anat_dir, func_dir]:
+sbatch_dir = os.path.join(work_dir, "sbatch_out")
+for h_dir in [anat_dir, func_dir, sbatch_dir]:
     if not os.path.exists(h_dir):
         os.makedirs(h_dir)
 
@@ -43,6 +44,7 @@ for h_dir in [anat_dir, func_dir]:
 # get fMRIprep data
 afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
 
+# %%
 # blur data
 subj_num = subj.split("-")[-1]
 afni_data = process.blur_epi(work_dir, subj_num, afni_data)
@@ -50,7 +52,11 @@ afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 # %%
 # make masks
 afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
+
+# %%
 afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
+
+# %%
 afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
 # %%

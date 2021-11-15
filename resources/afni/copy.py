@@ -34,8 +34,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     file_dict : dict
         files copied from derivatives/fMRIprep to derivatives/afni
         e.g. {
-            "mask-brain": "anat/<BIDS-str>_desc-brain_mask.nii.gz",
-            "struct-t1": "anat/<BIDS-str>_desc-preproc_T1w.nii.gz",
+            "mask-brain": "/path/to/anat/<BIDS-str>_desc-brain_mask.nii.gz",
+            "struct-t1": "/path/to/anat/<BIDS-str>_desc-preproc_T1w.nii.gz",
             }
 
     Notes
@@ -82,8 +82,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     anat_dir = os.path.join(work_dir, "anat")
     for anat in anat_files:
         anat_name = anat.split("/")[-1]
-        file_dict[file_name_switch[anat_name]] = f"anat/{anat_name}"
         out_file = os.path.join(anat_dir, anat_name)
+        file_dict[file_name_switch[anat_name]] = out_file
         if not os.path.exists(out_file):
             print(f"Copying {anat_name} ...")
             shutil.copyfile(anat, out_file)
@@ -113,8 +113,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
 
     for count, epi in enumerate(epi_files):
         epi_name = epi.split("/")[-1]
-        file_dict[f"epi-preproc{count + 1}"] = f"func/{epi_name}"
         out_file = os.path.join(func_dir, epi_name)
+        file_dict[f"epi-preproc{count + 1}"] = out_file
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(epi, out_file)
@@ -125,8 +125,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     # copy mot files, update dict (key = mot-confound?)
     for count, mot in enumerate(mot_files):
         mot_name = mot.split("/")[-1]
-        file_dict[f"mot-confound{count + 1}"] = f"func/{mot_name}"
         out_file = os.path.join(func_dir, mot_name)
+        file_dict[f"mot-confound{count + 1}"] = out_file
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(mot, out_file)
