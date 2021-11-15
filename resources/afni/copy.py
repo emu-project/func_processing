@@ -12,7 +12,8 @@ import shutil
 def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     """Get relevant fMRIprep files, rename.
 
-    Copies select fMRIprep files into AFNI format.
+    Copies select fMRIprep files into AFNI derivatives, prepares
+    for AFNI pre-processing steps.
 
     Parameters
     ----------
@@ -33,8 +34,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     file_dict : dict
         files copied from derivatives/fMRIprep to derivatives/afni
         e.g. {
-            "mask-brain": "<BIDS-str>_desc-brain_mask.nii.gz",
-            "struct-t1": "<BIDS-str>_desc-preproc_T1w.nii.gz",
+            "mask-brain": "anat/<BIDS-str>_desc-brain_mask.nii.gz",
+            "struct-t1": "anat/<BIDS-str>_desc-preproc_T1w.nii.gz",
             }
 
     Notes
@@ -78,10 +79,11 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
 
     # copy anat files, update file_dict
     file_dict = {}
+    anat_dir = os.path.join(work_dir, "anat")
     for anat in anat_files:
         anat_name = anat.split("/")[-1]
-        file_dict[file_name_switch[anat_name]] = anat_name
-        out_file = os.path.join(work_dir, anat_name)
+        file_dict[file_name_switch[anat_name]] = f"anat/{anat_name}"
+        out_file = os.path.join(anat_dir, anat_name)
         if not os.path.exists(out_file):
             print(f"Copying {anat_name} ...")
             shutil.copyfile(anat, out_file)
@@ -106,11 +108,13 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         mot_files
     ), "Number of task EPI files != condound files, check resources.afni.copy."
 
-    # copy EPI files, update dict
+    # copy EPI files, update dict (key = epi-preproc?)
+    func_dir = os.path.join(work_dir, "func")
+
     for count, epi in enumerate(epi_files):
         epi_name = epi.split("/")[-1]
-        file_dict[f"epi-preproc{count + 1}"] = epi_name
-        out_file = os.path.join(work_dir, epi_name)
+        file_dict[f"epi-preproc{count + 1}"] = f"func/{epi_name}"
+        out_file = os.path.join(func_dir, epi_name)
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(epi, out_file)
@@ -118,11 +122,11 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
 
-    # copy mot files, update dict
+    # copy mot files, update dict (key = mot-confound?)
     for count, mot in enumerate(mot_files):
         mot_name = mot.split("/")[-1]
-        file_dict[f"mot-confound{count + 1}"] = mot_name
-        out_file = os.path.join(work_dir, mot_name)
+        file_dict[f"mot-confound{count + 1}"] = f"func/{mot_name}"
+        out_file = os.path.join(func_dir, mot_name)
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             shutil.copyfile(mot, out_file)

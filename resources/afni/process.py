@@ -39,6 +39,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
     Notes
     -----
+    Requires afni_data["epi-preproc*"] keys.
     Determining blur multiplier based off voxel's dimension K.
     """
 
@@ -79,7 +80,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     return afni_data
 
 
-def scale_epi(work_dir, subj_num, sess, task, afni_data):
+def scale_epi(work_dir, subj_num, afni_data):
     """Scale EPI runs.
 
     Scale timeseries to center = 100 using AFNI's 3dcalc.
@@ -90,87 +91,39 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
         /path/to/derivatives/afni/sub-1234/ses-A
     subj_num : int/str
         subject identifier, for sbatch job name
-    sess : str
-        BIDS session string (ses-S1)
-    task : str
-        BIDS task string (task-test)
+    afni_data : dict
+        afni data dict for passing files
 
     Returns
     -------
     afni_dict : dict
-        updated with mask, epi keys
-        mask-min = mask of minimum value for task
         epi-scale? = scaled EPI for run-?
+
+    Notes
+    -----
+    Requires afni_data["epi-blur*"], afni_data["mask-min"].
     """
 
-    # make masks of voxels where some data exists
-    epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
-
-    mask_str = afni_data["mask-brain"]
-    mask_min = mask_str.replace("desc-brain", "desc-minval")
-    mask_min = mask_min.replace(sess, f"{sess}_{task}")
-
-    if not os.path.exists(os.path.join(work_dir, mask_min)):
-        min_list = []
-        for run in epi_pre:
-            min_list.append(f"tmp_mask_min.{run}")
-            if not os.path.exists(os.path.join(work_dir, f"tmp_mask_min.{run}")):
-                print("Making various masks ...")
-                h_cmd = f"""
-                    cd {work_dir}
-
-                    3dcalc \
-                        -overwrite \
-                        -a {run} \
-                        -expr 1 \
-                        -prefix tmp_mask_bin.{run}
-
-                    3dTstat \
-                        -min \
-                        -prefix tmp_mask_min.{run} \
-                        tmp_mask_bin.{run}
-                """
-                h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
-
-        print("Making minimum value mask ...")
-        h_cmd = f"""
-            cd {work_dir}
-
-            3dMean \
-                -datum short \
-                -prefix tmp_mask_mean_{task}.nii.gz \
-                {" ".join(min_list)}
-
-            3dcalc \
-                -a tmp_mask_mean_{task}.nii.gz \
-                -expr 'step(a-0.999)' \
-                -prefix {mask_min}
-        """
-        job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}min", work_dir
-        )
-        print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
-
-    assert os.path.exists(
-        os.path.join(work_dir, mask_min)
-    ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
-    afni_data["mask-min"] = mask_min
-
-    # scale data timeseries
+    # determine relevant files
     epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
+    mask_min = afni_data["mask-min"]
 
+    # scale each blurred/smoothed file
     for run in epi_blur:
         epi_scale = run.replace("desc-smoothed", "desc-scaled")
         run_num = run.split("run-")[1].split("_")[0]
+
+        # do work if missing
         if not os.path.exists(os.path.join(work_dir, epi_scale)):
+            tmp_file = f"""func/tmp_tstat.{run.split("/")[1]}"""
             print(f"Starting scaling for {run} ...")
             h_cmd = f"""
                 cd {work_dir}
 
-                3dTstat -prefix tmp_tstat.{run} {run}
+                3dTstat -prefix {tmp_file} {run}
 
                 3dcalc -a {run} \
-                    -b tmp_tstat.{run} \
+                    -b {tmp_file} \
                     -c {mask_min} \
                     -expr 'c * min(200, a/b*100)*step(a)*step(b)' \
                     -prefix {epi_scale}
@@ -180,6 +133,7 @@ def scale_epi(work_dir, subj_num, sess, task, afni_data):
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
+        # update dict
         assert os.path.exists(
             os.path.join(work_dir, epi_scale)
         ), f"{epi_scale} failed to write, check resources.afni.process.scale_epi."

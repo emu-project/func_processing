@@ -30,7 +30,6 @@ Json file for -t option should have the following format:
 import os
 import sys
 import json
-from argparse import ArgumentParser, RawTextHelpFormatter
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)

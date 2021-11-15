@@ -24,6 +24,10 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
     -------
     afni_data : dict
         updated with mask key "mask-int"
+
+    Notes
+    -----
+    Requires afni_data["epi-blur*"] and afni_data["mask-brain"].
     """
 
     # get list of smoothed/blurred EPI data, determine mask strings
@@ -35,11 +39,12 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
 
         # automask across all runs
         for run_file in epi_list:
-            if not os.path.exists(os.path.join(work_dir, f"tmp_mask.{run_file}")):
+            out_file = f"""func/tmp_mask.{run_file.split("/")[1]}"""
+            if not os.path.exists(os.path.join(work_dir, out_file)):
                 print("Making EPI mask ...")
                 h_cmd = f"""
                     cd {work_dir}
-                    3dAutomask -prefix tmp_mask.{run_file} {run_file}
+                    3dAutomask -prefix {out_file} {run_file}
                 """
                 h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
 
@@ -49,12 +54,12 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
             cd {work_dir}
 
             3dmask_tool \
-                -inputs tmp_mask.*.nii.gz \
+                -inputs func/tmp_mask.*.nii.gz \
                 -union \
-                -prefix tmp_mask_allRuns.nii.gz
+                -prefix func/tmp_mask_allRuns.nii.gz
 
             3dmask_tool \
-                -input tmp_mask_allRuns.nii.gz {brain_mask} \
+                -input func/tmp_mask_allRuns.nii.gz {brain_mask} \
                 -inter \
                 -prefix {intersect_mask}
         """
@@ -82,7 +87,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        should contain smoothed data from process.blur_epi
+        afni dictionary used for passing files
     thresh : float [default=0.5]
         value for thresholding probseg files
 
@@ -90,7 +95,11 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     -------
     afni_data : dict
         updated with "mask-erodedGM", "mask-erodedWM" keys
-        for eroded, binary masks
+        for eroded, binary gray and white matter masks
+
+    Notes
+    -----
+    Requires afni_data["mask-prob"], afni_data["mask-brain"].
     """
 
     # determine GM, WM tissue list, mask string, set up switch
@@ -111,6 +120,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         # work
         if not os.path.exists(os.path.join(work_dir, mask_file)):
+            tmp_file = f"""anat/tmp_bin_{tiss.split("/")[1]}"""
             print(f"Making binary tissue mask for {tiss} ...")
             h_cmd = f"""
                 cd {work_dir}
@@ -118,10 +128,10 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
                 c3d \
                     {tiss} \
                     -thresh {thresh} 1 1 0 \
-                    -o tmp_bin_{tiss}
+                    -o {tmp_file}
 
                 3dmask_tool \
-                    -input tmp_bin_{tiss} \
+                    -input {tmp_file} \
                     -dilate_input -1 \
                     -prefix {mask_file}
             """
@@ -135,5 +145,92 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
             os.path.join(work_dir, mask_file)
         ), f"{mask_file} failed to write, check resources.afni.masks.make_tissue_masks."
         afni_data[f"mask-eroded{tiss_type}"] = mask_file
+
+    return afni_data
+
+
+def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
+    """Make a mask of where minimum signal exists in EPI space.
+
+    Used to help with the scaling step, so low values do not
+    bias the scale. Based off "3dTstat -min".
+
+    Parameters
+    ----------
+    work_dir : str
+        /path/to/derivatives/afni/sub-1234/ses-A
+    subj_num : int/str
+        subject identifier, for sbatch job name
+    sess : str
+        BIDS session string (ses-A)
+    task : str
+        BIDS task string (task-test)
+    afni_data : dict
+        afni dictionary used for passing files
+
+    Returns
+    -------
+    afni_dict : dict
+        mask-min = mask of minimum value for task
+
+    Notes
+    -----
+    Requires afni_data["epi-preproc*"], afni_data["mask-brain"].
+    """
+
+    # make masks of voxels where some data exists (mask_min)
+    epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
+
+    mask_str = afni_data["mask-brain"]
+    mask_min = mask_str.replace("desc-brain", "desc-minval")
+    mask_min = mask_min.replace(sess, f"{sess}_{task}")
+
+    if not os.path.exists(os.path.join(work_dir, mask_min)):
+        min_list = []
+        for run in epi_pre:
+            tmp_min_file = f"""func/tmp_mask_min.{run.split("/")[1]}"""
+            min_list.append(tmp_min_file)
+            if not os.path.exists(os.path.join(work_dir, f"tmp_mask_min.{run}")):
+                tmp_bin_file = f"""func/tmp_mask_bin.{run.split("/")[1]}"""
+                print("Making various masks ...")
+                h_cmd = f"""
+                    cd {work_dir}
+
+                    3dcalc \
+                        -overwrite \
+                        -a {run} \
+                        -expr 1 \
+                        -prefix {tmp_bin_file}
+
+                    3dTstat \
+                        -min \
+                        -prefix {tmp_min_file} \
+                        {tmp_bin_file}
+                """
+                h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+
+        print("Making minimum value mask ...")
+        h_cmd = f"""
+            cd {work_dir}
+
+            3dMean \
+                -datum short \
+                -prefix func/tmp_mask_mean_{task}.nii.gz \
+                {" ".join(min_list)}
+
+            3dcalc \
+                -a func/tmp_mask_mean_{task}.nii.gz \
+                -expr 'step(a-0.999)' \
+                -prefix {mask_min}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 1, 1, f"{subj_num}min", work_dir
+        )
+        print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+
+    assert os.path.exists(
+        os.path.join(work_dir, mask_min)
+    ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
+    afni_data["mask-min"] = mask_min
 
     return afni_data

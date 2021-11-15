@@ -38,17 +38,13 @@ def mot_files(work_dir, afni_data):
 
     Notes
     -----
+    Requires afni_data[mot-confound*].
+
     As runs do not have an equal number of volumes, motion/censor files
     for each run are concatenated into a single file rather than managing
     zero padding.
 
     Writes 1D files - AFNI reads tsv as containing a header!
-
-    Writes:
-        <fMRIprep_desc-mean_timeseries.1D
-        <fMRIprep_desc-deriv_timeseries.1D
-        <fMRIprep_desc-censor_timeseries.1D
-        info_censored_volumes.json
     """
 
     # determine relevant col labels
