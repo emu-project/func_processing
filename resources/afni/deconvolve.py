@@ -198,10 +198,10 @@ def run_reml(work_dir, afni_data):
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 1, 4, 1, f"{subj_num}wts", f"{work_dir}/sbatch_out"
         )
-        assert os.path.exists(
-            nuiss_file
-        ), f"{nuiss_file} failed to write, check resources.afni.deconvolve.run_reml."
-        afni_data["epi-nuiss"] = nuiss_file
+    assert os.path.exists(
+        nuiss_file
+    ), f"{nuiss_file} failed to write, check resources.afni.deconvolve.run_reml."
+    afni_data["epi-nuiss"] = nuiss_file
 
     # run each planned deconvolution
     num_dcn = len([y for x, y in afni_data.items() if "dcn-" in x])

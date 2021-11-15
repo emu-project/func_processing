@@ -7,7 +7,6 @@ fMRIprep, and then deconvolve EPI data.
 import os
 import sys
 import glob
-import json
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
@@ -16,7 +15,14 @@ from resources.afni import copy, process, masks, motion, deconvolve
 
 
 # %%
-def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
+def control_preproc(
+    prep_dir,
+    afni_dir,
+    subj,
+    sess,
+    task,
+    tplflow_str="space-MNIPediatricAsym_cohort-5_res-2",
+):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -38,7 +44,7 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
         BIDS task string (task-test)
     tplflow_str = str
         template ID string, for finding fMRIprep output in
-        template space (space-MNIPediatricAsym_cohort-5_res-2)
+        template space [default=space-MNIPediatricAsym_cohort-5_res-2]
 
     Returns
     -------
@@ -64,8 +70,12 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
 
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
-    if not os.path.exists(work_dir):
-        os.makedirs(work_dir)
+    anat_dir = os.path.join(work_dir, "anat")
+    func_dir = os.path.join(work_dir, "func")
+    sbatch_dir = os.path.join(work_dir, "sbatch_out")
+    for h_dir in [anat_dir, func_dir, sbatch_dir]:
+        if not os.path.exists(h_dir):
+            os.makedirs(h_dir)
 
     # get fMRIprep data
     afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
@@ -88,14 +98,12 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str):
     # clean
     for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
         os.remove(tmp_file)
-    for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
-        os.remove(sbatch_file)
 
     return afni_data
 
 
 def control_deconvolution(
-    deriv_dir,
+    afni_dir,
     dset_dir,
     subj,
     sess,
@@ -120,7 +128,7 @@ def control_deconvolution(
 
     Parameters
     ----------
-    deriv_dir : str
+    afni_dir : str
         /path/to/BIDS/project/derivatives/afni
     dset_dir : str
         /path/to/BIDS/project/dset
@@ -134,7 +142,7 @@ def control_deconvolution(
         mapping of AFNI data, returned by control_preproc
     decon_plan : dict
         mapping of behvavior to timing files for planned
-        deconvolutions, see notes below
+        deconvolutions, see notes below [default=False]
     dur : int/float
         duration of task to model [default=2]
 
@@ -171,22 +179,21 @@ def control_deconvolution(
     """
 
     # setup directories
-    work_dir = os.path.join(deriv_dir, subj, sess)
+    work_dir = os.path.join(afni_dir, subj, sess)
 
     # get default timing files if none supplied
     if not decon_plan:
-        decon_plan = deconvolve.timing_files(dset_dir, deriv_dir, subj, sess, task)
+        decon_plan = deconvolve.timing_files(dset_dir, afni_dir, subj, sess, task)
 
-    # write deconvolution
-    for decon_str in decon_plan:
-        tf_dict = decon_plan[decon_str]
-        afni_data = deconvolve.write_decon(dur, decon_str, tf_dict, afni_data, work_dir)
+    # generate decon matrices, scripts
+    for decon_name, tf_dict in decon_plan.items():
+        afni_data = deconvolve.write_decon(decon_name, tf_dict, afni_data, work_dir)
 
-    # run deconvolution
+    # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)
 
     # clean
-    for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
-        os.remove(sbatch_file)
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+        os.remove(tmp_file)
 
     return afni_data
