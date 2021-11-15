@@ -126,14 +126,11 @@ def scale_epi(work_dir, subj_num, afni_data):
         run_num = run.split("run-")[1].split("_")[0]
 
         # do work if missing
-        if not os.path.exists(os.path.join(work_dir, epi_scale)):
-            tmp_file = f"""func/tmp_tstat.{run.split("/")[1]}"""
+        if not os.path.exists(epi_scale):
+            tmp_file = "tmp_tstat.sub".join(run.rsplit("sub", 1))
             print(f"Starting scaling for {run} ...")
             h_cmd = f"""
-                cd {work_dir}
-
                 3dTstat -prefix {tmp_file} {run}
-
                 3dcalc -a {run} \
                     -b {tmp_file} \
                     -c {mask_min} \
@@ -147,7 +144,7 @@ def scale_epi(work_dir, subj_num, afni_data):
 
         # update dict
         assert os.path.exists(
-            os.path.join(work_dir, epi_scale)
+            epi_scale
         ), f"{epi_scale} failed to write, check resources.afni.process.scale_epi."
         afni_data[f"epi-scale{run_num}"] = epi_scale
 
