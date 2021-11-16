@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 
-"""Title.
+"""Pre-process and deconvolve fMRIprep output.
 
-Desc.
+Incorpoarte fMRIprep output into an AFNI workflow, finish
+pre-processing and deconvolve. Will attempt to submit a batch
+of participants to a Slurm scheduler every 12 hours over
+the course of a week.
 
-Notes
------
-Input directory for -j should contain a json for each subject
-in study (name format: subj-1234*.json). See
+By default, all unique behaviors (and non-responses) are modelled
+for each subject/session, with user control via --json-dir. Input
+directory for --json-dir should contain a json for each subject
+in experiment (name format: subj-1234*.json). See
 workflow.control_afni.control_deconvolution for guidance
-in formatting json file.
+in formatting the dictionary.
+
+Default timing files written specifically for EMU (see
+resources.afni.deconvolve.timing_files).
+
+Supports task-based analyses, resting state will come soon.
 
 Examples
 --------
@@ -24,7 +32,6 @@ sbatch --job-name=runAfni \\
     -s ses-S1 \\
     -t task-study \\
     -c /home/nmuncy/compute/func_processing
-
 """
 # %%
 import os
@@ -44,6 +51,7 @@ def submit_jobs(
     prep_dir,
     dset_dir,
     afni_dir,
+    afni_final,
     subj,
     sess,
     task,
@@ -53,9 +61,43 @@ def submit_jobs(
     dur,
     decon_plan,
 ):
-    """Title.
+    """Schedule work for single participant.
 
-    Desc.
+    Submit workflow.control_afni for a single subject, session,
+    and task. Take data from fMRIprep output through deconvolution.
+    Finally, clean up, and move relevant files to <afni_final>.
+
+    Parameters
+    ----------
+    prep_dir : str
+        path to project derivatives/fmriprep
+    dset_dir : str
+        path to project dset
+    afni_dir : str
+        path to /scratch directory, for intermediates
+    afni_final : str
+        path to project derivatives/afni
+    subj : str
+        BIDS subject string
+    sess : str
+        BIDS session string
+    task : str
+        BIDS task string
+    code_dir : str
+        path to clone of github.com/emu-project/func_processing.git
+    slurm_dir : str
+        path to location for capturing sbatch stdout/err
+    tplflow_str : str
+        template_flow identifier string
+    dur : int/float/str
+        duration of event to be modeled
+    decon_plan : dict/None
+        planned deconvolution with behavior: timing file mappings
+
+    Returns
+    -------
+    h_out, h_err : str
+        stdout, stderr of sbatch submission
     """
 
     subj_num = subj.split("-")[-1]
@@ -72,6 +114,8 @@ def submit_jobs(
         #SBATCH --qos=pq_madlab
 
         import sys
+        import shutil
+        import glob
         sys.path.append("{code_dir}")
         from workflow import control_afni
 
@@ -94,8 +138,21 @@ def submit_jobs(
             "{dur}",
             {decon_plan},
         )
+        print(f"Finished {{subj}} {{sess}} {{task}} with: \\n {{afni_data}}")
 
-        print(f"Finished with \\n {{afni_data}}")
+        # clean up
+        shutil.rmtree(os.path.join("{afni_dir}", "sbatch_out"))
+        clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}", "func")
+        clean_list = ["preproc", "smoothed"]
+        for c_str in clean_list:
+            for h_file in glob.glob(f"{{clean_dir}}/*{{c_str}}_bold.nii.gz"):
+                os.remove(h_file)
+
+        # copy important files to /home/data
+        src = os.path.join("{afni_dir}", "{subj}")
+        dst = os.path.join("{afni_final}", "{subj}")
+        shutil.copytree(src, dst)
+
     """
 
     # write script for review, run it
@@ -129,7 +186,7 @@ def get_args():
     parser.add_argument(
         "--batch-num",
         type=int,
-        default=1,
+        default=8,
         help=textwrap.dedent(
             """\
             number of subjects to submit at one time
@@ -245,6 +302,9 @@ def main():
     # set up
     dset_dir = os.path.join(proj_dir, "dset")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
+    afni_final = os.path.join(proj_dir, "derivatives/afni")
+    if not os.path.exists(afni_final):
+        os.makedirs(afni_final)
 
     # wait 12H between submission attempts
     wait_time = 43200
@@ -300,9 +360,10 @@ def main():
                     afni_check.append(
                         os.path.exists(
                             os.path.join(
-                                afni_dir,
+                                afni_final,
                                 subj,
                                 sess,
+                                "func",
                                 f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
                             )
                         )
@@ -312,9 +373,10 @@ def main():
                 afni_check.append(
                     os.path.exists(
                         os.path.join(
-                            afni_dir,
+                            afni_final,
                             subj,
                             sess,
+                            "func",
                             f"decon_{task}_UniqueBehs_stats_REML+tlrc.HEAD",
                         )
                     )
@@ -346,6 +408,7 @@ def main():
                 prep_dir,
                 dset_dir,
                 afni_dir,
+                afni_final,
                 subj,
                 sess,
                 task,
