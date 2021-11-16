@@ -23,7 +23,6 @@ Examples
 --------
 sbatch --job-name=runAfni \\
     --output=runAfni_log \\
-    --time=00:10:00 \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
