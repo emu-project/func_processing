@@ -110,7 +110,7 @@ def control_deconvolution(
     sess,
     task,
     dur,
-    decon_plan=None,
+    decon_plan,
 ):
     """Generate and run planned deconvolutions.
 

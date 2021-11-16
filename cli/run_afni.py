@@ -21,9 +21,8 @@ sbatch --job-name=runAfni \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_afni.py \\
-    -s ses-S2 \\
-    -t task-test \\
-    -j /home/data/madlab/McMakin_EMUR01/derivatives/afni/decon_plans \\
+    -s ses-S1 \\
+    -t task-study \\
     -c /home/nmuncy/compute/func_processing
 
 """
@@ -50,27 +49,14 @@ def submit_jobs(
     task,
     code_dir,
     slurm_dir,
-    tplflow_str=None,
-    dur=None,
-    decon_plan=None,
+    tplflow_str,
+    dur,
+    decon_plan,
 ):
     """Title.
 
     Desc.
     """
-
-    # Make arguments, account for optional parameters in workflow.control_afni,
-    # use conditionals rather than mess with kwargs since I'd still be writing
-    # multiple conditionals.
-    preproc_options = [prep_dir, afni_dir, subj, sess, task]
-    decon_options = [afni_dir, dset_dir, subj, sess, task]
-    if tplflow_str:
-        preproc_options.append(tplflow_str)
-        decon_options.append(tplflow_str)
-    if dur:
-        decon_options.append(dur)
-    if decon_plan:
-        decon_options.append(decon_plan)
 
     subj_num = subj.split("-")[-1]
 
@@ -90,22 +76,33 @@ def submit_jobs(
         from workflow import control_afni
 
         afni_data = control_afni.control_preproc(
-            {", ".join(preproc_options)}
+            "{prep_dir}",
+            "{afni_dir}",
+            "{subj}",
+            "{sess}",
+            "{task}",
+            "{tplflow_str}",
         )
 
         afni_data = control_afni.control_deconvolution(
-            afni_data, {", ".join(decon_options)}
+            afni_data,
+            "{afni_dir}",
+            "{dset_dir}",
+            "{subj}",
+            "{sess}",
+            "{task}",
+            "{dur}",
+            {decon_plan},
         )
 
         print(f"Finished with \\n {{afni_data}}")
     """
+
+    # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
-    print(h_cmd)
-    return
     py_script = os.path.join(slurm_dir, f"preproc_decon_{subj_num}.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
-
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
     )
@@ -117,61 +114,90 @@ def submit_jobs(
 def get_args():
     """Get and parse arguments"""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+
     parser.add_argument(
-        "-p",
         "--proj-dir",
-        help="/path/to/BIDS/project/dir, default=/home/data/madlab/McMakin_EMUR01",
         type=str,
         default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+            path to BIDS-formatted project directory
+            (default : %(default)s)
+            """
+        ),
     )
     parser.add_argument(
-        "-n",
         "--batch-num",
-        help="number of subjects to submit at one time, default=8",
         type=int,
-        default=8,
+        default=1,
+        help=textwrap.dedent(
+            """\
+            number of subjects to submit at one time
+            (default : %(default)s)
+            """
+        ),
     )
     parser.add_argument(
-        "-a",
         "--tplflow-str",
-        help="template ID string, for finding fMRIprep output in template space, default=space-MNIPediatricAsym_cohort-5_res-2",
         type=str,
         default="space-MNIPediatricAsym_cohort-5_res-2",
+        help=textwrap.dedent(
+            """\
+            template ID string, for finding fMRIprep output in template space,
+            (default : %(default)s)
+        """
+        ),
     )
     parser.add_argument(
-        "-d",
         "--dur",
-        help="event duration, for deconvolution modulation [default=2]",
         type=str,
         default="2",
+        help=textwrap.dedent(
+            """\
+            event duration, for deconvolution modulation
+            (default : %(default)s)
+            """
+        ),
     )
     parser.add_argument(
-        "-d",
-        "--dur",
-        help="event duration, for deconvolution modulation [default=2]",
+        "--afni-dir",
         type=str,
-        default="2",
+        default="/scratch/madlab/McMakin_EMUR01/derivatives/afni",
+        help=textwrap.dedent(
+            """\
+            Path to location for making AFNI intermediates
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--json-dir",
+        type=str,
+        default=None,
+        help=textwrap.dedent(
+            """\
+            Path to directory containing JSON deconvolution plans for each
+            subject. Must be titled <subject>*.json. See notes in
+            workflow.control_afni.control_deconvolution for description
+            of dictionary format. Default (None) results in all unique
+            behaviors modeled (decon_<task>_UniqueBehs*).
+            (default : %(default)s)
+            """
+        ),
     )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
         "-s",
-        "--sess-str",
-        help="BIDS session str (ses-S1)",
+        "--session",
+        help="BIDS session str (ses-S2)",
         type=str,
         required=True,
     )
     required_args.add_argument(
         "-t",
-        "--task-str",
+        "--task",
         help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
-        "-j",
-        "--decon-dir",
-        help="Path to directory containing json decon plans",
         type=str,
         required=True,
     )
@@ -193,30 +219,32 @@ def get_args():
 # %%
 def main():
 
-    # For testing
-    proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    sess = "ses-S2"
-    task = "task-test"
-    decon_dir = "/home/nmuncy/compute/func_processing/tests/"
-    code_dir = "/home/nmuncy/compute/func_processing"
-    batch_num = 3
-    afni_dir = "/scratch/madlab/emu_test/derivatives/afni"
+    # # For testing
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # batch_num = 1
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    # dur = 2
+    # afni_dir = "/scratch/madlab/McMain_EMUR01/derivatives/afni"
+    # json_dir = None
+    # sess = "ses-S1"
+    # task = "task-study"
+    # code_dir = "/home/nmuncy/compute/func_processing"
 
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
-    tplflow_str = args.tplflow_str
-    sess = args.sess_str
-    task = args.task_str
-    decon_dir = args.decon_dir
-    code_dir = args.code_dir
     batch_num = args.batch_num
+    tplflow_str = args.tplflow_str
+    dur = args.dur
+    afni_dir = args.afni_dir
+    json_dir = args.json_dir
+    sess = args.session
+    task = args.task
+    code_dir = args.code_dir
 
     # set up
-    deriv_dir = os.path.join(proj_dir, "derivatives")
-    prep_dir = os.path.join(deriv_dir, "fmriprep")
-    # afni_dir = "scratch/madlab/emu_test/derivatives/afni"
+    dset_dir = os.path.join(proj_dir, "dset")
+    prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
 
     # wait 12H between submission attempts
     wait_time = 43200
@@ -246,12 +274,12 @@ def main():
         subj_list_all.sort()
 
         # make list of subjects who have fmriprep output and are
-        # missing afni output
+        # missing afni deconvolutions
         subj_list = []
-        decon_dict = {}
-        for subj in subj_list_all[1:2]:
+        for subj in subj_list_all:
 
             # check for fmriprep output
+            print(f"Checking {subj} for previous work ...")
             anat_check = glob.glob(
                 f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
                 recursive=True,
@@ -263,18 +291,31 @@ def main():
 
             # check whether each planned decon exists
             afni_check = []
-            decon_glob = glob.glob(os.path.join(decon_dir, f"{subj}*.json"))
-            assert decon_glob, f"No decon plan found for {subj} in {decon_dir}"
-            with open(decon_glob[0]) as jf:
-                decon_plan = json.load(jf)
-            for decon_str in decon_plan.keys():
+            if json_dir:
+                decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
+                assert decon_glob, f"No JSON found for {subj} in {json_dir}."
+                with open(decon_glob[0]) as jf:
+                    decon_plan = json.load(jf)
+                for decon_str in decon_plan.keys():
+                    afni_check.append(
+                        os.path.exists(
+                            os.path.join(
+                                afni_dir,
+                                subj,
+                                sess,
+                                f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
+                            )
+                        )
+                    )
+            else:
+                decon_plan = None
                 afni_check.append(
                     os.path.exists(
                         os.path.join(
                             afni_dir,
                             subj,
                             sess,
-                            f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
+                            f"decon_{task}_UniqueBehs_stats_REML+tlrc.HEAD",
                         )
                     )
                 )
@@ -282,8 +323,8 @@ def main():
             # append subj_list if fmriprep data exists and a planned
             # decon is missing
             if anat_check and func_check and False in afni_check:
+                print(f"Adding {subj} to working list (subj_list).")
                 subj_list.append(subj)
-                decon_dict[subj] = decon_glob[0]
 
         # kill while loop if all subjects have output, also don't
         # let job run longer than a week
@@ -300,17 +341,21 @@ def main():
             os.makedirs(slurm_dir)
 
         for subj in subj_list[:batch_num]:
-            submit_jobs(
+            print(f"Submitting job for {subj} {sess} {task}")
+            h_out, h_err = submit_jobs(
                 prep_dir,
+                dset_dir,
                 afni_dir,
                 subj,
                 sess,
                 task,
-                decon_dict[subj],
-                tplflow_str,
                 code_dir,
                 slurm_dir,
+                tplflow_str,
+                dur,
+                decon_plan,
             )
+            print(f"out: {h_out}, err: {h_err}")
 
         # pause while loop for 12 hours
         print(f"Waiting for {wait_time} seconds.")

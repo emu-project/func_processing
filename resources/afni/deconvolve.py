@@ -235,8 +235,9 @@ def run_reml(work_dir, afni_data):
 def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs"):
     """Generate AFNI timing files.
 
-    Use dset/func events.tsv files to generate AFNI-style timing files
-    for each unique behavior (trial_type).
+    Written specifically for the EMU study. Use dset/func/events.tsv
+    files to generate AFNI-style timing files for each unique
+    behavior (trial_type).
 
     Parameters
     ----------
@@ -269,6 +270,30 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.
     """
 
+    # make switch for AFNI-length names of ses-S2 behaviors, awkward
+    # NR switch is for consistency with ses-S1.
+    switch_names = {
+        "neg_targ_ht": "negTH",
+        "neg_targ_ms": "negTM",
+        "neg_lure_cr": "negLC",
+        "neg_lure_fa": "negLF",
+        "neg_foil_cr": "negFC",
+        "neg_foil_fa": "negFF",
+        "neu_targ_ht": "neuTH",
+        "neu_targ_ms": "neuTM",
+        "neu_lure_cr": "neuLC",
+        "neu_lure_fa": "neuLF",
+        "neu_foil_cr": "neuFC",
+        "neu_foil_fa": "neuFF",
+        "pos_targ_ht": "posTH",
+        "pos_targ_ms": "posTM",
+        "pos_lure_cr": "posLC",
+        "pos_lure_fa": "posLF",
+        "pos_foil_cr": "posFC",
+        "pos_foil_fa": "posFF",
+        "NR": "NR",
+    }
+
     # Structure subject output and input Paths based on subject and session (if specified)
     work_dir = os.path.join(deriv_dir, subj, sess, "func")
     source_dir = os.path.join(dset_dir, subj, sess, "func")
@@ -283,20 +308,18 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     for idx, _ in enumerate(events_data):
         events_data[idx]["run"] = idx + 1
     events_data = pd.concat(events_data)
+    events_data.fillna("NR", inplace=True)
 
     # Once events file is complete, iterate across trial_types to produce AFNI style events file
     decon_plan = {decon_name: {}}
     for trial_type, type_frame in events_data.groupby("trial_type"):
 
-        # determine description name
-        valence, ttype, outcome = trial_type.split("_")
-        trunc_name = valence + ttype[0].upper() + outcome[0].upper()
-        if trial_type == "non_resp_tr":
-            trunc_name = "NR"
+        # determine description/behavior name per session
+        beh_name = trial_type if sess == "ses-S1" else switch_names[trial_type]
 
         # Write timing file, make sure to start with empty file
         # since runs will be appended as new lines.
-        timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{trunc_name}_events.1D"
+        timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
         open(timing_file, "w").close()
 
         wf = open(timing_file, "a")
@@ -309,6 +332,7 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
             wf.write("\n")
         wf.close()
 
-        decon_plan[decon_name][trunc_name] = timing_file
+        # build decon_plan
+        decon_plan[decon_name][beh_name] = timing_file
 
     return decon_plan
