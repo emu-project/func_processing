@@ -112,6 +112,7 @@ def submit_jobs(
         #SBATCH --account=iacc_madlab
         #SBATCH --qos=pq_madlab
 
+        import os
         import sys
         import shutil
         import glob
@@ -137,20 +138,25 @@ def submit_jobs(
             "{dur}",
             {decon_plan},
         )
-        print(f"Finished {{subj}} {{sess}} {{task}} with: \\n {{afni_data}}")
+        print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
         # clean up
-        shutil.rmtree(os.path.join("{afni_dir}", "sbatch_out"))
-        clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}", "func")
-        clean_list = ["preproc", "smoothed"]
+        shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
+        if "{sess}" == "ses-S2":
+            shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "anat"))
+        clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
+        clean_list = ["preproc_bold", "smoothed_bold", "probseg"]
         for c_str in clean_list:
-            for h_file in glob.glob(f"{{clean_dir}}/*{{c_str}}_bold.nii.gz"):
+            for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
                 os.remove(h_file)
 
         # copy important files to /home/data
         src = os.path.join("{afni_dir}", "{subj}")
         dst = os.path.join("{afni_final}", "{subj}")
         shutil.copytree(src, dst)
+
+        # turn out the lights
+        shutil.rmtree(os.path.join("{afni_dir}", "{subj}"))
 
     """
 
