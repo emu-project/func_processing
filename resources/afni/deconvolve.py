@@ -14,7 +14,7 @@ import glob
 from . import submit
 
 
-def write_decon(decon_name, tf_dict, afni_data, work_dir, dur=2):
+def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
     """Generate deconvolution script.
 
     Write a deconvolution script using the pre-processed data, motion, and
@@ -38,8 +38,8 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur=2):
         contains names for various files
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
-    dur : int/float
-        duration of event to model [default=2]
+    dur : int/float/str
+        duration of event to model
 
     Returns
     -------

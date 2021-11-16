@@ -42,12 +42,35 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    prep_dir, afni_dir, subj, sess, task, decon_json, tplflow_str, code_dir, slurm_dir
+    prep_dir,
+    dset_dir,
+    afni_dir,
+    subj,
+    sess,
+    task,
+    code_dir,
+    slurm_dir,
+    tplflow_str=None,
+    dur=None,
+    decon_plan=None,
 ):
     """Title.
 
     Desc.
     """
+
+    # Make arguments, account for optional parameters in workflow.control_afni,
+    # use conditionals rather than mess with kwargs since I'd still be writing
+    # multiple conditionals.
+    preproc_options = [prep_dir, afni_dir, subj, sess, task]
+    decon_options = [afni_dir, dset_dir, subj, sess, task]
+    if tplflow_str:
+        preproc_options.append(tplflow_str)
+        decon_options.append(tplflow_str)
+    if dur:
+        decon_options.append(dur)
+    if decon_plan:
+        decon_options.append(decon_plan)
 
     subj_num = subj.split("-")[-1]
 
@@ -67,25 +90,18 @@ def submit_jobs(
         from workflow import control_afni
 
         afni_data = control_afni.control_preproc(
-            "{prep_dir}",
-            "{afni_dir}",
-            "{subj}",
-            "{sess}",
-            "{task}",
-            "{tplflow_str}",
+            {", ".join(preproc_options)}
         )
 
         afni_data = control_afni.control_deconvolution(
-            "{afni_dir}",
-            "{subj}",
-            "{sess}",
-            afni_data,
-            "{decon_json}",
+            afni_data, {", ".join(decon_options)}
         )
 
         print(f"Finished with \\n {{afni_data}}")
     """
     cmd_dedent = textwrap.dedent(h_cmd)
+    print(h_cmd)
+    return
     py_script = os.path.join(slurm_dir, f"preproc_decon_{subj_num}.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
@@ -121,6 +137,20 @@ def get_args():
         help="template ID string, for finding fMRIprep output in template space, default=space-MNIPediatricAsym_cohort-5_res-2",
         type=str,
         default="space-MNIPediatricAsym_cohort-5_res-2",
+    )
+    parser.add_argument(
+        "-d",
+        "--dur",
+        help="event duration, for deconvolution modulation [default=2]",
+        type=str,
+        default="2",
+    )
+    parser.add_argument(
+        "-d",
+        "--dur",
+        help="event duration, for deconvolution modulation [default=2]",
+        type=str,
+        default="2",
     )
 
     required_args = parser.add_argument_group("Required Arguments")
@@ -163,14 +193,14 @@ def get_args():
 # %%
 def main():
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # sess = "ses-S2"
-    # task = "task-test"
-    # decon_dir = "/home/nmuncy/compute/func_processing/tests/"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-    # batch_num = 3
+    # For testing
+    proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    sess = "ses-S2"
+    task = "task-test"
+    decon_dir = "/home/nmuncy/compute/func_processing/tests/"
+    code_dir = "/home/nmuncy/compute/func_processing"
+    batch_num = 3
     afni_dir = "/scratch/madlab/emu_test/derivatives/afni"
 
     # receive passed args
@@ -187,6 +217,8 @@ def main():
     deriv_dir = os.path.join(proj_dir, "derivatives")
     prep_dir = os.path.join(deriv_dir, "fmriprep")
     # afni_dir = "scratch/madlab/emu_test/derivatives/afni"
+
+    # wait 12H between submission attempts
     wait_time = 43200
 
     # submit all subjects to AFNI

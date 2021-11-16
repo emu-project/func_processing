@@ -20,7 +20,7 @@ afni_data = control_afni.control_preproc(prep_dir, afni_dir, subj, sess, task)
 # %%
 dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
 afni_dir = control_afni.control_deconvolution(
-    afni_dir, dset_dir, subj, sess, task, afni_data
+    afni_data, afni_dir, dset_dir, subj, sess, task
 )
 
 

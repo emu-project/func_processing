@@ -21,7 +21,7 @@ def control_preproc(
     subj,
     sess,
     task,
-    tplflow_str="space-MNIPediatricAsym_cohort-5_res-2",
+    tplflow_str,
 ):
     """Move data through AFNI pre-processing.
 
@@ -44,7 +44,7 @@ def control_preproc(
         BIDS task string (task-test)
     tplflow_str = str
         template ID string, for finding fMRIprep output in
-        template space [default=space-MNIPediatricAsym_cohort-5_res-2]
+        template space (space-MNIPediatricAsym_cohort-5_res-2)
 
     Returns
     -------
@@ -103,14 +103,14 @@ def control_preproc(
 
 
 def control_deconvolution(
+    afni_data,
     afni_dir,
     dset_dir,
     subj,
     sess,
     task,
-    afni_data,
-    decon_plan=False,
-    dur=2,
+    dur,
+    decon_plan=None,
 ):
     """Generate and run planned deconvolutions.
 
@@ -128,6 +128,8 @@ def control_deconvolution(
 
     Parameters
     ----------
+    afni_data : dict
+        mapping of AFNI data, returned by control_preproc
     afni_dir : str
         /path/to/BIDS/project/derivatives/afni
     dset_dir : str
@@ -138,13 +140,11 @@ def control_deconvolution(
         BIDS session string (ses-S1)
     task : str
         BIDS task string (task-test)
-    afni_data : dict
-        mapping of AFNI data, returned by control_preproc
+    dur : int/float/str
+        duration of task to model (2)
     decon_plan : dict
         mapping of behvavior to timing files for planned
-        deconvolutions, see notes below [default=False]
-    dur : int/float
-        duration of task to model [default=2]
+        deconvolutions, see notes below [default=None]
 
     Returns
     -------
@@ -187,7 +187,9 @@ def control_deconvolution(
 
     # generate decon matrices, scripts
     for decon_name, tf_dict in decon_plan.items():
-        afni_data = deconvolve.write_decon(decon_name, tf_dict, afni_data, work_dir)
+        afni_data = deconvolve.write_decon(
+            decon_name, tf_dict, afni_data, work_dir, dur
+        )
 
     # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)
