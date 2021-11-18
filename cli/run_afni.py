@@ -37,7 +37,6 @@ import os
 import sys
 import json
 import fnmatch
-import time
 import glob
 from datetime import datetime
 import textwrap
@@ -312,70 +311,36 @@ def main():
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
-    # wait 12H between submission attempts
-    wait_time = 43200
+    # make list of subjects who have fmriprep output and are
+    # missing afni deconvolutions
+    subj_list_all = [
+        x
+        for x in os.listdir(prep_dir)
+        if fnmatch.fnmatch(x, "sub-*") and not fnmatch.fnmatch(x, "*html")
+    ]
+    subj_list_all.sort()
+    subj_list = []
+    for subj in subj_list_all:
 
-    # submit all subjects to AFNI
-    while_count = 0
-    work_status = True
-    while work_status:
-
-        # see if jobs are still running, wait another 12 hours if so
-        sq_check = subprocess.Popen(
-            "squeue -u $(whoami)", shell=True, stdout=subprocess.PIPE
+        # check for fmriprep output
+        print(f"Checking {subj} for previous work ...")
+        anat_check = glob.glob(
+            f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
+            recursive=True,
         )
-        out_lines = sq_check.communicate()[0].decode("utf-8")
-        if not out_lines.count("\n") < 3:
-            print("Waiting for jobs to finish.")
-            time.sleep(wait_time)
-            while_count += 1
-            continue
+        func_check = glob.glob(
+            f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
+            recursive=True,
+        )
 
-        # list subjects in fmriprep dir
-        subj_list_all = [
-            x
-            for x in os.listdir(prep_dir)
-            if fnmatch.fnmatch(x, "sub-*") and not fnmatch.fnmatch(x, "*html")
-        ]
-        subj_list_all.sort()
-
-        # make list of subjects who have fmriprep output and are
-        # missing afni deconvolutions
-        subj_list = []
-        for subj in subj_list_all:
-
-            # check for fmriprep output
-            print(f"Checking {subj} for previous work ...")
-            anat_check = glob.glob(
-                f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
-                recursive=True,
-            )
-            func_check = glob.glob(
-                f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
-                recursive=True,
-            )
-
-            # check whether each planned decon exists
-            afni_check = []
-            if json_dir:
-                decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
-                assert decon_glob, f"No JSON found for {subj} in {json_dir}."
-                with open(decon_glob[0]) as jf:
-                    decon_plan = json.load(jf)
-                for decon_str in decon_plan.keys():
-                    afni_check.append(
-                        os.path.exists(
-                            os.path.join(
-                                afni_final,
-                                subj,
-                                sess,
-                                "func",
-                                f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
-                            )
-                        )
-                    )
-            else:
-                decon_plan = None
+        # check whether each planned deconvolution exists
+        afni_check = []
+        if json_dir:
+            decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
+            assert decon_glob, f"No JSON found for {subj} in {json_dir}."
+            with open(decon_glob[0]) as jf:
+                decon_plan = json.load(jf)
+            for decon_str in decon_plan.keys():
                 afni_check.append(
                     os.path.exists(
                         os.path.join(
@@ -383,53 +348,56 @@ def main():
                             subj,
                             sess,
                             "func",
-                            f"decon_{task}_UniqueBehs_stats_REML+tlrc.HEAD",
+                            f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
                         )
                     )
                 )
-
-            # append subj_list if fmriprep data exists and a planned
-            # decon is missing
-            if anat_check and func_check and False in afni_check:
-                print(f"Adding {subj} to working list (subj_list).")
-                subj_list.append(subj)
-
-        # kill while loop if all subjects have output, also don't
-        # let job run longer than a week
-        if len(subj_list) == 0 or while_count > 14:
-            work_status = False
-
-        # do preproc/decon for each subject
-        current_time = datetime.now()
-        slurm_dir = os.path.join(
-            afni_dir,
-            f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
-        )
-        if not os.path.exists(slurm_dir):
-            os.makedirs(slurm_dir)
-
-        for subj in subj_list[:batch_num]:
-            print(f"Submitting job for {subj} {sess} {task}")
-            h_out, h_err = submit_jobs(
-                prep_dir,
-                dset_dir,
-                afni_dir,
-                afni_final,
-                subj,
-                sess,
-                task,
-                code_dir,
-                slurm_dir,
-                tplflow_str,
-                dur,
-                decon_plan,
+        else:
+            decon_plan = None
+            afni_check.append(
+                os.path.exists(
+                    os.path.join(
+                        afni_final,
+                        subj,
+                        sess,
+                        "func",
+                        f"decon_{task}_UniqueBehs_stats_REML+tlrc.HEAD",
+                    )
+                )
             )
-            print(f"out: {h_out}, err: {h_err}")
 
-        # pause while loop for 12 hours
-        print(f"Waiting for {wait_time} seconds.")
-        time.sleep(wait_time)
-        while_count += 1
+        # append subj_list if fmriprep data exists and a planned
+        # decon is missing
+        if anat_check and func_check and False in afni_check:
+            print(f"Adding {subj} to working list (subj_list).")
+            subj_list.append(subj)
+
+    # submit workflow.control_afni for each subject
+    current_time = datetime.now()
+    slurm_dir = os.path.join(
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+    )
+    if not os.path.exists(slurm_dir):
+        os.makedirs(slurm_dir)
+
+    for subj in subj_list[:batch_num]:
+        print(f"Submitting job for {subj} {sess} {task}")
+        h_out, h_err = submit_jobs(
+            prep_dir,
+            dset_dir,
+            afni_dir,
+            afni_final,
+            subj,
+            sess,
+            task,
+            code_dir,
+            slurm_dir,
+            tplflow_str,
+            dur,
+            decon_plan,
+        )
+        print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
 
 
 if __name__ == "__main__":
