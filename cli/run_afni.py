@@ -116,6 +116,7 @@ def submit_jobs(
         import sys
         import shutil
         import glob
+        import subprocess
         sys.path.append("{code_dir}")
         from workflow import control_afni
 
@@ -151,9 +152,9 @@ def submit_jobs(
                 os.remove(h_file)
 
         # copy important files to /home/data
-        src = os.path.join("{afni_dir}", "{subj}")
-        dst = os.path.join("{afni_final}", "{subj}")
-        shutil.copytree(src, dst)
+        h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
+        h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+        h_job = h_cp.communicate()
 
         # turn out the lights
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}"))
