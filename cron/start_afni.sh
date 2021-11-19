@@ -16,6 +16,9 @@ function Usage {
         -s <session> = BIDS session (ses-S1)
         -t <task> = BIDS task, corresponding to session (task-study)
 
+    Optional Arguments:
+        -u [y/n] = update repo [n]
+
     Usage:
         ./start_afni.sh \\
             -p \$TOKEN_GITHUB_EMU \\
@@ -27,13 +30,17 @@ USAGE
 
 
 # Check options
-while getopts ":p:s:t:h" OPT; do
+update_repo=n
+
+while getopts ":p:s:t:u:h" OPT; do
     case $OPT in
         p) token=${OPTARG}
             ;;
         s) sess=${OPTARG}
             ;;
         t) task=${OPTARG}
+            ;;
+        u) update_repo=${OPTARG}
             ;;
         h)
             Usage
@@ -99,9 +106,11 @@ proj_dir=$(builtin cd $h_dir; pwd)
 
 
 # pull repo
-cd $proj_dir
-echo -e "\nUpdating $proj_dir"
-git pull https://${token}:x-oauth-basic@github.com/emu-project/func_processing.git --branch dev-afni
+if [ $update_repo == "y" ]; then
+    cd $proj_dir
+    echo -e "\nUpdating $proj_dir"
+    git fetch https://${token}:x-oauth-basic@github.com/emu-project/func_processing.git
+fi
 
 
 # verify environment
@@ -134,22 +143,24 @@ echo -e "\nPython path: $(which python)"
 # submit afni CLI
 cat << EOF
 
-    Success! Starting run_afni with the following parameters:
+    Success! Starting cli/run_afni.py with the following parameters:
 
     -s <sess> = $sess
     -t <task> = $task
     -c <proj_dir> = $proj_dir
+    --batch-num = 2
 
 EOF
 
-# sbatch \
-#     --job-name=runAfni \
-#     --output=runAfni_log \
-#     --mem-per-cpu=4000 \
-#     --partition=IB_44C_512G \
-#     --account=iacc_madlab \
-#     --qos=pq_madlab \
-#     ${proj_dir}/cli/run_afni.py \
-#     -s $sess \
-#     -t $task \
-#     -c $proj_dir \
+sbatch \
+    --job-name=runAfni \
+    --output=runAfni_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    ${proj_dir}/cli/run_afni.py \
+    -s $sess \
+    -t $task \
+    -c $proj_dir \
+    --batch-num 2
