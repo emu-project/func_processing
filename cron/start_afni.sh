@@ -159,7 +159,7 @@ EOF
 
 sbatch \
     --job-name=runAfni \
-    --output=runAfni_log \
+    --output=runAfni_${sess}_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
