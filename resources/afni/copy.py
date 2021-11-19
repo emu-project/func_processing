@@ -138,4 +138,5 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
 
+
     return file_dict
