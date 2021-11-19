@@ -6,6 +6,7 @@ node (submit_hpc_subprocess) or on a scheduled node
 commands.
 """
 import subprocess
+import os
 
 
 def submit_hpc_subprocess(bash_command):
@@ -61,7 +62,7 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
     job_name : str
         job name
     out_dir : str
-        location for sbatch_<job_name>.err/out
+        location for <job_name>.err/out
 
     Returns
     -------
@@ -77,11 +78,11 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
         sbatch \
         -J {job_name} \
         -t {wall_hours}:00:00 \
-        --mem={mem_gig}000 \
-        --ntasks-per-node={num_proc} \
+        --cpus-per-task={num_proc} \
+        --mem-per-cpu={mem_gig}000 \
         -p IB_44C_512G \
-        -o {out_dir}/sbatch_{job_name}.out \
-        -e {out_dir}/sbatch_{job_name}.err \
+        -o {out_dir}/{job_name}.out \
+        -e {out_dir}/{job_name}.err \
         --account iacc_madlab --qos pq_madlab \
         --wait \
         --wrap="module load afni-20.2.06
@@ -89,6 +90,8 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
             {command}
         "
     """
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     sbatch_response = subprocess.Popen(sbatch_job, shell=True, stdout=subprocess.PIPE)
     job_id = sbatch_response.communicate()[0].decode("utf-8")
     return (job_name, job_id)
