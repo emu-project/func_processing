@@ -136,7 +136,7 @@ while [ $try_count -lt 4 ] && [ $conda_found != 0 ]; do
             ;;
         2) PYTHONPATH=~/miniconda3/bin:/home/data/madlab/scripts && export PYTHONPATH
             ;;
-        3) echo "Failed to find conda when PYTHONPATH=$PYTHONPATH, exiting."
+        3) echo "Failed to find conda when PYTHONPATH=$PYTHONPATH, exiting." >&2
             exit 1
             ;;
     esac

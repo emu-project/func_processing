@@ -38,6 +38,7 @@ import sys
 import json
 import fnmatch
 import glob
+import time
 from datetime import datetime
 import textwrap
 import subprocess
@@ -372,6 +373,10 @@ def main():
             print(f"Adding {subj} to working list (subj_list).")
             subj_list.append(subj)
 
+    # kill for no subjects
+    if len(subj_list) == 0:
+        return
+
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
@@ -397,6 +402,7 @@ def main():
             dur,
             decon_plan,
         )
+        time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
 
 

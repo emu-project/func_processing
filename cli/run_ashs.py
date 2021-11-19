@@ -7,21 +7,14 @@ this is a required argument.
 
 This will determine which participants do not have
 ASHS output in proj_dir/derivatives/ashs/sub..., and
-then submit batchs of subjects. The script will wait
-for an hour after each batch of submissions, and then
-repeat.
-
-Data files are located in dset, /scratch is used as a
-working space, and output are written to derivatives.
-Waiting each hour is based on number of jobs in squeue,
-the job will only continue once the number of new line
-characters in squeue falls below 3 (header + this job = 2).
+then submit batchs of subjects. Data files are located in
+dset, /scratch is used as a working space, and output are
+written to derivatives.
 
 Examples
 --------
 sbatch --job-name=runAshs \\
     --output=runAshs_log \\
-    --time=75:00:00 \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
@@ -233,6 +226,7 @@ def main():
     # atlas_dir = "/home/data/madlab/atlases"
     # sing_img = "/home/nmuncy/bin/singularities/ashs_latest.simg"
     # atlas_str = "ashs_atlas_magdeburg"
+    # code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
     # receive passed args
     args = get_args().parse_args()
@@ -247,87 +241,58 @@ def main():
     sing_img = args.sing_img
     code_dir = args.code_dir
 
-    # code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    # set up
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives/ashs")
-    wait_time = 3600
 
-    # submit all subjects to ASHS
-    while_count = 0
-    work_status = True
-    while work_status:
-
-        # check to make sure no jobs are running,
-        # account for this job
-        sq_check = subprocess.Popen(
-            "squeue -u $(whoami)", shell=True, stdout=subprocess.PIPE
+    # make subject dict of those who need ASHS output
+    subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
+    subj_list_all.sort()
+    subj_dict = {}
+    for subj in subj_list_all:
+        ashs_exists = os.path.exists(
+            os.path.join(
+                deriv_dir, subj, sess, f"{subj}_left_lfseg_corr_usegray.nii.gz"
+            )
         )
-        out_lines = sq_check.communicate()[0].decode("utf-8")
-        if not out_lines.count("\n") < 3:
-            print("Waiting for jobs to finish.")
-            time.sleep(wait_time)
-            while_count += 1
-            continue
+        t1_files = glob.glob(f"{dset_dir}/{subj}/**/*{t1_search}.nii*", recursive=True)
+        t2_files = glob.glob(f"{dset_dir}/{subj}/**/*{t2_search}.nii*", recursive=True)
+        if t1_files and t2_files and not ashs_exists:
 
-        # make dict of dset subjects which have T1- and T2-weighted data
-        # and do not have ASHS output
-        subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
-        subj_list_all.sort()
-        subj_dict = {}
-        for subj in subj_list_all:
-            ashs_exists = os.path.exists(
-                os.path.join(
-                    deriv_dir, subj, sess, f"{subj}_left_lfseg_corr_usegray.nii.gz"
-                )
-            )
-            t1_files = glob.glob(
-                f"{dset_dir}/{subj}/**/*{t1_search}.nii*", recursive=True
-            )
-            t2_files = glob.glob(
-                f"{dset_dir}/{subj}/**/*{t2_search}.nii*", recursive=True
-            )
-            if t1_files and t2_files and not ashs_exists:
+            # give list item in list for field map correction, multiple acquisitions
+            subj_dict[subj] = {}
+            subj_dict[subj]["t1-file"] = t1_files[-1].split("/")[-1]
+            subj_dict[subj]["t1-dir"] = t1_files[-1].rsplit("/", 1)[0]
+            subj_dict[subj]["t2-file"] = t2_files[-1].split("/")[-1]
+            subj_dict[subj]["t2-dir"] = t2_files[-1].rsplit("/", 1)[0]
 
-                # give list item in list for field map correction, multiple acquisitions
-                subj_dict[subj] = {}
-                subj_dict[subj]["t1-file"] = t1_files[-1].split("/")[-1]
-                subj_dict[subj]["t1-dir"] = t1_files[-1].rsplit("/", 1)[0]
-                subj_dict[subj]["t2-file"] = t2_files[-1].split("/")[-1]
-                subj_dict[subj]["t2-dir"] = t2_files[-1].rsplit("/", 1)[0]
+    # kill while loop if all subjects have output
+    if len(subj_dict.keys()) == 0:
+        return
 
-        # kill while loop if all subjects have output, also don't
-        # let job run longer than a few days
-        if len(subj_dict.keys()) == 0 or while_count > 72:
-            work_status = False
+    # submit jobs for N subjects that don't have output in deriv_dir
+    current_time = datetime.now()
+    slurm_dir = os.path.join(
+        scratch_dir,
+        f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+    )
+    if not os.path.exists(slurm_dir):
+        os.makedirs(slurm_dir)
 
-        # submit jobs for N subjects that don't have output in deriv_dir
-        current_time = datetime.now()
-        slurm_dir = os.path.join(
-            scratch_dir,
-            f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+    for subj in list(subj_dict)[:batch_num]:
+        job_out, job_err = submit_jobs(
+            subj,
+            subj_dict,
+            os.path.join(deriv_dir, subj, sess),
+            os.path.join(scratch_dir, subj, sess),
+            atlas_str,
+            atlas_dir,
+            sing_img,
+            slurm_dir,
+            code_dir,
         )
-        if not os.path.exists(slurm_dir):
-            os.makedirs(slurm_dir)
-
-        for subj in list(subj_dict)[:batch_num]:
-            job_out, job_err = submit_jobs(
-                subj,
-                subj_dict,
-                os.path.join(deriv_dir, subj, sess),
-                os.path.join(scratch_dir, subj, sess),
-                atlas_str,
-                atlas_dir,
-                sing_img,
-                slurm_dir,
-                code_dir,
-            )
-            print(job_out)
-            time.sleep(3)
-
-        # pause while loop for an hour
-        print(f"Waiting for {wait_time} seconds.")
-        time.sleep(wait_time)
-        while_count += 1
+        print(job_out)
+        time.sleep(3)
 
 
 if __name__ == "__main__":
