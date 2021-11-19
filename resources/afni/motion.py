@@ -38,17 +38,13 @@ def mot_files(work_dir, afni_data):
 
     Notes
     -----
+    Requires afni_data[mot-confound*].
+
     As runs do not have an equal number of volumes, motion/censor files
     for each run are concatenated into a single file rather than managing
     zero padding.
 
     Writes 1D files - AFNI reads tsv as containing a header!
-
-    Writes:
-        <fMRIprep_desc-mean_timeseries.1D
-        <fMRIprep_desc-deriv_timeseries.1D
-        <fMRIprep_desc-censor_timeseries.1D
-        info_censored_volumes.json
     """
 
     # determine relevant col labels
@@ -74,6 +70,11 @@ def mot_files(work_dir, afni_data):
     mean_cat = []
     deriv_cat = []
     censor_cat = []
+
+    num_mot = len([y for x, y in afni_data.items() if "mot-confound" in x])
+    assert (
+        num_mot > 0
+    ), "ERROR: afni_data['mot-confound?'] not found. Check resources.afni.copy.copy_data"
 
     mot_list = [x for k, x in afni_data.items() if "mot-confound" in k]
     mot_str = mot_list[0].replace("run-1_", "")
@@ -158,7 +159,9 @@ def mot_files(work_dir, afni_data):
             "included_volumes": int(num_vol),
             "proportion_excluded": round(1 - (num_vol / num_tot), 3),
         }
-        with open(os.path.join(work_dir, "info_censored_volumes.json"), "w") as jfile:
+        with open(
+            os.path.join(work_dir, "func/info_censored_volumes.json"), "w"
+        ) as jfile:
             json.dump(cen_dict, jfile)
 
     # update afni_data

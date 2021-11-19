@@ -5,13 +5,15 @@ finishing pre-processing, deconvolution, and group-level analyses.
 """
 
 import os
+import glob
 import shutil
 
 
-def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
+def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     """Get relevant fMRIprep files, rename.
 
-    Copies select fMRIprep files into AFNI format.
+    Copies select fMRIprep files into AFNI derivatives, prepares
+    for AFNI pre-processing steps.
 
     Parameters
     ----------
@@ -21,12 +23,8 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         /path/to/derivatives/afni/sub-1234/ses-A
     subj : str
         BIDS subject string (sub-1234)
-    sess : str
-        BIDS session string (ses-A)
     task : str
         BIDS task string (task-test)
-    num_runs : int
-        number of EPI runs
     tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
@@ -36,8 +34,8 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
     file_dict : dict
         files copied from derivatives/fMRIprep to derivatives/afni
         e.g. {
-            "mask-brain": "<BIDS-str>_desc-brain_mask.nii.gz",
-            "struct-t1": "<BIDS-str>_desc-preproc_T1w.nii.gz",
+            "mask-brain": "/path/to/anat/<BIDS-str>_desc-brain_mask.nii.gz",
+            "struct-t1": "/path/to/anat/<BIDS-str>_desc-preproc_T1w.nii.gz",
             }
 
     Notes
@@ -51,11 +49,27 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         mot-confound? = confounds (motion) file for EPI data for run-?
     """
 
-    # set vars, dict
-    anat_str = f"{subj}_{sess}_{tplflow_str}"
-    func_str = f"{subj}_{sess}_{task}"
+    # determine anat string
+    h_anat = glob.glob(
+        f"{prep_dir}/{subj}/**/*{tplflow_str}_desc-preproc_T1w.nii.gz", recursive=True
+    )
+    anat_str = h_anat[0].split("/")[-1].split("_desc")[0]
 
-    # switch for assigning file_dict keys
+    # make a list of anat files to copy
+    desired_anat = (
+        f"{anat_str}_desc-preproc_T1w.nii.gz",
+        f"{anat_str}_desc-brain_mask.nii.gz",
+        f"{anat_str}_label-GM_probseg.nii.gz",
+        f"{anat_str}_label-WM_probseg.nii.gz",
+    )
+    anat_files = []
+    for anat in desired_anat:
+        anat_files.extend(glob.glob(f"{prep_dir}/{subj}/**/{anat}", recursive=True))
+    assert len(desired_anat) == len(
+        anat_files
+    ), "Missing desired_anat files, check resources.afni.copy."
+
+    # switch for assigning anat file_dict keys
     file_name_switch = {
         f"{anat_str}_desc-preproc_T1w.nii.gz": "struct-t1",
         f"{anat_str}_desc-brain_mask.nii.gz": "mask-brain",
@@ -63,49 +77,65 @@ def copy_data(prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str):
         f"{anat_str}_label-WM_probseg.nii.gz": "mask-probWM",
     }
 
-    # organize copy_dict by BIDS scan type
-    copy_dict = {
-        "anat": [
-            f"{anat_str}_desc-preproc_T1w.nii.gz",
-            f"{anat_str}_desc-brain_mask.nii.gz",
-            f"{anat_str}_label-GM_probseg.nii.gz",
-            f"{anat_str}_label-WM_probseg.nii.gz",
-        ],
-        "func": [],
-    }
-
-    # add preproc bold, confound TS to copy_dict and file_name_switch
-    for run in range(0, num_runs):
-        run_num = run + 1
-        run_str = f"{func_str}_run-{run_num}_{tplflow_str}"
-        copy_dict["func"].append(f"{run_str}_desc-preproc_bold.nii.gz")
-        copy_dict["func"].append(
-            f"{subj}_{sess}_{task}_run-{run_num}_desc-confounds_timeseries.tsv"
-        )
-
-        file_name_switch[
-            f"{run_str}_desc-preproc_bold.nii.gz"
-        ] = f"epi-preproc{run_num}"
-        file_name_switch[
-            f"{subj}_{sess}_{task}_run-{run_num}_desc-confounds_timeseries.tsv"
-        ] = f"mot-confound{run_num}"
-
-    # copy data
+    # copy anat files, update file_dict
     file_dict = {}
-    for scan_type in copy_dict:
-        source_dir = os.path.join(prep_dir, subj, sess, scan_type)
-        for h_file in copy_dict[scan_type]:
-            in_file = os.path.join(source_dir, h_file)
-            out_file = os.path.join(work_dir, h_file)
-            if not os.path.exists(out_file):
-                print(f"Copying {h_file} ...")
-                shutil.copyfile(in_file, out_file)
+    anat_dir = os.path.join(work_dir, "anat")
+    for anat in anat_files:
+        anat_name = anat.split("/")[-1]
+        out_file = os.path.join(anat_dir, anat_name)
+        file_dict[file_name_switch[anat_name]] = out_file
+        if not os.path.exists(out_file):
+            print(f"Copying {anat_name} ...")
+            shutil.copyfile(anat, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
 
-            # write return dict
-            h_key = file_name_switch[h_file]
-            if os.path.exists(out_file):
-                file_dict[h_key] = h_file
-            else:
-                file_dict[h_key] = "Missing"
+    # find EPI, motion files
+    epi_files = sorted(
+        glob.glob(
+            f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
+            recursive=True,
+        )
+    )
+    epi_files.sort()
+
+    mot_files = sorted(
+        glob.glob(
+            f"{prep_dir}/{subj}/**/*{task}*desc-confounds_timeseries.tsv",
+            recursive=True,
+        )
+    )
+    mot_files.sort()
+
+    assert len(epi_files) == len(
+        mot_files
+    ), "Number of task EPI files != condound files, check resources.afni.copy."
+
+    # copy EPI files, update dict (key = epi-preproc?)
+    func_dir = os.path.join(work_dir, "func")
+
+    for count, epi in enumerate(epi_files):
+        epi_name = epi.split("/")[-1]
+        out_file = os.path.join(func_dir, epi_name)
+        file_dict[f"epi-preproc{count + 1}"] = out_file
+        if not os.path.exists(out_file):
+            print(f"Copying {out_file}")
+            shutil.copyfile(epi, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
+
+    # copy mot files, update dict (key = mot-confound?)
+    for count, mot in enumerate(mot_files):
+        mot_name = mot.split("/")[-1]
+        out_file = os.path.join(func_dir, mot_name)
+        file_dict[f"mot-confound{count + 1}"] = out_file
+        if not os.path.exists(out_file):
+            print(f"Copying {out_file}")
+            shutil.copyfile(mot, out_file)
+        assert os.path.exists(
+            out_file
+        ), f"{out_file} failed to copy, check resources.afni.copy."
 
     return file_dict

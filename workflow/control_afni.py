@@ -7,7 +7,6 @@ fMRIprep, and then deconvolve EPI data.
 import os
 import sys
 import glob
-import json
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
@@ -16,7 +15,14 @@ from resources.afni import copy, process, masks, motion, deconvolve
 
 
 # %%
-def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
+def control_preproc(
+    prep_dir,
+    afni_dir,
+    subj,
+    sess,
+    task,
+    tplflow_str,
+):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -26,16 +32,16 @@ def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
 
     Parameters
     ----------
-    deriv_dir : str
-        /path/to/BIDS/project/derivatives
+    prep_dir : str
+        /path/to/BIDS/project/derivatives/fmriprep
+    afni_dir : str
+        /path/to/BIDS/project/derivatives/afni
     subj : str
         BIDS subject string (sub-1234)
     sess : str
         BIDS session string (ses-S1)
     task : str
         BIDS task string (task-test)
-    num_runs : int
-        number of EPI runs for session (3)
     tplflow_str = str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
@@ -63,16 +69,16 @@ def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
     """
 
     # setup directories
-    prep_dir = os.path.join(deriv_dir, "fmriprep")
-    afni_dir = os.path.join(deriv_dir, "afni")
     work_dir = os.path.join(afni_dir, subj, sess)
-    if not os.path.exists(work_dir):
-        os.makedirs(work_dir)
+    anat_dir = os.path.join(work_dir, "anat")
+    func_dir = os.path.join(work_dir, "func")
+    sbatch_dir = os.path.join(work_dir, "sbatch_out")
+    for h_dir in [anat_dir, func_dir, sbatch_dir]:
+        if not os.path.exists(h_dir):
+            os.makedirs(h_dir)
 
     # get fMRIprep data
-    afni_data = copy.copy_data(
-        prep_dir, work_dir, subj, sess, task, num_runs, tplflow_str
-    )
+    afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
 
     # blur data
     subj_num = subj.split("-")[-1]
@@ -81,26 +87,31 @@ def control_preproc(deriv_dir, subj, sess, task, num_runs, tplflow_str):
     # make masks
     afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
+    afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
     # scale data
-    afni_data = process.scale_epi(work_dir, subj_num, sess, task, afni_data)
+    afni_data = process.scale_epi(work_dir, subj_num, afni_data)
 
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
 
-    # check for files
-    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
-
     # clean
-    for tmp_file in glob.glob(f"{work_dir}/tmp*"):
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
         os.remove(tmp_file)
-    for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
-        os.remove(sbatch_file)
 
     return afni_data
 
 
-def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
+def control_deconvolution(
+    afni_data,
+    afni_dir,
+    dset_dir,
+    subj,
+    sess,
+    task,
+    dur,
+    decon_plan,
+):
     """Generate and run planned deconvolutions.
 
     Use AFNI's 3dDeconvolve and 3dREMLfit to deconvolve EPI
@@ -117,18 +128,23 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
 
     Parameters
     ----------
-    deriv_dir : str
-        /path/to/BIDS/project/derivatives
+    afni_data : dict
+        mapping of AFNI data, returned by control_preproc
+    afni_dir : str
+        /path/to/BIDS/project/derivatives/afni
+    dset_dir : str
+        /path/to/BIDS/project/dset
     subj : str
         BIDS subject string (sub-1234)
     sess : str
         BIDS session string (ses-S1)
-    afni_data : dict
-        mapping of AFNI data, returned by control_preproc
-    decon_json : str
-        /path/to/decon/plan.json
-    dur : int/float
-        duration of task to model [default=2]
+    task : str
+        BIDS task string (task-test)
+    dur : int/float/str
+        duration of task to model (2)
+    decon_plan : dict
+        mapping of behvavior to timing files for planned
+        deconvolutions, see notes below [default=None]
 
     Returns
     -------
@@ -143,7 +159,7 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
     Only onset timing files accepted, not married onset:duration! Timing files
     must be AFNI formatted, (one row/run for each beahvior).
 
-    decon_plan.json should have the following format:
+    decon_plan should have the following format:
         {"Decon Tile": {
             "BehA": "/path/to/timing_behA.txt",
             "BehB": "/path/to/timing_behB.txt",
@@ -158,26 +174,28 @@ def control_deconvolution(deriv_dir, subj, sess, afni_data, decon_json, dur=2):
             "negLC": "/path/to/negative_lure_cr.txt",
             }
         }
+
+    [decon_plan=False] yields decon_<task>_UniqueBehs*
     """
 
     # setup directories
-    afni_dir = os.path.join(deriv_dir, "afni")
     work_dir = os.path.join(afni_dir, subj, sess)
 
-    with open(os.path.join(decon_json)) as jf:
-        decon_plan = json.load(jf)
+    # get default timing files if none supplied
+    if not decon_plan:
+        decon_plan = deconvolve.timing_files(dset_dir, afni_dir, subj, sess, task)
 
-    # write deconvolution
-    for decon_str in decon_plan:
-        tf_dict = decon_plan[decon_str]
-        afni_data = deconvolve.write_decon(dur, decon_str, tf_dict, afni_data, work_dir)
+    # generate decon matrices, scripts
+    for decon_name, tf_dict in decon_plan.items():
+        afni_data = deconvolve.write_decon(
+            decon_name, tf_dict, afni_data, work_dir, dur
+        )
 
-    # run deconvolution
+    # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)
 
-    # check for files, clean
-    assert "Missing" not in afni_data.values(), "Missing value (file) in afni_data."
-    for sbatch_file in glob.glob(f"{work_dir}/sbatch*"):
-        os.remove(sbatch_file)
+    # clean
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+        os.remove(tmp_file)
 
     return afni_data

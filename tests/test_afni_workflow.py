@@ -1,6 +1,3 @@
-"""
-
-"""
 # %%
 import os
 import sys
@@ -12,22 +9,19 @@ from workflow import control_afni
 
 
 # %%
-# for testing
-deriv_dir = "/scratch/madlab/emu_test/derivatives"
+prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
+afni_dir = "/scratch/madlab/emu_test/derivatives/afni"
 subj = "sub-4002"
 sess = "ses-S2"
 task = "task-test"
-num_runs = 3
-tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
-afni_data = control_afni.control_preproc(
-    deriv_dir, subj, sess, task, num_runs, tplflow_str
-)
+afni_data = control_afni.control_preproc(prep_dir, afni_dir, subj, sess, task)
 
 # %%
-decon_json = "sub-4002_decon_plan.json"
-afni_data = control_afni.control_deconvolution(
-    deriv_dir, subj, sess, afni_data, decon_json
+dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
+afni_dir = control_afni.control_deconvolution(
+    afni_data, afni_dir, dset_dir, subj, sess, task
 )
+
 
 # %%
