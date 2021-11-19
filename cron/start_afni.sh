@@ -122,7 +122,7 @@ fi
 # verify environment
 try_count=0; unset conda_found
 search_python () {
-    which python | grep "conda" > /dev/null 2>&1
+    which python | grep "conda3" > /dev/null 2>&1
     return $?
 }
 search_python; conda_found=$?
@@ -147,14 +147,13 @@ echo -e "\nPython path: $(which python)"
 
 
 # submit afni CLI
-cat << EOF
+cat <<- EOF
 
     Success! Starting cli/run_afni.py with the following parameters:
 
     -s <sess> = $sess
     -t <task> = $task
     -c <proj_dir> = $proj_dir
-    --batch-num = 2
 
 EOF
 
@@ -168,5 +167,4 @@ sbatch \
     ${proj_dir}/cli/run_afni.py \
     -s $sess \
     -t $task \
-    -c $proj_dir \
-    --batch-num 2
+    -c $proj_dir
