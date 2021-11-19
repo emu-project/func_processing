@@ -25,6 +25,12 @@ function Usage {
             -s ses-S1 \\
             -t task-study
 
+    Cron example:
+        * */6 * * * TOKEN=`cat /home/nmuncy/.ssh/pat_github_emu`; \
+            cd /home/nmuncy/compute/func_processing/cron && \
+            ./start_afni.sh -p $TOKEN -s ses-S1 -t task-study \
+            >cron_out 2>cron_err
+
 USAGE
 }
 
