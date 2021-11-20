@@ -310,29 +310,31 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     events_data = pd.concat(events_data)
     events_data.fillna("NR", inplace=True)
 
-    # Once events file is complete, iterate across trial_types to produce AFNI style events file
+    # determine behaviors, runs
+    beh_list = events_data.trial_type.unique()
+    run_list = sorted(events_data.run.unique())
+
+    # start with empty timing files, fill decon_plan
     decon_plan = {decon_name: {}}
-    for trial_type, type_frame in events_data.groupby("trial_type"):
+    for beh in beh_list:
+        beh_name = beh if sess == "ses-S1" else switch_names[beh]
+        tf = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
+        open(tf, "w").close()
+        decon_plan[decon_name][beh_name] = tf
 
-        # determine description/behavior name per session
-        beh_name = trial_type if sess == "ses-S1" else switch_names[trial_type]
-
-        # Write timing file, make sure to start with empty file
-        # since runs will be appended as new lines.
-        timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
-        open(timing_file, "w").close()
-
-        wf = open(timing_file, "a")
-        for _, run_frame in type_frame.groupby("run"):
-            if run_frame.empty:
-                wf.writelines("*")
+    # append timing files by row for e/run * behavior
+    for run in run_list:
+        df_run = events_data[events_data["run"] == run]
+        for beh in beh_list:
+            beh_name = beh if sess == "ses-S1" else switch_names[beh]
+            timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
+            idx_beh = df_run.index[df_run["trial_type"] == beh].tolist()
+            if not idx_beh:
+                with open(timing_file, "a") as tf:
+                    tf.writelines("*\n")
             else:
-                h_line = run_frame["onset"].round().tolist()
-                wf.writelines(" ".join(map(str, h_line)))
-            wf.write("\n")
-        wf.close()
-
-        # build decon_plan
-        decon_plan[decon_name][beh_name] = timing_file
+                onsets = df_run.iloc[idx_beh]["onset"].round().tolist()
+                with open(timing_file, "a") as tf:
+                    tf.writelines(f"""{" ".join(map(str, onsets))}\n""")
 
     return decon_plan
