@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""CLI for runnings project
+"""CLI for running de/refacing of project data.
 
 Examples
 --------
@@ -48,7 +48,7 @@ def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
 
         import sys
         sys.path.append("{code_dir}")
-        from afni import process
+        from resources.afni import process
 
         process.reface("{subj}", "{sess}", "{t1_file}", "{proj_dir}", "{method}")
     """

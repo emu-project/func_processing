@@ -187,10 +187,11 @@ def reface(subj, sess, t1_file, proj_dir, method):
             -anonymize_output \
             -prefix {t1_out}
 
-        rm {out_dir}/*.face.nii.gz
-        rm -r {out_dir}/*_QC
+        # rm {out_dir}/*.face.nii.gz
+        # rm -r {out_dir}/*_QC
         # rm {out_dir}/*.{{err,out}}
     """
+    print(h_cmd)
     subj_num = subj.split("-")[1]
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
