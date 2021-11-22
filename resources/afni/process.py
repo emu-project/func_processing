@@ -149,3 +149,53 @@ def scale_epi(work_dir, subj_num, afni_data):
         afni_data[f"epi-scale{run_num}"] = epi_scale
 
     return afni_data
+
+
+def reface(subj, sess, t1_file, proj_dir, method):
+    """De/Reface T1-weighted files.
+
+    Use AFNI's refacer to deface or reface T1-weighted
+    structural files.
+
+    Parameters
+    ----------
+    subj : str
+        BIDS subject string (sub-1234)
+    sess : str
+        BIDS session string (ses-A)
+    t1_file : str
+        file name of T1-weighted file
+        (sub-1234_ses-A_T1w.nii.gz)
+    proj_dir : str
+        path to BIDS project dir
+        (/path/to/BIDS/proj)
+    method : str
+        "deface", "reface", or "reface_plus" method
+    """
+    out_dir = os.path.join(proj_dir, f"derivatives/{method}", subj, sess, "anat")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
+    t1_out = os.path.join(
+        out_dir,
+        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
+    )
+    h_cmd = f"""
+        export TMPDIR={out_dir}
+
+        \\@afni_refacer_run \
+            -input {t1_in} \
+            -mode_{method} \
+            -anonymize_output \
+            -prefix {t1_out}
+
+        rm {out_dir}/*.face.nii.gz
+        rm -r {out_dir}/*_QC
+        rm {out_dir}/*.{{err,out}}
+    """
+    print(h_cmd)
+    subj_num = subj.split("-")[1]
+    job_name, job_id = submit.submit_hpc_sbatch(
+        h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
+    )
+    print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
