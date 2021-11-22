@@ -21,7 +21,7 @@ function Usage {
     Cron example:
         * */4 * * * cd /home/nmuncy/compute/func_processing/cron && \
             ./start_reface.sh \
-            >cron-ashs_out 2>cron-ashs_err
+            >cron-reface_out 2>cron-reface_err
 
 USAGE
 }
@@ -87,11 +87,11 @@ cat <<- EOF
 
 EOF
 
-# sbatch --job-name=runReface \
-#     --output=runReface_log \
-#     --mem-per-cpu=4000 \
-#     --partition=IB_44C_512G \
-#     --account=iacc_madlab \
-#     --qos=pq_madlab \
-#     run_reface.py \
-#     -c /home/nmuncy/compute/func_processing
+sbatch --job-name=runReface \
+    --output=runReface_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    ${proj_dir}/cli/run_reface.py \
+    -c $proj_dir

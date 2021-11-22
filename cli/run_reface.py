@@ -179,7 +179,11 @@ def main():
 
         deface_exists = os.path.exists(
             os.path.join(
-                deriv_dir, subj, sess, t1_file.replace("_T1w", f"_desc-{method}_T1w")
+                deriv_dir,
+                subj,
+                sess,
+                "anat",
+                t1_file.replace("_T1w", f"_desc-{method}_T1w"),
             )
         )
 
