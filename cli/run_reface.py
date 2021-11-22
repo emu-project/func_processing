@@ -2,6 +2,8 @@
 
 """CLI for running de/refacing of project data.
 
+Submit a batch of subjects for de/refacing.
+
 Examples
 --------
 sbatch --job-name=runDeface \\
@@ -10,9 +12,8 @@ sbatch --job-name=runDeface \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    # run_ashs.py \\
-    # -s /home/nmuncy/bin/singularities/ashs_latest.simg \\
-    # -c /home/nmuncy/compute/func_processing
+    run_reface.py \\
+    -c /home/nmuncy/compute/func_processing
 """
 # %%
 import os
@@ -28,9 +29,31 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
-    """Run
+    """Submit refacing module.
 
-    Desc.
+    Also writes a python script to slurm_dir for review.
+
+    Parameters
+    ----------
+    subj : str
+        BIDS subject string (sub-1234)
+    sess : str
+        BIDS session string (ses-A)
+    t1_file : str
+        file name of T1w file (sub-1234_ses-A_T1w.nii.gz)
+    proj_dir : str
+        BIDS project directory (/path/to/proj)
+    method : str
+        refacing method (reface, deface, reface_plus)
+    code_dir : str
+        path to clone of github.com/emu-project/func_processing.git
+    slurm_dir : str
+        path to location for capturing sbatch stdout/err
+
+    Returns
+    -------
+    h_out, h_err : str
+        stdout, stderr of sbatch submission
     """
 
     subj_num = subj.split("-")[-1]
@@ -69,70 +92,41 @@ def get_args():
     """Get and parse arguments"""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        "-p",
         "--proj-dir",
-        help="/path/to/BIDS/project/dir, default=/home/data/madlab/McMakin_EMUR01",
         type=str,
         default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+            path to BIDS-formatted project directory
+            (default : %(default)s)
+            """
+        ),
     )
     parser.add_argument(
-        "-w",
-        "--scratch-dir",
-        help="/path/to/scratch/dir, default=/scratch/madlab/emu_ashs",
-        type=str,
-        default="/scratch/madlab/emu_ashs",
-    )
-    parser.add_argument(
-        "-ss",
-        "--sess-str",
-        help="BIDS session str, used for organizing ASHS output, default=ses-S1",
-        type=str,
-        default="ses-S1",
-    )
-    parser.add_argument(
-        "-n",
         "--batch-num",
-        help="number of subjects to submit at one time, default=8",
         type=int,
         default=8,
+        help=textwrap.dedent(
+            """\
+            number of subjects to submit at one time
+            (default : %(default)s)
+            """
+        ),
     )
     parser.add_argument(
-        "-t1",
-        "--t1-search",
-        help="String to identify T1w files, default=T1w",
+        "--method",
         type=str,
-        default="T1w",
-    )
-    parser.add_argument(
-        "-t2",
-        "--t2-search",
-        help="String to identify T2w files, default=PD",
-        type=str,
-        default="PD",
-    )
-    parser.add_argument(
-        "-a",
-        "--atlas-dir",
-        help="Absolute path to directory containing ASHS template directory, default=/home/data/madlab/atlases",
-        type=str,
-        default="/home/data/madlab/atlases",
-    )
-    parser.add_argument(
-        "-as",
-        "--atlas-str",
-        help="Name of ASHS template directory, default=ashs_atlas_magdeburg",
-        type=str,
-        default="ashs_atlas_magdeburg",
+        default="reface",
+        help=textwrap.dedent(
+            """\
+            method of refacing, accepts "deface",
+            "reface", or "reface_plus"
+            (default : %(default)s)
+        """
+        ),
     )
 
     required_args = parser.add_argument_group("Required Arguments")
-    required_args.add_argument(
-        "-s",
-        "--sing-img",
-        help="Path to singularity image of docker://nmuncy/ashs.",
-        type=str,
-        required=True,
-    )
     required_args.add_argument(
         "-c",
         "--code-dir",
@@ -152,15 +146,17 @@ def get_args():
 def main():
 
     # # For testing
-    proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    method = "reface"
-    batch_num = 2
-    code_dir = "/home/nmuncy/compute/func_processing"
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # method = "reface"
+    # batch_num = 1
+    # code_dir = "/home/nmuncy/compute/func_processing"
 
     # receive passed args
     args = get_args().parse_args()
-    # proj_dir = args.proj_dir
-    # batch_num = args.batch_num
+    proj_dir = args.proj_dir
+    batch_num = args.batch_num
+    method = args.method
+    code_dir = args.code_dir
 
     # set up
     scratch_dir = os.path.join(
@@ -215,7 +211,7 @@ def main():
             code_dir,
             slurm_dir,
         )
-        print(job_out)
+        print(f"{method} {subj} with job: {job_out}")
         time.sleep(3)
 
 

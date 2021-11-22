@@ -181,15 +181,17 @@ def reface(subj, sess, t1_file, proj_dir, method):
         t1_file.replace("_T1w", f"_desc-{method}_T1w"),
     )
     h_cmd = f"""
+        export TMPDIR={out_dir}
+
         \\@afni_refacer_run \
             -input {t1_in} \
             -mode_{method} \
             -anonymize_output \
             -prefix {t1_out}
 
-        # rm {out_dir}/*.face.nii.gz
-        # rm -r {out_dir}/*_QC
-        # rm {out_dir}/*.{{err,out}}
+        rm {out_dir}/*.face.nii.gz
+        rm -r {out_dir}/*_QC
+        rm {out_dir}/*.{{err,out}}
     """
     print(h_cmd)
     subj_num = subj.split("-")[1]
