@@ -6,8 +6,8 @@ Submit a batch of subjects for de/refacing.
 
 Examples
 --------
-sbatch --job-name=runDeface \\
-    --output=runDeface_log \\
+sbatch --job-name=runReface \\
+    --output=runReface_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
