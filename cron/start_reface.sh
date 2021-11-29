@@ -119,7 +119,7 @@ if [ $num_jobs -gt 1 ]; then
 fi
 
 
-# submit ashs CLI
+# submit reface CLI
 cat <<- EOF
 
     Success! Starting $code_dir/cli/run_reface.py
@@ -130,7 +130,7 @@ cat <<- EOF
 EOF
 
 sbatch --job-name=runReface \
-    --output=${code_dir}/cli/runReface_log \
+    --output=${code_dir}/logs/runReface_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
