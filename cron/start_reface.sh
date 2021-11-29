@@ -8,29 +8,42 @@ function Usage {
     whether previous jobs are still running. Next it submit
     cli/run_reface.py via sbatch.
 
-    -m options reference afni_refacer_run modes, reface is default.
-        -mode_{reface|reface_plus|deface}
+    Required Arguments:
+        -c </code/dir> = path to clone of emu-project/func_processing.git
 
-   Optional Arguments:
-        -m [deface/reface/reface_plus] = method of adjusting face.
+    Optional Arguments:
+        -m [deface/reface/reface_plus] = method of adjusting face, reface is default.
+            references -mode_{reface|reface_plus|deface} option of @afni_refacer_run.
         -h = print this help
 
-   Usage:
-    ./start_ashs.sh
+    Usage:
+        ./start_ashs.sh -c /home/nmuncy/compute/func_processing
 
     Cron example:
         * */4 * * * cd /home/nmuncy/compute/func_processing/cron && \
             ./start_reface.sh \
+            -c /home/nmuncy/compute/func_processing \
             >cron-reface_out 2>cron-reface_err
 
 USAGE
 }
 
-# Check options
+
+# Start record
+currentDate=`date`
+echo "************************"
+echo "Cron Start: $currentDate"
+echo "************************"
+
+
+# Set, get options
 method=reface
-while getopts ":m:h" OPT; do
+
+while getopts ":c:m:h" OPT; do
     case $OPT in
         m) method=${OPTARG}
+            ;;
+        c) code_dir=${OPTARG}
             ;;
         h)
             Usage
@@ -43,12 +56,26 @@ while getopts ":m:h" OPT; do
     esac
 done
 
+if [ $OPTIND == 1 ]; then
+    Usage
+    exit 0
+fi
+
+
+# verify options
+if [ ! -d $code_dir ]; then
+    echo -e "\n \t ERROR: input for -c missing or is not a directory." >&2
+    Usage
+    exit 1
+fi
+echo -e "\n \t \$code_dir: $code_dir"
+
 case $method in
-    reface) echo "Method == reface"
+    reface) echo -e "\n \t Method: $method"
         ;;
-    reface_plus) echo "Method == reface_plus"
+    reface_plus) echo -e "\n \t Method: $method"
         ;;
-    deface) echo "Method == deface"
+    deface) echo -e "\n \t Method: $method"
         ;;
     *) echo "ERROR: unrecognized method \"$method\", see -m help."
         Usage
@@ -57,41 +84,56 @@ case $method in
 esac
 
 
-# Start record
-currentDate=`date`
-echo "************************"
-echo "Cron Start: $currentDate"
-echo "************************"
+# verify environment
+try_count=0; unset conda_found
+search_python () {
+    which python | grep "conda3" > /dev/null 2>&1
+    return $?
+}
+search_python; conda_found=$?
+while [ $try_count -lt 4 ] && [ $conda_found != 0 ]; do
+    echo -e "\n \t ERROR: Did not find conda3 in PYTHONPATH,"
+    echo -e "\t attempting resolution $try_count."
+    case $try_count in
+        0) source ~/.bash_profile
+            ;;
+        1) source ~/.bashrc
+            ;;
+        2) PYTHONPATH=~/miniconda3/bin:/home/data/madlab/scripts && export PYTHONPATH
+            ;;
+        3) echo -e "\n \t ERROR: Failed to find conda3 when PYTHONPATH=$PYTHONPATH, exiting." >&2
+            exit 1
+            ;;
+    esac
+    let try_count+=1
+    search_python; conda_found=$?
+done
+echo -e "\n \t Python path: $(which python)"
 
 
 # check that previous jobs are done
 num_jobs=`squeue -u $(whoami) | wc -l`
 if [ $num_jobs -gt 1 ]; then
-    echo "Jobs still running, exiting ..."
+    echo -e "\n \t Jobs still running, exiting ..."
     exit 0
 fi
-
-
-# determine resolved path to code directory
-h_dir=$(pwd)/..
-proj_dir=$(builtin cd $h_dir; pwd)
 
 
 # submit ashs CLI
 cat <<- EOF
 
-    Success! Starting cli/run_reface.py with the following parameters:
-
-    -m <method> = $method
-    -c <code_dir> = $proj_dir
+    Success! Starting $code_dir/cli/run_reface.py
+    with the following parameters:
+        -m <method> = $method
+        -c <code_dir> = $code_dir
 
 EOF
 
 sbatch --job-name=runReface \
-    --output=runReface_log \
+    --output=${code_dir}/cli/runReface_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    ${proj_dir}/cli/run_reface.py \
-    -c $proj_dir
+    ${code_dir}/cli/run_reface.py \
+    -c $code_dir
