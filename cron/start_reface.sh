@@ -130,7 +130,7 @@ cat <<- EOF
 EOF
 
 sbatch --job-name=runReface \
-    --output=${code_dir}/runReface_log \
+    --output=${code_dir}/cli/runReface_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
