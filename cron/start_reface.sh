@@ -11,13 +11,13 @@ function Usage {
     Required Arguments:
         -c </code/dir> = path to clone of emu-project/func_processing.git
 
-   Optional Arguments:
+    Optional Arguments:
         -m [deface/reface/reface_plus] = method of adjusting face, reface is default.
             references -mode_{reface|reface_plus|deface} option of @afni_refacer_run.
         -h = print this help
 
-   Usage:
-    ./start_ashs.sh -c /home/nmuncy/compute/func_processing
+    Usage:
+        ./start_ashs.sh -c /home/nmuncy/compute/func_processing
 
     Cron example:
         * */4 * * * cd /home/nmuncy/compute/func_processing/cron && \
@@ -36,8 +36,9 @@ echo "Cron Start: $currentDate"
 echo "************************"
 
 
-# Check options
+# Set, get options
 method=reface
+
 while getopts ":c:m:h" OPT; do
     case $OPT in
         m) method=${OPTARG}
@@ -118,26 +119,18 @@ if [ $num_jobs -gt 1 ]; then
 fi
 
 
-# # determine resolved path to code directory.
-# # something changed in cron, $pwd points to $HOME
-# h_dir=$(pwd)/..
-# proj_dir=$(builtin cd $h_dir; pwd)
-# echo "proj_dir: $proj_dir"
-
-
 # submit ashs CLI
 cat <<- EOF
 
     Success! Starting $code_dir/cli/run_reface.py
     with the following parameters:
-
-    -m <method> = $method
-    -c <code_dir> = $proj_dir
+        -m <method> = $method
+        -c <code_dir> = $code_dir
 
 EOF
 
 sbatch --job-name=runReface \
-    --output=runReface_log \
+    --output=${code_dir}/runReface_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
