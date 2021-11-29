@@ -12,23 +12,36 @@ function Usage {
 
    Required Arguments:
     -s <sing_img> = path to singularity image of docker://nmuncy/ashs
+    -c </code/dir> = path to clone of emu-project/func_processing.git
 
    Usage:
     ./start_ashs.sh \\
-        -s /home/nmuncy/bin/singularities/ashs_latest.simg
+        -s /home/nmuncy/bin/singularities/ashs_latest.simg \\
+        -c /home/nmuncy/compute/func_processing
 
     Cron example:
         * 23 * * * cd /home/nmuncy/compute/func_processing/cron && \
             ./start_ashs.sh \
             -s /home/nmuncy/bin/singularities/ashs_latest.simg \
+            -c /home/nmuncy/compute/func_processing \
             >cron-ashs_out 2>cron-ashs_err
 
 USAGE
 }
 
+
+# Start record
+currentDate=`date`
+echo "************************"
+echo "Cron Start: $currentDate"
+echo "************************"
+
+
 # Check options
-while getopts ":s:h" OPT; do
+while getopts ":c:s:h" OPT; do
     case $OPT in
+        c) code_dir=${OPTARG}
+            ;;
         s) sing_img=${OPTARG}
             ;;
         h)
@@ -53,12 +66,11 @@ if [ -z $sing_img ]; then
     exit 1
 fi
 
-
-# Start record
-currentDate=`date`
-echo "************************"
-echo "Cron Start: $currentDate"
-echo "************************"
+if [ ! -d $code_dir ]; then
+    echo -e "\n \t ERROR: input for -c missing or is not a directory." >&2
+    Usage
+    exit 1
+fi
 
 
 # check that previous jobs are done
@@ -89,27 +101,22 @@ while [ $try_count -lt 3 ] && [ $sing_found != 0]; do
 done
 
 
-# determine resolved path to code directory
-h_dir=$(pwd)/..
-proj_dir=$(builtin cd $h_dir; pwd)
-
-
 # submit ashs CLI
 cat <<- EOF
 
-    Success! Starting cli/run_ashs.py with the following parameters:
-
-    -s <sing_img> = $sing_img
-    -c <code_dir> = $proj_dir
+    Success! Starting $code_dir/cli/run_ashs.py
+    with the following parameters:
+        -s <sing_img> = $sing_img
+        -c <code_dir> = $code_dir
 
 EOF
 
 sbatch --job-name=runAshs \
-    --output=runAshs_log \
+    --output=${code_dir}/logs/runAshs_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    ${proj_dir}/cli/run_ashs.py \
+    ${code_dir}/cli/run_ashs.py \
     -s $sing_img \
-    -c $proj_dir
+    -c $code_dir
