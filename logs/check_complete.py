@@ -9,55 +9,85 @@ import sys
 import glob
 import json
 import textwrap
+import platform
+import pandas as pd
+import numpy as np
 import fnmatch
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
-def check_afni():
-    pass
-
-
-# %%
 def main():
 
-    # For testing
-    proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    # determine env, path
+    proj_dir = (
+        "/home/data/madlab/McMakin_EMUR01"
+        if platform.system() == "Linux"
+        else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    )
 
-    task_dict = {
-        "ses-S1": {"num_runs": 2, "task_name": "task-study"},
-        "ses-S2": {"num_runs": 3, "task_name": "task-test"},
-    }
     expected_dict = {
         "afni": [
-            "space-MNIPediatricAsym_cohort-5_res-2_desc-WMe_mask.nii.gz",
-            "ses-S1_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
-            "task-study_run-1_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
-            "task-study_run-2_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
-            "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD",
-            "ses-S2_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
-            "task-test_run-1_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
-            "task-test_run-2_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
-            "task-test_run-3_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
-            "decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD",
+            [
+                "ses-S1_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
+                "intersect_1",
+            ],
+            ["decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD", "decon_1"],
+            [
+                "ses-S2_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
+                "intersect_2",
+            ],
+            ["decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD", "decon_2"],
         ],
-        "ashs": ["left_lfseg_corr_usegray", "right_lfseg_corr_usegray"],
-        "reface": ["desc-reface"],
+        "ashs": [
+            ["left_lfseg_corr_usegray", "ashs_L"],
+            ["right_lfseg_corr_usegray", "ashs_R"],
+        ],
+        "reface": [["desc-reface", "reface"]],
     }
 
     log_dir = os.path.dirname(os.path.abspath(__file__))
+    completed_tsv = os.path.join(log_dir, "completed.tsv")
     deriv_dir = os.path.join(proj_dir, "derivatives")
     dset_dir = os.path.join(proj_dir, "dset")
 
     subj_list = sorted([x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")])
 
-    with open(os.path.join(log_dir, "completed.json")) as jf:
-        json_dict = json.load(jf)
+    if not os.path.exists(completed_tsv):
+        col_names = [
+            "subjID",
+            "intersect_1",
+            "intersect_2",
+            "decon_1",
+            "decon_2",
+            "ashs_L",
+            "ashs_R",
+            "reface",
+        ]
+        df = pd.DataFrame(columns=col_names)
+        df["subjID"] = subj_list
+        df.to_csv(completed_tsv, index=False, sep="\t")
 
-    # for subj in subj_list:
-    json_dict["subjID"].append(subj)
-    for exp in expected_dict:
-        pass
+    df_comp = pd.read_csv(completed_tsv, sep="\t")
+
+    for subj in subj_list:
+        print(f"Checking {subj} ...")
+        if not df_comp["subjID"].str.contains(subj).any():
+            df_comp.loc[len(df_comp.index), "subjID"] = subj
+        ind_row = df_comp.index[df_comp["subjID"] == subj].tolist()
+
+        for deriv in expected_dict:
+            for h_count, _ in enumerate(expected_dict[deriv]):
+                deriv_str = expected_dict[deriv][h_count][0]
+                ind_col = df_comp.columns.get_loc(expected_dict[deriv][h_count][1])
+                deriv_file = glob.glob(
+                    f"{deriv_dir}/{deriv}/{subj}/**/*{deriv_str}*", recursive=True
+                )
+                h_input = True if deriv_file else False
+                df_comp.iloc[ind_row, ind_col] = h_input
+
+    df_comp.sort_values(by=["subjID"])
+    df_comp.to_csv(completed_tsv, index=False, sep="\t")
 
 
 if __name__ == "__main__":
