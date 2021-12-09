@@ -15,7 +15,7 @@ import fnmatch
 
 
 # %%
-def check_preproc(proj_dir, code_dir):
+def check_preproc(proj_dir, pat_github_emu):
     """Desc.
 
     Test.
@@ -28,7 +28,8 @@ def check_preproc(proj_dir, code_dir):
     #     if platform.system() == "Linux"
     #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # )
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    # repo_local = "/Users/nmuncy/Desktop/func_processing"
+    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
 
     # For each derivative directory in proj_dir, a key
     # with associated tuples exist for file to be checked.
@@ -57,12 +58,19 @@ def check_preproc(proj_dir, code_dir):
         "reface": [["reface", "desc-reface"]],
     }
 
-    # update repo
-    repo = git.Repo(code_dir)
-    repo.remotes.origin.pull()
+    # get, update repo
+    repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
+    repo_local = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    try:
+        print(f"Cloning repo to {repo_local}")
+        repo = git.Repo.clone_from(repo_origin, repo_local)
+    except:
+        print(f"Updating repo: {repo_local}")
+        repo = git.Repo(repo_local)
+        repo.remotes.origin.pull()
 
     # set up
-    log_dir = os.path.join(code_dir, "logs")
+    log_dir = os.path.join(repo_local, "logs")
     completed_tsv = os.path.join(log_dir, "completed_preprocessing.tsv")
     deriv_dir = os.path.join(proj_dir, "derivatives")
     dset_dir = os.path.join(proj_dir, "dset")
