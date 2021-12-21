@@ -28,9 +28,10 @@ sbatch --job-name=runAfni \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_afni.py \\
-    -s ses-S1 \\
-    -t task-study \\
-    -c /home/nmuncy/compute/func_processing
+    -s ses-S2 \\
+    -t task-test \\
+    -c /home/nmuncy/compute/func_processing \\
+    -p $TOKEN_GITHUB_EMU
 """
 
 
@@ -44,7 +45,8 @@ import json
 import fnmatch
 import glob
 import time
-import git
+
+# import git
 import pandas as pd
 import numpy as np
 import operator
@@ -56,10 +58,8 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    prep_dir,
-    dset_dir,
     afni_dir,
-    afni_final,
+    proj_dir,
     subj,
     sess,
     task,
@@ -67,6 +67,7 @@ def submit_jobs(
     slurm_dir,
     tplflow_str,
     dur,
+    do_decon,
     decon_plan,
 ):
     """Schedule work for single participant.
@@ -77,14 +78,10 @@ def submit_jobs(
 
     Parameters
     ----------
-    prep_dir : str
-        path to project derivatives/fmriprep
-    dset_dir : str
-        path to project dset
     afni_dir : str
         path to /scratch directory, for intermediates
-    afni_final : str
-        path to project derivatives/afni
+    proj_dir : str
+        path to BIDS-formatted project directory
     subj : str
         BIDS subject string
     sess : str
@@ -99,6 +96,8 @@ def submit_jobs(
         template_flow identifier string
     dur : int/float/str
         duration of event to be modeled
+    do_decon : bool
+        whether to conduct deconvolution
     decon_plan : dict/None
         planned deconvolution with behavior: timing file mappings
 
@@ -109,6 +108,9 @@ def submit_jobs(
     """
 
     subj_num = subj.split("-")[-1]
+    prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
+    dset_dir = os.path.join(proj_dir, "dset")
+    afni_final = os.path.join(proj_dir, "derivatives/afni")
 
     h_cmd = f"""\
         #!/bin/env {sys.executable}
@@ -138,24 +140,33 @@ def submit_jobs(
             "{tplflow_str}",
         )
 
-        afni_data = control_afni.control_deconvolution(
-            afni_data,
-            "{afni_dir}",
-            "{dset_dir}",
-            "{subj}",
-            "{sess}",
-            "{task}",
-            "{dur}",
-            {decon_plan},
-        )
-        print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
+        if {do_decon}:
+            afni_data = control_afni.control_deconvolution(
+                afni_data,
+                "{afni_dir}",
+                "{dset_dir}",
+                "{subj}",
+                "{sess}",
+                "{task}",
+                "{dur}",
+                {decon_plan},
+            )
+            print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
         # clean up
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
-        if "{sess}" == "ses-S2":
-            shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "anat"))
         clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
-        clean_list = ["preproc_bold", "smoothed_bold", "probseg"]
+        clean_list = [
+            "preproc_bold",
+            "smoothed_bold",
+            "scaled_bold",
+            "nuissance_bold",
+            "probseg",
+            "preproc_T1w",
+            "minval_mask",
+            "GMe_mask",
+            "WMe_mask",
+        ]
         for c_str in clean_list:
             for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
                 os.remove(h_file)
@@ -272,6 +283,13 @@ def get_args():
         type=str,
         required=True,
     )
+    required_args.add_argument(
+        "-p",
+        "--pat",
+        help="Personal Access Token for github.com/emu-project",
+        type=str,
+        required=True,
+    )
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -286,16 +304,16 @@ def main():
     # # For testing
     # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # batch_num = 1
+    # batch_num = 3
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
     # dur = 2
-    # afni_dir = "/scratch/madlab/McMain_EMUR01/derivatives/afni"
+    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
     # json_dir = None
-    # sess = "ses-S1"
+    # sess = "ses-S2"
     # task = "task-study"
-    # code_dir = "/Users/nmuncy/Projects/func_processing"
+    # code_dir = "/home/nmuncy/compute/func_processing"
 
-    # receive passed args
+    # # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     batch_num = args.batch_num
@@ -306,24 +324,30 @@ def main():
     sess = args.session
     task = args.task
     code_dir = args.code_dir
+    pat_github_emu = args.pat
 
     # set up
-    dset_dir = os.path.join(proj_dir, "dset")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
-    # update repo for logs
-    repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
-    repo_local = code_dir
-    try:
-        print(f"Cloning repo to {repo_local}")
-        repo = git.Repo.clone_from(repo_origin, repo_local)
-    except:
-        print(f"Updating repo: {repo_local}")
-        repo = git.Repo(repo_local)
-        repo.remotes.origin.pull()
+    # # update repo for logs
+    # repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
+    # repo_local = code_dir
+    # try:
+    #     print(f"Cloning repo to {repo_local}")
+    #     repo = git.Repo.clone_from(repo_origin, repo_local)
+    # except:
+    #     print(f"Updating repo: {repo_local}")
+    #     repo = git.Repo(repo_local)
+    #     repo.remotes.origin.pull()
+
+    # update logs
+    sys.path.append(code_dir)
+    from resources.reports.check_complete import check_preproc
+
+    check_preproc(proj_dir, code_dir, pat_github_emu)
 
     # get completed logs
     log_dir = os.path.join(code_dir, "logs")
@@ -358,27 +382,20 @@ def main():
         else:
             decon_plan = None
 
-        # check logs intersection masks
+        # check logs for session's intersection masks, first decon
+        # TODO update decon check
         ind_subj = df_log.index[df_log["subjID"] == subj]
-        intersect_col_name = f"intersect_{sess}"
-        intersect_exists = operator.not_(
-            pd.isnull(df_log.loc[ind_subj, intersect_col_name]).bool()
-        )
+        intersect_missing = pd.isnull(df_log.loc[ind_subj, f"intersect_{sess}"]).bool()
+        decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
 
-        # check logs for session's first decon
-        # TODO update this check
-        decon_col_name = f"decon_{sess}_1"
-        decon_exists = operator.not_(
-            pd.isnull(df_log.loc[ind_subj, decon_col_name]).bool()
-        )
-
-        # append subj_list if fmriprep data exists and afni data is missing
+        # Append subj_list if fmriprep data exists and afni data is missing.
+        # Note - only add decon to dict, pre-processing is required to create
+        # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
-            if not intersect_exists or not decon_exists:
-                print(f"Adding {subj} to working list (subj_dict).")
+            if intersect_missing or decon_missing:
+                print(f"\tAdding {subj} to working list (subj_dict).")
                 subj_dict[subj] = {
-                    "Preproc": intersect_exists,
-                    "Decon": decon_exists,
+                    "Decon": decon_missing,
                     "Decon_plan": decon_plan,
                 }
 
@@ -394,13 +411,11 @@ def main():
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
-    for subj in subj_list[:batch_num]:
+    for subj, value_dict in list(subj_dict.items())[:batch_num]:
         print(f"Submitting job for {subj} {sess} {task}")
         h_out, h_err = submit_jobs(
-            prep_dir,
-            dset_dir,
             afni_dir,
-            afni_final,
+            proj_dir,
             subj,
             sess,
             task,
@@ -408,7 +423,8 @@ def main():
             slurm_dir,
             tplflow_str,
             dur,
-            decon_plan,
+            value_dict["Decon"],
+            value_dict["Decon_plan"],
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

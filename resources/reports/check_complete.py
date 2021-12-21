@@ -8,15 +8,16 @@ import os
 import time
 import datetime
 import glob
-import git
 
-import platform
+# import git
+
+# import platform
 import pandas as pd
 import fnmatch
 
 
 # %%
-def check_preproc(proj_dir, pat_github_emu):
+def check_preproc(proj_dir, code_dir, pat_github_emu):
     """Check for files in expected_dict.
 
     In order to determine which participants need pre-processing,
@@ -32,6 +33,8 @@ def check_preproc(proj_dir, pat_github_emu):
     proj_dir : str
         Path to BIDS-organized project directory, for
         finding dset and derivatives
+    code_dir : str
+        Path to desired/existing location of https://github.com/emu-project/func_processing.git
     pat_github_emu : str
         Personal Access Token to https://github.com/emu-project
 
@@ -48,13 +51,13 @@ def check_preproc(proj_dir, pat_github_emu):
             decon_<sess>_<int>
     """
 
-    # For testing
-    proj_dir = (
-        "/home/data/madlab/McMakin_EMUR01"
-        if platform.system() == "Linux"
-        else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    )
-    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # # For testing
+    # proj_dir = (
+    #     "/home/data/madlab/McMakin_EMUR01"
+    #     if platform.system() == "Linux"
+    #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    # )
+    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
 
     expected_dict = {
         "afni": [
@@ -97,17 +100,17 @@ def check_preproc(proj_dir, pat_github_emu):
 
     # get, update repo
     repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
-    repo_local = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    try:
-        print(f"Cloning repo to {repo_local}")
-        repo = git.Repo.clone_from(repo_origin, repo_local)
-    except:
-        print(f"Updating repo: {repo_local}")
-        repo = git.Repo(repo_local)
-        repo.remotes.origin.pull()
+    repo_local = code_dir
+    # try:
+    #     print(f"Cloning repo to {repo_local}")
+    #     repo = git.Repo.clone_from(repo_origin, repo_local)
+    # except:
+    #     print(f"Updating repo: {repo_local}")
+    #     repo = git.Repo(repo_local)
+    #     repo.remotes.origin.pull()
 
     # set up
-    log_dir = os.path.join(repo_local, "logs")
+    log_dir = os.path.join(code_dir, "logs")
     completed_tsv = os.path.join(log_dir, "completed_preprocessing.tsv")
     deriv_dir = os.path.join(proj_dir, "derivatives")
     dset_dir = os.path.join(proj_dir, "dset")
@@ -157,11 +160,11 @@ def check_preproc(proj_dir, pat_github_emu):
     df_comp.sort_values(by=["subjID"])
     df_comp.to_csv(completed_tsv, index=False, sep="\t")
 
-    # update repo origin
-    now = datetime.datetime.now()
-    repo.git.add(completed_tsv)
-    repo.index.commit(
-        f"""Updated completed_preprocess.tsv at {now.strftime("%Y-%m-%d %H:%M:%S")}"""
-    )
-    origin = repo.remote(name="origin")
-    origin.push()
+    # # update repo origin
+    # now = datetime.datetime.now()
+    # repo.git.add(completed_tsv)
+    # repo.index.commit(
+    #     f"""Updated completed_preprocess.tsv at {now.strftime("%Y-%m-%d %H:%M:%S")}"""
+    # )
+    # origin = repo.remote(name="origin")
+    # origin.push()
