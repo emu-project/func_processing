@@ -9,6 +9,7 @@ import time
 import datetime
 import glob
 import git
+
 import platform
 import pandas as pd
 import fnmatch
@@ -43,28 +44,30 @@ def check_preproc(proj_dir, pat_github_emu):
         - tuple[0] is a string that matches a column in col_names
             and a column of logs/completed_preprocessing.tsv
         - tuple[1] is a string used to find the single file via glob
+        - multiple decons are supported for each session via
+            decon_<sess>_<int>
     """
 
-    # # For testing
-    # proj_dir = (
-    #     "/home/data/madlab/McMakin_EMUR01"
-    #     if platform.system() == "Linux"
-    #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # )
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # For testing
+    proj_dir = (
+        "/home/data/madlab/McMakin_EMUR01"
+        if platform.system() == "Linux"
+        else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    )
+    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
 
     expected_dict = {
         "afni": [
             (
-                "intersect_1",
+                "intersect_ses-S1",
                 "ses-S1_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
-            ("decon_1", "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD"),
+            ("decon_ses-S1_1", "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD"),
             (
-                "intersect_2",
+                "intersect_ses-S2",
                 "ses-S2_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
-            ("decon_2", "decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD"),
+            ("decon_ses-S2_1", "decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD"),
         ],
         "ashs": [
             ("ashs_L", "left_lfseg_corr_usegray"),
@@ -75,10 +78,10 @@ def check_preproc(proj_dir, pat_github_emu):
 
     col_names = [
         "subjID",
-        "intersect_1",
-        "intersect_2",
-        "decon_1",
-        "decon_2",
+        "intersect_ses-S1",
+        "intersect_ses-S2",
+        "decon_ses-S1_1",
+        "decon_ses-S2_1",
         "ashs_L",
         "ashs_R",
         "reface",

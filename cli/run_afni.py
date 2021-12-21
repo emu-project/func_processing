@@ -32,6 +32,11 @@ sbatch --job-name=runAfni \\
     -t task-study \\
     -c /home/nmuncy/compute/func_processing
 """
+
+
+# TODO git pull for logs
+
+
 # %%
 import os
 import sys
@@ -39,6 +44,10 @@ import json
 import fnmatch
 import glob
 import time
+import git
+import pandas as pd
+import numpy as np
+import operator
 from datetime import datetime
 import textwrap
 import subprocess
@@ -251,18 +260,10 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
+        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
+        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
     )
     required_args.add_argument(
         "-c",
@@ -283,6 +284,7 @@ def get_args():
 def main():
 
     # # For testing
+    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # batch_num = 1
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
@@ -291,7 +293,7 @@ def main():
     # json_dir = None
     # sess = "ses-S1"
     # task = "task-study"
-    # code_dir = "/home/nmuncy/compute/func_processing"
+    # code_dir = "/Users/nmuncy/Projects/func_processing"
 
     # receive passed args
     args = get_args().parse_args()
@@ -312,19 +314,30 @@ def main():
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
+    # update repo for logs
+    repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
+    repo_local = code_dir
+    try:
+        print(f"Cloning repo to {repo_local}")
+        repo = git.Repo.clone_from(repo_origin, repo_local)
+    except:
+        print(f"Updating repo: {repo_local}")
+        repo = git.Repo(repo_local)
+        repo.remotes.origin.pull()
+
+    # get completed logs
+    log_dir = os.path.join(code_dir, "logs")
+    df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
+
     # make list of subjects who have fmriprep output and are
     # missing afni deconvolutions
-    subj_list_all = [
-        x
-        for x in os.listdir(prep_dir)
-        if fnmatch.fnmatch(x, "sub-*") and not fnmatch.fnmatch(x, "*html")
-    ]
-    subj_list_all.sort()
-    subj_list = []
+    subj_list_all = df_log["subjID"].tolist()
+    subj_dict = {}
     for subj in subj_list_all:
 
         # check for fmriprep output
         print(f"Checking {subj} for previous work ...")
+        fmriprep_check = False
         anat_check = glob.glob(
             f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
             recursive=True,
@@ -333,55 +346,50 @@ def main():
             f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
             recursive=True,
         )
+        if anat_check and func_check:
+            fmriprep_check = True
 
-        # check whether each planned deconvolution exists
-        afni_check = []
+        # determine decon plans
         if json_dir:
             decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
             assert decon_glob, f"No JSON found for {subj} in {json_dir}."
             with open(decon_glob[0]) as jf:
                 decon_plan = json.load(jf)
-            for decon_str in decon_plan.keys():
-                afni_check.append(
-                    os.path.exists(
-                        os.path.join(
-                            afni_final,
-                            subj,
-                            sess,
-                            "func",
-                            f"decon_{task}_{decon_str}_stats_REML+tlrc.HEAD",
-                        )
-                    )
-                )
         else:
             decon_plan = None
-            afni_check.append(
-                os.path.exists(
-                    os.path.join(
-                        afni_final,
-                        subj,
-                        sess,
-                        "func",
-                        f"decon_{task}_UniqueBehs_stats_REML+tlrc.HEAD",
-                    )
-                )
-            )
 
-        # append subj_list if fmriprep data exists and a planned
-        # decon is missing
-        if anat_check and func_check and False in afni_check:
-            print(f"Adding {subj} to working list (subj_list).")
-            subj_list.append(subj)
+        # check logs intersection masks
+        ind_subj = df_log.index[df_log["subjID"] == subj]
+        intersect_col_name = f"intersect_{sess}"
+        intersect_exists = operator.not_(
+            pd.isnull(df_log.loc[ind_subj, intersect_col_name]).bool()
+        )
+
+        # check logs for session's first decon
+        # TODO update this check
+        decon_col_name = f"decon_{sess}_1"
+        decon_exists = operator.not_(
+            pd.isnull(df_log.loc[ind_subj, decon_col_name]).bool()
+        )
+
+        # append subj_list if fmriprep data exists and afni data is missing
+        if fmriprep_check:
+            if not intersect_exists or not decon_exists:
+                print(f"Adding {subj} to working list (subj_dict).")
+                subj_dict[subj] = {
+                    "Preproc": intersect_exists,
+                    "Decon": decon_exists,
+                    "Decon_plan": decon_plan,
+                }
 
     # kill for no subjects
-    if len(subj_list) == 0:
+    if len(subj_dict.keys()) == 0:
         return
 
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

@@ -15,6 +15,11 @@ sbatch --job-name=runReface \\
     run_reface.py \\
     -c /home/nmuncy/compute/func_processing
 """
+
+
+# TODO git pull for logs
+
+
 # %%
 import os
 import sys
@@ -199,8 +204,7 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

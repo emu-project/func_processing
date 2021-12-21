@@ -34,6 +34,8 @@ from datetime import datetime
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+# TODO git pull for logs
+
 
 # %%
 def submit_jobs(
@@ -273,8 +275,7 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
