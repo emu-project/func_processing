@@ -87,28 +87,28 @@ esac
 # verify environment
 try_count=0; unset conda_found
 search_python () {
-    which python | grep "conda3" > /dev/null 2>&1
+    which python | grep "emuR01_madlab_env" > /dev/null 2>&1
     return $?
 }
 search_python; conda_found=$?
-while [ $try_count -lt 4 ] && [ $conda_found != 0 ]; do
-    echo -e "\n \t ERROR: Did not find conda3 in PYTHONPATH,"
-    echo -e "\t attempting resolution $try_count."
+while [ $try_count -lt 2 ] && [ $conda_found != 0 ]; do
+    echo "ERROR: did not find conda env emuR01_madlab_env,"
+    echo -e "\tattempting resolution $try_count.\n"
     case $try_count in
-        0) source ~/.bash_profile
+        0) madlab_env emuR01
             ;;
-        1) source ~/.bashrc
+        1) source ~/.bashrc && madlab_env emuR01
             ;;
-        2) PYTHONPATH=~/miniconda3/bin:/home/data/madlab/scripts && export PYTHONPATH
-            ;;
-        3) echo -e "\n \t ERROR: Failed to find conda3 when PYTHONPATH=$PYTHONPATH, exiting." >&2
+        2) echo "Failed to load conda env emuR01_madlab_env." >&2
+            echo "Please configure environment according to github.com/fiumadlab/madlab_env.git" >&2
+            echo "Exiting." >&2
             exit 1
             ;;
     esac
     let try_count+=1
     search_python; conda_found=$?
 done
-echo -e "\n \t Python path: $(which python)"
+echo -e "\nPython path: $(which python)"
 
 
 # check that previous jobs are done
