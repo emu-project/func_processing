@@ -159,7 +159,6 @@ def submit_jobs(
         clean_list = [
             "preproc_bold",
             "smoothed_bold",
-            "scaled_bold",
             "nuissance_bold",
             "probseg",
             "preproc_T1w",
@@ -383,16 +382,20 @@ def main():
             decon_plan = None
 
         # check logs for session's intersection masks, first decon
-        # TODO update decon check
+        # TODO update decon check, check log for scaled
         ind_subj = df_log.index[df_log["subjID"] == subj]
         intersect_missing = pd.isnull(df_log.loc[ind_subj, f"intersect_{sess}"]).bool()
         decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
+        scaled_exists = glob.glob(
+            f"{proj_dir}/derivatives/afni/{subj}/**/*{task}*{tplflow_str}_desc-scaled_bold.nii.gz",
+            recursive=True,
+        )
 
         # Append subj_list if fmriprep data exists and afni data is missing.
         # Note - only add decon to dict, pre-processing is required to create
         # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
-            if intersect_missing or decon_missing:
+            if intersect_missing or not scaled_exists or decon_missing:
                 print(f"\tAdding {subj} to working list (subj_dict).")
                 subj_dict[subj] = {
                     "Decon": decon_missing,
