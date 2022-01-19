@@ -164,7 +164,6 @@ def submit_jobs(
             "preproc_T1w",
             "minval_mask",
             "GMe_mask",
-            "WMe_mask",
         ]
         for c_str in clean_list:
             for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
