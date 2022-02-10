@@ -8,16 +8,14 @@ import os
 import time
 import datetime
 import glob
-
-# import git
-
-# import platform
+import git
+import platform
 import pandas as pd
 import fnmatch
 
 
 # %%
-def check_preproc(proj_dir, code_dir, pat_github_emu):
+def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=False):
     """Check for files in expected_dict.
 
     In order to determine which participants need pre-processing,
@@ -37,6 +35,13 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
         Path to desired/existing location of https://github.com/emu-project/func_processing.git
     pat_github_emu : str
         Personal Access Token to https://github.com/emu-project
+    new_df : bool
+        Whether to generate a completely new logs/completed_preprocessing.tsv,
+        use "new_df=True" when expected_dict gets updated with new files.
+    one_subj : bool/str
+        Whether to check for data from single subject. If true, supply
+        BIDS-formatted subject string.
+        (e.g. one_subj="sub-4001")
 
     Notes
     -----
@@ -51,25 +56,30 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
             decon_<sess>_<int>
     """
 
-    # # For testing
-    # proj_dir = (
-    #     "/home/data/madlab/McMakin_EMUR01"
-    #     if platform.system() == "Linux"
-    #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # )
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # For testing
+    proj_dir = (
+        "/home/data/madlab/McMakin_EMUR01"
+        if platform.system() == "Linux"
+        else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    )
+    code_dir = "/home/nmuncy/compute/func_processing"
+    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
 
     expected_dict = {
         "afni": [
+            ("wme_mask", "desc-WMe_mask"),
             (
                 "intersect_ses-S1",
                 "ses-S1_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
-            ("decon_ses-S1_1", "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD"),
             (
                 "intersect_ses-S2",
                 "ses-S2_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
+            ("scaled_ses-S2_1", "run-1_*_desc-scaled_bold"),
+            ("scaled_ses-S2_2", "run-2_*_desc-scaled_bold"),
+            ("scaled_ses-S2_3", "run-3_*_desc-scaled_bold"),
+            ("decon_ses-S1_1", "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD"),
             ("decon_ses-S2_1", "decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD"),
         ],
         "ashs": [
@@ -81,8 +91,12 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
 
     col_names = [
         "subjID",
+        "wme_mask",
         "intersect_ses-S1",
         "intersect_ses-S2",
+        "scaled_ses-S2_1",
+        "scaled_ses-S2_2",
+        "scaled_ses-S2_3",
         "decon_ses-S1_1",
         "decon_ses-S2_1",
         "ashs_L",
@@ -101,13 +115,13 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
     # get, update repo
     repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
     repo_local = code_dir
-    # try:
-    #     print(f"Cloning repo to {repo_local}")
-    #     repo = git.Repo.clone_from(repo_origin, repo_local)
-    # except:
-    #     print(f"Updating repo: {repo_local}")
-    #     repo = git.Repo(repo_local)
-    #     repo.remotes.origin.pull()
+    try:
+        print(f"Cloning repo to {repo_local}")
+        repo = git.Repo.clone_from(repo_origin, repo_local)
+    except:
+        print(f"Updating repo: {repo_local}")
+        repo = git.Repo(repo_local)
+        repo.remotes.origin.pull()
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -116,10 +130,13 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
     dset_dir = os.path.join(proj_dir, "dset")
 
     # determine subjects from dset
-    subj_list = sorted([x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")])
+    if one_subj:
+        subj_list = one_subj
+    else:
+        subj_list = sorted([x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")])
 
-    # make new completed_tsv if one does not exist
-    if not os.path.exists(completed_tsv):
+    # make new completed_tsv
+    if new_df:
         df = pd.DataFrame(columns=col_names)
         df["subjID"] = subj_list
         df.to_csv(completed_tsv, index=False, sep="\t")
@@ -160,11 +177,11 @@ def check_preproc(proj_dir, code_dir, pat_github_emu):
     df_comp.sort_values(by=["subjID"])
     df_comp.to_csv(completed_tsv, index=False, sep="\t")
 
-    # # update repo origin
-    # now = datetime.datetime.now()
-    # repo.git.add(completed_tsv)
-    # repo.index.commit(
-    #     f"""Updated completed_preprocess.tsv at {now.strftime("%Y-%m-%d %H:%M:%S")}"""
-    # )
-    # origin = repo.remote(name="origin")
-    # origin.push()
+    # update repo origin
+    now = datetime.datetime.now()
+    repo.git.add(completed_tsv)
+    repo.index.commit(
+        f"""Updated completed_preprocess.tsv at {now.strftime("%Y-%m-%d %H:%M:%S")}"""
+    )
+    origin = repo.remote(name="origin")
+    origin.push()

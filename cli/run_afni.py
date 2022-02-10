@@ -45,8 +45,7 @@ import json
 import fnmatch
 import glob
 import time
-
-# import git
+import git
 import pandas as pd
 import numpy as np
 import operator
@@ -69,6 +68,7 @@ def submit_jobs(
     dur,
     do_decon,
     decon_plan,
+    pat_github_emu,
 ):
     """Schedule work for single participant.
 
@@ -100,6 +100,8 @@ def submit_jobs(
         whether to conduct deconvolution
     decon_plan : dict/None
         planned deconvolution with behavior: timing file mappings
+    pat_github_emu : str
+        Personal Access Token to https://github.com/emu-project
 
     Returns
     -------
@@ -130,6 +132,7 @@ def submit_jobs(
         import subprocess
         sys.path.append("{code_dir}")
         from workflow import control_afni
+        from resources.reports.check_complete import check_preproc
 
         afni_data = control_afni.control_preproc(
             "{prep_dir}",
@@ -177,6 +180,8 @@ def submit_jobs(
         # turn out the lights
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}"))
 
+        # update logs
+        check_preproc({proj_dir}, {code_dir}, {pat_github_emu}, one_subj="{subj}")
     """
 
     # write script for review, run it
@@ -269,10 +274,18 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
+        "-s",
+        "--session",
+        help="BIDS session str (ses-S2)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
+        "-t",
+        "--task",
+        help="BIDS EPI task str (task-test)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
         "-c",
@@ -382,7 +395,6 @@ def main():
 
         # check logs for session's intersection masks, first decon
         # TODO update decon check, check log for scaled
-        # TODO scaled_exists, wme_exists can be removed below
         ind_subj = df_log.index[df_log["subjID"] == subj]
         intersect_missing = pd.isnull(df_log.loc[ind_subj, f"intersect_{sess}"]).bool()
         decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
@@ -390,21 +402,12 @@ def main():
             f"{proj_dir}/derivatives/afni/{subj}/**/*{task}*{tplflow_str}_desc-scaled_bold.nii.gz",
             recursive=True,
         )
-        wme_exists = glob.glob(
-            f"{proj_dir}/derivatives/afni/{subj}/**/*_desc-WMe_mask.nii.gz",
-            recursive=True,
-        )
 
         # Append subj_list if fmriprep data exists and afni data is missing.
         # Note - only add decon to dict, pre-processing is required to create
         # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
-            if (
-                intersect_missing
-                or decon_missing
-                or not scaled_exists
-                or not wme_exists
-            ):
+            if intersect_missing or decon_missing or not scaled_exists:
                 print(f"\tAdding {subj} to working list (subj_dict).")
                 subj_dict[subj] = {
                     "Decon": decon_missing,
@@ -418,7 +421,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
@@ -437,6 +441,7 @@ def main():
             dur,
             value_dict["Decon"],
             value_dict["Decon_plan"],
+            pat_github_emu,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
