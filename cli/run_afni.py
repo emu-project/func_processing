@@ -35,20 +35,13 @@ sbatch --job-name=runAfni \\
 """
 
 
-# TODO git pull for logs
-
-
 # %%
 import os
 import sys
 import json
-import fnmatch
 import glob
 import time
-import git
 import pandas as pd
-import numpy as np
-import operator
 from datetime import datetime
 import textwrap
 import subprocess
@@ -342,17 +335,6 @@ def main():
     afni_final = os.path.join(proj_dir, "derivatives/afni")
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
-
-    # # update repo for logs
-    # repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
-    # repo_local = code_dir
-    # try:
-    #     print(f"Cloning repo to {repo_local}")
-    #     repo = git.Repo.clone_from(repo_origin, repo_local)
-    # except:
-    #     print(f"Updating repo: {repo_local}")
-    #     repo = git.Repo(repo_local)
-    #     repo.remotes.origin.pull()
 
     # update logs
     sys.path.append(code_dir)

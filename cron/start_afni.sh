@@ -110,7 +110,7 @@ done
 
 # check that previous jobs are done
 num_jobs=`squeue -u $(whoami) | wc -l`
-if [ $num_jobs -gt 1 ]; then
+if [ $num_jobs -gt 2 ]; then
     echo "Jobs still running, exiting ..."
     exit 0
 fi

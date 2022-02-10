@@ -64,6 +64,8 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     )
     code_dir = "/home/nmuncy/compute/func_processing"
     pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    one_subj = "sub-4168"
+    new_df = False
 
     expected_dict = {
         "afni": [
@@ -131,9 +133,11 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
 
     # determine subjects from dset
     if one_subj:
-        subj_list = one_subj
+        subj_list = [one_subj]
     else:
-        subj_list = sorted([x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")])
+        subj_list = sorted(
+            [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
+        )
 
     # make new completed_tsv
     if new_df:
