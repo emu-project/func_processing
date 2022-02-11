@@ -56,16 +56,16 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
             decon_<sess>_<int>
     """
 
-    # For testing
-    proj_dir = (
-        "/home/data/madlab/McMakin_EMUR01"
-        if platform.system() == "Linux"
-        else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    )
-    code_dir = "/home/nmuncy/compute/func_processing"
-    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    one_subj = "sub-4168"
-    new_df = False
+    # # For testing
+    # proj_dir = (
+    #     "/home/data/madlab/McMakin_EMUR01"
+    #     if platform.system() == "Linux"
+    #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    # )
+    # code_dir = "/home/nmuncy/compute/func_processing"
+    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # one_subj = "sub-4168"
+    # new_df = False
 
     expected_dict = {
         "afni": [

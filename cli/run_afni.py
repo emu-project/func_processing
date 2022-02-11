@@ -174,7 +174,7 @@ def submit_jobs(
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}"))
 
         # update logs
-        check_preproc({proj_dir}, {code_dir}, {pat_github_emu}, one_subj="{subj}")
+        # check_preproc({proj_dir}, {code_dir}, {pat_github_emu}, one_subj="{subj}")
     """
 
     # write script for review, run it
@@ -336,11 +336,11 @@ def main():
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
-    # update logs
-    sys.path.append(code_dir)
-    from resources.reports.check_complete import check_preproc
+    # # update logs
+    # sys.path.append(code_dir)
+    # from resources.reports.check_complete import check_preproc
 
-    check_preproc(proj_dir, code_dir, pat_github_emu)
+    # check_preproc(proj_dir, code_dir, pat_github_emu)
 
     # get completed logs
     log_dir = os.path.join(code_dir, "logs")
