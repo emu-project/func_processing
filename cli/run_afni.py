@@ -30,6 +30,7 @@ sbatch --job-name=runAfni \\
     run_afni.py \\
     -s ses-S2 \\
     -t task-test \\
+    -c /home/nmuncy/compute/func_processing \\
     -p $TOKEN_GITHUB_EMU
 """
 
@@ -278,6 +279,12 @@ def get_args():
         type=str,
         required=True,
     )
+    required_args.add_argument(
+        "-c",
+        "--code-dir",
+        required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
+    )
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -311,9 +318,9 @@ def main():
     sess = args.session
     task = args.task
     pat_github_emu = args.pat
+    code_dir = args.code_dir
 
     # set up
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")

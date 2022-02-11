@@ -13,6 +13,7 @@ sbatch --job-name=runReface \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_reface.py \\
+    -c /home/nmuncy/compute/func_processing \\
     --run
 """
 
@@ -130,6 +131,12 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
+        "-c",
+        "--code-dir",
+        required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
+    )
+    required_args.add_argument(
         "--run",
         dest="run",
         required=True,
@@ -152,15 +159,20 @@ def main():
     # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # method = "reface"
     # batch_num = 1
+    # code_dir = /home/nmuncy/compute/func_processing
 
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     batch_num = args.batch_num
     method = args.method
+    code_dir = args.code_dir
+    run_script = args.run
+
+    if not run_script:
+        sys.exit()
 
     # set up
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     log_dir = os.path.join(code_dir, "logs")
     scratch_dir = os.path.join(
         proj_dir.replace("/home/data", "/scratch"), "derivatives", "afni"
@@ -199,7 +211,8 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir,
+        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

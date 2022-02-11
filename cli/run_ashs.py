@@ -20,6 +20,7 @@ sbatch --job-name=runAshs \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_ashs.py \\
+    -c /home/nmuncy/compute/func_processing \\
     -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """
 # %%
@@ -197,6 +198,12 @@ def get_args():
         type=str,
         required=True,
     )
+    required_args.add_argument(
+        "-c",
+        "--code-dir",
+        required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
+    )
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -230,9 +237,9 @@ def main():
     atlas_dir = args.atlas_dir
     atlas_str = args.atlas_str
     sing_img = args.sing_img
+    code_dir = args.code_dir
 
     # set up
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     log_dir = os.path.join(code_dir, "logs")
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives/ashs")
@@ -268,7 +275,8 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir, f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir,
+        f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
