@@ -20,21 +20,18 @@ sbatch --job-name=runAshs \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_ashs.py \\
-    -s /home/nmuncy/bin/singularities/ashs_latest.simg \\
-    -c /home/nmuncy/compute/func_processing
+    -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """
 # %%
 import os
 import sys
-import fnmatch
 import glob
 import time
 import textwrap
+import pandas as pd
 from datetime import datetime
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
-
-# TODO git pull for logs
 
 
 # %%
@@ -200,13 +197,6 @@ def get_args():
         type=str,
         required=True,
     )
-    required_args.add_argument(
-        "-c",
-        "--code-dir",
-        help="Path to clone of github.com/emu-project/func_processing.git",
-        type=str,
-        required=True,
-    )
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -228,7 +218,6 @@ def main():
     # atlas_dir = "/home/data/madlab/atlases"
     # sing_img = "/home/nmuncy/bin/singularities/ashs_latest.simg"
     # atlas_str = "ashs_atlas_magdeburg"
-    # code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
     # receive passed args
     args = get_args().parse_args()
@@ -241,25 +230,29 @@ def main():
     atlas_dir = args.atlas_dir
     atlas_str = args.atlas_str
     sing_img = args.sing_img
-    code_dir = args.code_dir
 
     # set up
+    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    log_dir = os.path.join(code_dir, "logs")
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives/ashs")
 
+    # get completed logs
+    df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
+
     # make subject dict of those who need ASHS output
-    subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
-    subj_list_all.sort()
+    subj_list_all = df_log["subjID"].tolist()
     subj_dict = {}
     for subj in subj_list_all:
-        ashs_exists = os.path.exists(
-            os.path.join(
-                deriv_dir, subj, sess, f"{subj}_left_lfseg_corr_usegray.nii.gz"
-            )
-        )
+
+        # check log for missing left ASHS
+        ind_subj = df_log.index[df_log["subjID"] == subj]
+        ashs_missing = pd.isnull(df_log.loc[ind_subj, "ashs_L"]).bool()
+
+        # check for T1,2w files
         t1_files = glob.glob(f"{dset_dir}/{subj}/**/*{t1_search}.nii*", recursive=True)
         t2_files = glob.glob(f"{dset_dir}/{subj}/**/*{t2_search}.nii*", recursive=True)
-        if t1_files and t2_files and not ashs_exists:
+        if t1_files and t2_files and ashs_missing:
 
             # give list item in list for field map correction, multiple acquisitions
             subj_dict[subj] = {}

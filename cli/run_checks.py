@@ -11,8 +11,6 @@ Requires internet connection for git pulling/pushing.
 # %%
 import os
 import sys
-
-# from pathlib import Path
 import textwrap
 from argparse import ArgumentParser, RawTextHelpFormatter
 
@@ -51,16 +49,17 @@ def get_args():
 # %%
 def main():
 
-    # For testing
-    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # # For testing
+    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+
+    args = get_args().parse_args()
+    proj_dir = args.proj_dir
+    pat_github_emu = args.pat
 
     # orient self, update logs
-    # code_dir = str(Path(__file__).parent.parent.absolute())
     code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    print(code_dir)
     sys.path.append(code_dir)
-    print(sys.path)
     from resources.reports.check_complete import check_preproc
 
     check_preproc(proj_dir, code_dir, pat_github_emu)

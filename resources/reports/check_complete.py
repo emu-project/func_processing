@@ -9,9 +9,36 @@ import time
 import datetime
 import glob
 import git
-import platform
 import pandas as pd
 import fnmatch
+import requests
+import io
+
+
+# %%
+def clone_guid(pat_github_emu):
+    """Clone pseudo_guid_list.csv.
+
+    Parameters
+    ----------
+    pat_github_emu: str
+        personal access token for github.com/emu-project
+
+    Returns
+    -------
+    df_guid : pandas.DataFrame
+        dataframe of subject ID, GUIDs, comments
+    """
+
+    r = requests.get(
+        "https://raw.githubusercontent.com/emu-project/data_pulling/master/data_pulling/data/pseudo_guid_list.csv",
+        headers={
+            "accept": "application/vnd.github.v3.raw",
+            "authorization": "token {}".format(pat_github_emu),
+        },
+    )
+    df_guid = pd.read_csv(io.StringIO(r.text), index_col=False)
+    return df_guid
 
 
 # %%
@@ -25,6 +52,9 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     This will use strings from expected_dict to create a dataframe. In
     order to keep things synchronized, it will git clone/pull the repo
     and add/commit/push the updated logs/completed_preprocessing.tsv.
+
+    Subject list is made from pseudo_guid_list, so only consented data
+    is reflected in log.
 
     Parameters
     ----------
@@ -45,6 +75,8 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
 
     Notes
     -----
+    Internet connection is required!
+
     expected_dict should have the following organization:
         - each key corresponds to a derivatives directory
         - the value of each key is a list of tuples
@@ -57,11 +89,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     """
 
     # # For testing
-    # proj_dir = (
-    #     "/home/data/madlab/McMakin_EMUR01"
-    #     if platform.system() == "Linux"
-    #     else "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # )
+    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # code_dir = "/home/nmuncy/compute/func_processing"
     # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # one_subj = "sub-4168"
@@ -118,10 +146,10 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
     repo_local = code_dir
     try:
-        print(f"Cloning repo to {repo_local}")
+        print(f"\nCloning repo to {repo_local}")
         repo = git.Repo.clone_from(repo_origin, repo_local)
     except:
-        print(f"Updating repo: {repo_local}")
+        print(f"\nUpdating repo: {repo_local}")
         repo = git.Repo(repo_local)
         repo.remotes.origin.pull()
 
@@ -131,13 +159,24 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     deriv_dir = os.path.join(proj_dir, "derivatives")
     dset_dir = os.path.join(proj_dir, "dset")
 
-    # determine subjects from dset
+    # get updated pseudo_guid_list
+    df_guid = clone_guid(pat_github_emu)
+
+    # determine subjects from dset*pseudo_guid_list
     if one_subj:
         subj_list = [one_subj]
     else:
-        subj_list = sorted(
+        subj_list_all = sorted(
             [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
         )
+        df_guid["comments"] = df_guid["comments"].fillna("nan")
+        exclude_list = [
+            f"sub-{x}" for x in df_guid[df_guid["exclude"].notnull()]["redcap_id"]
+        ]
+        subj_guid = [f"sub-{x}" for x in df_guid["redcap_id"]]
+        subj_list = [
+            x for x in subj_list_all if x not in exclude_list and x in subj_guid
+        ]
 
     # make new completed_tsv
     if new_df:
@@ -182,6 +221,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     df_comp.to_csv(completed_tsv, index=False, sep="\t")
 
     # update repo origin
+    print("\nCommiting, pushing updates ...")
     now = datetime.datetime.now()
     repo.git.add(completed_tsv)
     repo.index.commit(

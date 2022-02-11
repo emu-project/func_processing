@@ -30,7 +30,6 @@ sbatch --job-name=runAfni \\
     run_afni.py \\
     -s ses-S2 \\
     -t task-test \\
-    -c /home/nmuncy/compute/func_processing \\
     -p $TOKEN_GITHUB_EMU
 """
 
@@ -267,25 +266,10 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
+        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
-        "-c",
-        "--code-dir",
-        help="Path to clone of github.com/emu-project/func_processing.git",
-        type=str,
-        required=True,
+        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
     )
     required_args.add_argument(
         "-p",
@@ -307,17 +291,16 @@ def main():
 
     # # For testing
     # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # batch_num = 3
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
     # dur = 2
     # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
     # json_dir = None
     # sess = "ses-S2"
-    # task = "task-study"
-    # code_dir = "/home/nmuncy/compute/func_processing"
+    # task = "task-test"
 
-    # # receive passed args
+    # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     batch_num = args.batch_num
@@ -327,23 +310,17 @@ def main():
     json_dir = args.json_dir
     sess = args.session
     task = args.task
-    code_dir = args.code_dir
     pat_github_emu = args.pat
 
     # set up
+    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
-    # # update logs
-    # sys.path.append(code_dir)
-    # from resources.reports.check_complete import check_preproc
-
-    # check_preproc(proj_dir, code_dir, pat_github_emu)
-
     # get completed logs
-    log_dir = os.path.join(code_dir, "logs")
     df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
 
     # make list of subjects who have fmriprep output and are
@@ -375,21 +352,19 @@ def main():
         else:
             decon_plan = None
 
-        # check logs for session's intersection masks, first decon
-        # TODO update decon check, check log for scaled
+        # Check logs for missing WM-eroded masks, session intersection mask,
+        # deconvolution, or run-1 scaled files.
         ind_subj = df_log.index[df_log["subjID"] == subj]
+        wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
         intersect_missing = pd.isnull(df_log.loc[ind_subj, f"intersect_{sess}"]).bool()
         decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
-        scaled_exists = glob.glob(
-            f"{proj_dir}/derivatives/afni/{subj}/**/*{task}*{tplflow_str}_desc-scaled_bold.nii.gz",
-            recursive=True,
-        )
+        scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
 
         # Append subj_list if fmriprep data exists and afni data is missing.
         # Note - only add decon to dict, pre-processing is required to create
         # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
-            if intersect_missing or decon_missing or not scaled_exists:
+            if intersect_missing or wme_missing or decon_missing or scaled_missing:
                 print(f"\tAdding {subj} to working list (subj_dict).")
                 subj_dict[subj] = {
                     "Decon": decon_missing,
@@ -403,8 +378,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
