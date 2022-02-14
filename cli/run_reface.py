@@ -13,16 +13,19 @@ sbatch --job-name=runReface \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_reface.py \\
-    -c /home/nmuncy/compute/func_processing
+    -c /home/nmuncy/compute/func_processing \\
+    --run
 """
+
+
 # %%
 import os
 import sys
-import fnmatch
 import glob
 import time
 import subprocess
 import textwrap
+import pandas as pd
 from datetime import datetime
 from argparse import ArgumentParser, RawTextHelpFormatter
 
@@ -130,10 +133,17 @@ def get_args():
     required_args.add_argument(
         "-c",
         "--code-dir",
-        help="Path to clone of github.com/emu-project/func_processing.git",
-        type=str,
         required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
     )
+    required_args.add_argument(
+        "--run",
+        dest="run",
+        required=True,
+        action="store_true",
+        help="use to start script",
+    )
+    required_args.set_defaults(run=False)
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -146,10 +156,10 @@ def get_args():
 def main():
 
     # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # method = "reface"
     # batch_num = 1
-    # code_dir = "/home/nmuncy/compute/func_processing"
+    # code_dir = /home/nmuncy/compute/func_processing
 
     # receive passed args
     args = get_args().parse_args()
@@ -157,8 +167,13 @@ def main():
     batch_num = args.batch_num
     method = args.method
     code_dir = args.code_dir
+    run_script = args.run
+
+    if not run_script:
+        sys.exit()
 
     # set up
+    log_dir = os.path.join(code_dir, "logs")
     scratch_dir = os.path.join(
         proj_dir.replace("/home/data", "/scratch"), "derivatives", "afni"
     )
@@ -167,27 +182,24 @@ def main():
     if not os.path.exists(deriv_dir):
         os.makedirs(deriv_dir)
 
+    # get completed logs
+    df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
+
     # make subject dict of those who need defaced output
-    subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
-    subj_list_all.sort()
+    subj_list_all = df_log["subjID"].tolist()
     subj_dict = {}
     for subj in subj_list_all:
 
+        # check for t1 file
         t1_files = sorted(glob.glob(f"{dset_dir}/{subj}/**/*T1w.nii*", recursive=True))
         t1_file = t1_files[-1].split("/")[-1]
         sess = t1_file.split("_")[1]
 
-        deface_exists = os.path.exists(
-            os.path.join(
-                deriv_dir,
-                subj,
-                sess,
-                "anat",
-                t1_file.replace("_T1w", f"_desc-{method}_T1w"),
-            )
-        )
+        # check log for missing re/deface
+        ind_subj = df_log.index[df_log["subjID"] == subj]
+        reface_missing = pd.isnull(df_log.loc[ind_subj, "reface"]).bool()
 
-        if t1_files and not deface_exists:
+        if t1_files and reface_missing:
             subj_dict[subj] = {}
             subj_dict[subj]["sess"] = sess
             subj_dict[subj]["anat"] = t1_file

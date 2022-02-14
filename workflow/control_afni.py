@@ -16,12 +16,7 @@ from resources.afni import copy, process, masks, motion, deconvolve
 
 # %%
 def control_preproc(
-    prep_dir,
-    afni_dir,
-    subj,
-    sess,
-    task,
-    tplflow_str,
+    prep_dir, afni_dir, subj, sess, task, tplflow_str,
 ):
     """Move data through AFNI pre-processing.
 
@@ -103,14 +98,7 @@ def control_preproc(
 
 
 def control_deconvolution(
-    afni_data,
-    afni_dir,
-    dset_dir,
-    subj,
-    sess,
-    task,
-    dur,
-    decon_plan,
+    afni_data, afni_dir, dset_dir, subj, sess, task, dur, decon_plan,
 ):
     """Generate and run planned deconvolutions.
 
