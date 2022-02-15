@@ -11,6 +11,7 @@ Requires "submit" module at same level.
 import os
 import pandas as pd
 import glob
+import math
 from . import submit
 
 
@@ -338,3 +339,195 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
                     tf.writelines(f"""{" ".join(map(str, onsets))}\n""")
 
     return decon_plan
+
+
+def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
+    """Construct regression matrix for resting state data.
+
+    Parameters
+    ----------
+
+
+    Returns
+    -------
+
+
+    Notes
+    -----
+
+    """
+
+    # check for req files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi == 1
+    ), "ERROR: afni_data['epi-scale1'] not found, or too many RS files. Check resources.afni.process.scale_epi."
+
+    assert (
+        afni_data["mask-min"] and afni_data["mask-erodedCSF"]
+    ), "ERROR: required masks (min, erodedCSF) not found. Check resources.afni.masks."
+
+    assert (
+        afni_data["mot-mean"] and afni_data["mot-deriv"] and afni_data["mot-censor"]
+    ), "ERROR: missing afni_data[mot-*] files, check resources.afni.motion.mot_files."
+
+    # set up strings
+    epi_file = afni_data["epi-scale1"][0]
+    file_censor = afni_data["mot-censor"]
+    subj_num = epi_file.split("sub-")[-1].split("_")[0]
+
+    # Conduct PCA to identify CSF signal - mask EPI data
+    # by minimum mask to avoid projecting into non-brain spaces. Then
+    # conduct PC analysis to derive timeseries of CSF.
+    file_pcomp = file_censor.replace("censor", "csfPC")
+    if not os.path.exists(file_pcomp):
+
+        # set file strings
+        tmp_censor = file_censor.replace("censor", "tmp-censor")
+        masked_epi = epi_file.replace("scaled", "masked")
+        project_epi = epi_file.replace("scaled", "project")
+        roi_pcomp = file_censor.replace("censor", "roiPC")
+
+        # determine polynomial order
+        # TODO check num_pol math so ceiling integer is product
+        tr_count, h_err = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
+        tr_len, h_err = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_file}")
+        num_pol = 1 + math.ceil((float(tr_count) * float(tr_len)) / 150)
+
+        # do PCA
+        h_cmd = f"""
+            3dcalc \
+                -a {epi_file} \
+                -b {afni_data["mask-min"]} \
+                -expr 'a*b' \
+                -prefix {masked_epi}
+
+            1d_tool.py \
+                -set_run_lengths {tr_count} \
+                -select_runs 1 \
+                -infile {file_censor} \
+                -write {tmp_censor}
+
+            3dTproject \
+                -polort {num_pol} \
+                -prefix {project_epi} \
+                -censor {tmp_censor} \
+                -cenmode KILL \
+                -input {masked_epi}
+
+            3dpc \
+                -mask {afni_data["mask-erodedCSF"]} \
+                -pcsave 3 \
+                -prefix {roi_pcomp} \
+                {project_epi}
+
+            1d_tool.py \
+                -censor_fill_parent {tmp_censor} \
+                -infile {roi_pcomp} \
+                -write - | 1d_tool.py \
+                -set_run_lengths {tr_count} \
+                -pad_into_many_runs 1 1 \
+                -infile - -write {file_pcomp}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 8, 1, f"{subj_num}PC", f"{work_dir}/sbatch_out"
+        )
+    assert os.path.exists(
+        file_pcomp
+    ), f"{file_pcomp} failed to write, check resources.afni.deconvolve.regress_resting."
+
+    # Build deconvolve command, write script for review.
+    # This will load effects of no interest on fitts sub-brick, and
+    # errts will contain cleaned time series. CSF time series is
+    # used as a nuissance regressor.
+    func_dir = os.path.join(work_dir, "func")
+    out_str = "decon_task-rest"
+    cmd_decon = f"""
+        3dDeconvolve \
+            -x1D_stop \
+            -input {epi_file} \
+            -censor {file_censor} \
+            -ortvec {file_pcomp} csf_ts \
+            -ortvec {afni_data["mot-mean"]} mot_mean \
+            -ortvec {afni_data["mot-deriv"]} mot_deriv \
+            -polort A \
+            -fout -tout \
+            -x1D {func_dir}/X.{out_str}.xmat.1D \
+            -xjpeg {func_dir}/X.{out_str}.jpg \
+            -x1D_uncensored {func_dir}/X.{out_str}.nocensor.xmat.1D \
+            -fitts {func_dir}/{out_str}_fitts \
+            -errts {func_dir}/{out_str}_errts \
+            -bucket {func_dir}/{out_str}_stats
+    """
+    decon_script = os.path.join(func_dir, f"{out_str}.sh")
+    with open(decon_script, "w") as script:
+        script.write(cmd_decon)
+
+    # generate x-matrices
+    xmat_file = os.path.join(func_dir, f"X.{out_str}.xmat.1D")
+    if not os.path.exists(xmat_file):
+        print("Running 3dDeconvolve for Resting data")
+        h_out, h_err = submit.submit_hpc_subprocess(cmd_decon)
+    assert os.path.exists(
+        xmat_file
+    ), f"{xmat_file} failed to write, check resources.afni.deconvolve.regress_resting."
+
+    # project regression matrix
+    if proj_meth == "original":
+        epi_tproject = os.path.join(func_dir, f"{out_str}_tproject+tlrc")
+        if not os.path.exists(f"{epi_tproject}.HEAD"):
+            h_cmd = f"""
+                3dTproject \
+                    -polort 0 \
+                    -input {epi_file} \
+                    -censor {file_censor} \
+                    -cenmode ZERO \
+                    -ort {func_dir}/X.{out_str}.nocensor.xmat.1D \
+                    -prefix {epi_tproject}
+            """
+            job_name, job_id = submit.submit_hpc_sbatch(
+                h_cmd, 1, 8, 1, f"{subj_num}Proj", f"{work_dir}/sbatch_out"
+            )
+        assert os.path.exists(
+            f"{epi_tproject}.HEAD"
+        ), f"{epi_tproject}.HEAD failed to write, check resources.afni.deconvolve.regress_resting."
+        afni_data["reg-matrix"] = epi_tproject
+
+    # project via anaticor method
+    if proj_meth == "anaticor":
+        epi_anaticor = os.path.join(func_dir, f"{out_str}_anaticor+tlrc")
+        if not os.path.exists(f"{epi_anaticor}.HEAD"):
+            comb_mask = epi_file.replace("scaled", "combCSF")
+            blur_mask = epi_file.replace("scaled", "blurCSF")
+            h_cmd = f"""
+                3dcalc \
+                    -a {masked_epi} \
+                    -b {afni_data["mask-erodedCSF"]} \
+                    -expr "a*bool(b)" \
+                    -datum float \
+                    -prefix {comb_mask}
+
+                3dmerge \
+                    -1blur_fwhm 30 \
+                    -doall \
+                    -prefix {blur_mask} \
+                    {comb_mask}
+
+                3dTproject \
+                    -polort 0 \
+                    -input {epi_file} \
+                    -censor {file_censor} \
+                    -cenmode ZERO \
+                    -dsort {blur_mask} \
+                    -ort {func_dir}/X.{out_str}.nocensor.xmat.1D \
+                    -prefix {epi_anaticor}
+            """
+            job_name, job_id = submit.submit_hpc_sbatch(
+                h_cmd, 1, 8, 1, f"{subj_num}Proj", f"{work_dir}/sbatch_out"
+            )
+        assert os.path.exists(
+            f"{epi_anaticor}.HEAD"
+        ), f"{epi_anaticor}.HEAD failed to write, check resources.afni.deconvolve.regress_resting."
+        afni_data["reg-matrix"] = epi_anaticor
+
+    return afni_data

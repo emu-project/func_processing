@@ -45,6 +45,7 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         mask-brain = brain mask
         mask-probGM = probability gray matter mask
         mask-probWM = probability white matter mask
+        mask-probCSF = probability csf mask
         epi-preproc? = fMRIprep preprocessed EPI for run-?
         mot-confound? = confounds (motion) file for EPI data for run-?
     """
@@ -61,6 +62,7 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         f"{anat_str}_desc-brain_mask.nii.gz",
         f"{anat_str}_label-GM_probseg.nii.gz",
         f"{anat_str}_label-WM_probseg.nii.gz",
+        f"{anat_str}_label-CSF_probseg.nii.gz",
     )
     anat_files = []
     for anat in desired_anat:
@@ -75,6 +77,7 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         f"{anat_str}_desc-brain_mask.nii.gz": "mask-brain",
         f"{anat_str}_label-GM_probseg.nii.gz": "mask-probGM",
         f"{anat_str}_label-WM_probseg.nii.gz": "mask-probWM",
+        f"{anat_str}_label-CSF_probseg.nii.gz": "mask-probCSF",
     }
 
     # copy anat files, update file_dict
@@ -137,6 +140,5 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         assert os.path.exists(
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
-
 
     return file_dict

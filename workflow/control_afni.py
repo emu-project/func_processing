@@ -187,3 +187,16 @@ def control_deconvolution(
         os.remove(tmp_file)
 
     return afni_data
+
+
+def control_resting(afni_data, afni_dir, subj, sess):
+    """Title.
+
+    Desc.
+    """
+
+    # setup dir
+    work_dir = os.path.join(afni_dir, subj, sess)
+
+    # generate regression matrix
+    afni_data = deconvolve.regress_resting(afni_data, work_dir)

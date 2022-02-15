@@ -93,7 +93,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
 
 
 def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
-    """Make tissue masks.
+    """Make tissue class masks.
 
     Parameters
     ----------
@@ -133,6 +133,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     switch_name = {
         "GM": mask_str.replace("desc-brain", "desc-GMe"),
         "WM": mask_str.replace("desc-brain", "desc-WMe"),
+        "CSF": mask_str.replace("desc-brain", "desc-CSFe"),
     }
 
     # make eroded, binary tissue masks
@@ -258,7 +259,7 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
 
     assert os.path.exists(
         mask_min
-    ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
+    ), f"{mask_min} failed to write, check resources.afni.masks.make_minimum_masks."
     afni_data["mask-min"] = mask_min
 
     return afni_data

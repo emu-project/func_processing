@@ -176,10 +176,7 @@ def reface(subj, sess, t1_file, proj_dir, method):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
-    t1_out = os.path.join(
-        out_dir,
-        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
-    )
+    t1_out = os.path.join(out_dir, t1_file.replace("_T1w", f"_desc-{method}_T1w"),)
     h_cmd = f"""
         export TMPDIR={out_dir}
 
@@ -199,3 +196,93 @@ def reface(subj, sess, t1_file, proj_dir, method):
         h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
     )
     print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+
+
+def resting_metrics(work_dir, afni_data):
+    """Title.
+
+    Desc.
+    """
+
+    # check for req files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi == 1
+    ), "ERROR: afni_data['epi-scale1'] not found, or too many RS files. Check resources.afni.process.scale_epi."
+
+    assert afni_data[
+        "reg-matrix"
+    ], "ERROR: no regression matrix, check resources.afni.deconvolve.regress_resting."
+
+    assert afni_data[
+        "mot-censor"
+    ], "ERROR: missing afni_data[mot-censor] file, check resources.afni.motion.mot_files."
+
+    assert afni_data[
+        "mask-int"
+    ], "ERROR: missing afni_data[mask-int] file, check resources.afni.masks.make_intersect_mask."
+
+    # set up
+    epi_file = afni_data["epi-scale1"][0]
+    reg_file = afni_data["reg-matrix"]
+    file_censor = afni_data["mot-censor"]
+    int_mask = afni_data["mask-int"]
+    subj_num = epi_file.split("sub-")[-1].split("_")[0]
+
+    # calc SNR
+    snr_file = epi_file.replace("scaled", "tsnr")
+    if not os.path.exists(snr_file):
+        mean_file = epi_file.replace("scaled", "meanTS")
+        sd_file = epi_file.replace("scaled", "sdTS")
+        used_vols, h_err = submit.submit_hpc_subprocess(
+            f"1d_tool.py -infile {file_censor} -show_trs_uncensored encoded"
+        )
+        h_cmd = f"""
+            3dTstat \
+                -mean \
+                -prefix {mean_file} \
+                {epi_file}"[{used_vols}]"
+
+            3dTstat \
+                -stdev \
+                -prefix {sd_file} \
+                {reg_file}"[{used_vols}]"
+
+            3dcalc \
+                -a {mean_file} \
+                -b {sd_file} \
+                -c {int_mask} \
+                -expr 'c*a/b' \
+                -prefix {snr_file}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 8, 1, f"{subj_num}SNR", f"{work_dir}/sbatch_out"
+        )
+
+    # calc global corr
+    unit_file = reg_file.replace("+tlrc", "_unit+tlrc")
+    gmean_file = reg_file.replace("+tlrc", "_gmean.1D")
+    gcor_file = reg_file.replace("+tlrc", "_gcor.1D")
+    if not os.path.exists(gcor_file):
+        h_cmd = f"""
+            3dTnorm \
+                -norm2 \
+                -prefix {unit_file} \
+                {reg_file}
+
+            3dmaskave \
+                -quiet \
+                -mask {int_mask} \
+                {unit_file} >{gmean_file}
+
+            3dTstat \
+                -sos \
+                -prefix - \
+                {gmean_file}\' >{gcor_file}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 8, 1, f"{subj_num}GCOR", f"{work_dir}/sbatch_out"
+        )
+
+    # calc correlations
+
