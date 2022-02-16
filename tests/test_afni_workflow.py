@@ -10,18 +10,10 @@ from workflow import control_afni
 
 # %%
 prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
-afni_dir = "/scratch/madlab/emu_test/derivatives/afni"
-subj = "sub-4002"
+afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
+subj = "sub-4146"
 sess = "ses-S2"
-task = "task-test"
+task = "task-rest"
 
 afni_data = control_afni.control_preproc(prep_dir, afni_dir, subj, sess, task)
-
-# %%
-dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
-afni_dir = control_afni.control_deconvolution(
-    afni_data, afni_dir, dset_dir, subj, sess, task
-)
-
-
-# %%
+afni_dir = control_afni.control_resting(afni_data, afni_dir, subj, sess)

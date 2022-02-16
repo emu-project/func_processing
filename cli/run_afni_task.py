@@ -27,7 +27,7 @@ sbatch --job-name=runAfni \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_afni.py \\
+    run_afni_task.py \\
     -s ses-S2 \\
     -t task-test \\
     -c /home/nmuncy/compute/func_processing \\
@@ -363,7 +363,9 @@ def main():
         # deconvolution, or run-1 scaled files.
         ind_subj = df_log.index[df_log["subjID"] == subj]
         wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
-        intersect_missing = pd.isnull(df_log.loc[ind_subj, f"intersect_{sess}"]).bool()
+        intersect_missing = pd.isnull(
+            df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
+        ).bool()
         decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
         scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
 

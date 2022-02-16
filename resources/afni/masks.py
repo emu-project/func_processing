@@ -8,7 +8,7 @@ import os
 from . import submit
 
 
-def make_intersect_mask(work_dir, subj_num, afni_data):
+def make_intersect_mask(work_dir, subj_num, afni_data, sess, task):
     """Make EPI-struct intersection mask.
 
     Parameters
@@ -19,6 +19,8 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         subject identifier, for sbatch job name
      afni_data : dict
         should contain smoothed data from process.blur_epi
+    sess :
+    task :
 
     Returns
     -------
@@ -43,12 +45,11 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
     epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
     # intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
-    sess = brain_mask.split("ses-")[1].split("/")[0]
     file_name = os.path.basename(brain_mask)
     file_path = os.path.dirname(brain_mask)
     subj, _, space, cohort, res, _, suff = file_name.split("_")
     intersect_mask = (
-        f"{file_path}/{subj}_ses-{sess}_{space}_{cohort}_{res}_desc-intersect_{suff}"
+        f"{file_path}/{subj}_{sess}_{task}_{space}_{cohort}_{res}_desc-intersect_{suff}"
     )
 
     if not os.path.exists(intersect_mask):

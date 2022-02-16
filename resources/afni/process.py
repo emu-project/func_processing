@@ -198,7 +198,7 @@ def reface(subj, sess, t1_file, proj_dir, method):
     print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
 
-def resting_metrics(work_dir, afni_data):
+def resting_metrics(afni_data, work_dir):
     """Title.
 
     Desc.
@@ -227,6 +227,8 @@ def resting_metrics(work_dir, afni_data):
     reg_file = afni_data["reg-matrix"]
     file_censor = afni_data["mot-censor"]
     int_mask = afni_data["mask-int"]
+    out_str = "decon_task-rest"
+    func_dir = os.path.join(work_dir, "func")
     subj_num = epi_file.split("sub-")[-1].split("_")[0]
 
     # calc SNR
@@ -284,5 +286,42 @@ def resting_metrics(work_dir, afni_data):
             h_cmd, 1, 8, 1, f"{subj_num}GCOR", f"{work_dir}/sbatch_out"
         )
 
-    # calc correlations
+    # noise estimations - afni style
+    noise_file = os.path.join(func_dir, "noise_est.1D")
+    if not os.path.exists(noise_file):
+        used_trs, h_err = submit.submit_hpc_subprocess(
+            f"""1d_tool.py \
+                -infile {func_dir}/X.{out_str}.xmat.1D \
+                -show_trs_uncensored encoded \
+                -show_trs_run 1 \
+            """
+        )
+        h_cmd = f"""
+            3dFWHMx \
+                -mask {int_mask} \
+                -ACF {func_dir}/ACF_epits.1D \
+                {epi_file}"[{used_trs}]" >{func_dir}/blur_epits.1D
 
+            3dFWHMx \
+                -mask {int_mask} \
+                -ACF {func_dir}/ACF_errts.1D \
+                {reg_file}"[{used_trs}]" >{func_dir}/blur_errts.1D
+
+            [ ! -s {func_dir}/blur_epits.1D ] || [ ! -s {func_dir}/blur_errts.1D ] \
+                && exit 1
+
+            blur_e0=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{0..$(2)}}'\')
+            blur_e1=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{1..$(2)}}'\')
+            blur_r0=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{0..$(2)}}'\')
+            blur_r1=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{1..$(2)}}'\')
+
+            cat <<-EOF >{noise_file}
+                $blur_e0    #epits FWHM blur est
+                $blur_e1    #epits ACF blur est
+                $blur_r0    #errts FWHM blur est
+                $blur_r1    #errts ACF blur est
+            EOF
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 4, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
+        )

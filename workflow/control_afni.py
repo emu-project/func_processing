@@ -80,7 +80,7 @@ def control_preproc(
     afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 
     # make masks
-    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
+    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data, sess, task)
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
     afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
@@ -198,5 +198,12 @@ def control_resting(afni_data, afni_dir, subj, sess):
     # setup dir
     work_dir = os.path.join(afni_dir, subj, sess)
 
-    # generate regression matrix
+    # generate regression matrix, determine snr/corr/noise
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
+    afni_data = process.resting_metrics(afni_data, work_dir)
+
+    # # clean
+    # for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+    #     os.remove(tmp_file)
+
+    return afni_data
