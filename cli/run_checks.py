@@ -6,6 +6,11 @@ Check <proj_dir> for a completed data, and generate/update
 logs/completed_preprocessing.tsv.
 
 Requires internet connection for git pulling/pushing.
+
+Example
+-------
+python run_checks.py \\
+    -p $TOKEN_GITHUB_EMU
 """
 
 # %%
@@ -30,6 +35,17 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--new-df",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Whether to generate new log, use when new fields
+            added to resources.reports.check_complete.
+            """
+        ),
+    )
+
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
         "-p",
@@ -56,13 +72,14 @@ def main():
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     pat_github_emu = args.pat
+    new_df = args.new_df
 
     # orient self, update logs
     code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     sys.path.append(code_dir)
     from resources.reports.check_complete import check_preproc
 
-    check_preproc(proj_dir, code_dir, pat_github_emu)
+    check_preproc(proj_dir, code_dir, pat_github_emu, new_df)
 
 
 if __name__ == "__main__":

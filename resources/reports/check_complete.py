@@ -42,7 +42,7 @@ def clone_guid(pat_github_emu):
 
 
 # %%
-def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=False):
+def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     """Check for files in expected_dict.
 
     In order to determine which participants need pre-processing,
@@ -67,7 +67,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
         Personal Access Token to https://github.com/emu-project
     new_df : bool
         Whether to generate a completely new logs/completed_preprocessing.tsv,
-        use "new_df=True" when expected_dict gets updated with new files.
+        "True" when expected_dict gets updated with new files.
     one_subj : bool/str
         Whether to check for data from single subject. If true, supply
         BIDS-formatted subject string.
