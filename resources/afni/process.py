@@ -176,7 +176,10 @@ def reface(subj, sess, t1_file, proj_dir, method):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
-    t1_out = os.path.join(out_dir, t1_file.replace("_T1w", f"_desc-{method}_T1w"),)
+    t1_out = os.path.join(
+        out_dir,
+        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
+    )
     h_cmd = f"""
         export TMPDIR={out_dir}
 
@@ -223,7 +226,7 @@ def resting_metrics(afni_data, work_dir):
     ], "ERROR: missing afni_data[mask-int] file, check resources.afni.masks.make_intersect_mask."
 
     # set up
-    epi_file = afni_data["epi-scale1"][0]
+    epi_file = afni_data["epi-scale1"]
     reg_file = afni_data["reg-matrix"]
     file_censor = afni_data["mot-censor"]
     int_mask = afni_data["mask-int"]
@@ -234,6 +237,7 @@ def resting_metrics(afni_data, work_dir):
     # calc SNR
     snr_file = epi_file.replace("scaled", "tsnr")
     if not os.path.exists(snr_file):
+        print(f"Making SNR file {snr_file}")
         mean_file = epi_file.replace("scaled", "meanTS")
         sd_file = epi_file.replace("scaled", "sdTS")
         used_vols, h_err = submit.submit_hpc_subprocess(
@@ -266,6 +270,7 @@ def resting_metrics(afni_data, work_dir):
     gmean_file = reg_file.replace("+tlrc", "_gmean.1D")
     gcor_file = reg_file.replace("+tlrc", "_gcor.1D")
     if not os.path.exists(gcor_file):
+        print(f"Calculating global correlation {gcor_file}")
         h_cmd = f"""
             3dTnorm \
                 -norm2 \
@@ -289,6 +294,7 @@ def resting_metrics(afni_data, work_dir):
     # noise estimations - afni style
     noise_file = os.path.join(func_dir, "noise_est.1D")
     if not os.path.exists(noise_file):
+        print(f"Running noise simulations ...")
         used_trs, h_err = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
                 -infile {func_dir}/X.{out_str}.xmat.1D \

@@ -372,7 +372,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     ), "ERROR: missing afni_data[mot-*] files, check resources.afni.motion.mot_files."
 
     # set up strings
-    epi_file = afni_data["epi-scale1"][0]
+    epi_file = afni_data["epi-scale1"]
     file_censor = afni_data["mot-censor"]
     subj_num = epi_file.split("sub-")[-1].split("_")[0]
 
@@ -381,6 +381,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     # conduct PC analysis to derive timeseries of CSF.
     file_pcomp = file_censor.replace("censor", "csfPC")
     if not os.path.exists(file_pcomp):
+        print(f"Starting PCA for {epi_file} ...")
 
         # set file strings
         tmp_censor = file_censor.replace("censor", "tmp-censor")
@@ -389,12 +390,14 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
         roi_pcomp = file_censor.replace("censor", "roiPC")
 
         # determine polynomial order
-        # TODO check num_pol math so ceiling integer is product
-        tr_count, h_err = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
-        tr_len, h_err = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_file}")
-        num_pol = 1 + math.ceil((float(tr_count) * float(tr_len)) / 150)
+        h_out, h_err = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
+        tr_count = int(h_out.decode("utf-8").strip())
+        h_out, h_err = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_file}")
+        tr_len = float(h_out.decode("utf-8").strip())
+        num_pol = 1 + math.ceil((tr_count * tr_len) / 150)
 
         # do PCA
+        # TODO fix this step
         h_cmd = f"""
             3dcalc \
                 -a {epi_file} \
@@ -429,6 +432,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
                 -pad_into_many_runs 1 1 \
                 -infile - -write {file_pcomp}
         """
+        print(h_cmd)
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}PC", f"{work_dir}/sbatch_out"
         )
@@ -440,6 +444,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     # This will load effects of no interest on fitts sub-brick, and
     # errts will contain cleaned time series. CSF time series is
     # used as a nuissance regressor.
+    print("Writing 3dDeconvolve for Resting data ...")
     func_dir = os.path.join(work_dir, "func")
     out_str = "decon_task-rest"
     cmd_decon = f"""
@@ -476,6 +481,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     if proj_meth == "original":
         epi_tproject = os.path.join(func_dir, f"{out_str}_tproject+tlrc")
         if not os.path.exists(f"{epi_tproject}.HEAD"):
+            print(f"Project regression matrix as {epi_tproject}")
             h_cmd = f"""
                 3dTproject \
                     -polort 0 \
@@ -497,6 +503,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     if proj_meth == "anaticor":
         epi_anaticor = os.path.join(func_dir, f"{out_str}_anaticor+tlrc")
         if not os.path.exists(f"{epi_anaticor}.HEAD"):
+            print(f"Project regression matrix as {epi_anaticor}")
             comb_mask = epi_file.replace("scaled", "combCSF")
             blur_mask = epi_file.replace("scaled", "blurCSF")
             h_cmd = f"""

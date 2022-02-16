@@ -114,6 +114,7 @@ def submit_jobs(
             "{task}",
             "{tplflow_str}",
         )
+        print(f"afni_data : \\n {{afni_data}}")
 
         if {do_regress}:
             afni_data = control_afni.control_resting(
@@ -122,7 +123,7 @@ def submit_jobs(
                 "{subj}",
                 "{sess}",
             )
-            print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
+        print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
         # clean up
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
@@ -261,14 +262,15 @@ def get_args():
 # %%
 def main():
 
-    # For testing
-    pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    batch_num = 1
-    tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    sess = "ses-S2"
-    task = "task-rest"
+    # # For testing
+    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # batch_num = 1
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
+    # sess = "ses-S2"
+    # task = "task-rest"
+    # code_dir = "/home/nmuncy/compute/func_processing"
 
     # receive passed args
     args = get_args().parse_args()
@@ -293,7 +295,8 @@ def main():
 
     # make list of subjects who have fmriprep output and are
     # missing afni deconvolutions
-    subj_list_all = df_log["subjID"].tolist()
+    # subj_list_all = df_log["subjID"].tolist()
+    subj_list_all = ["sub-4146"]
     subj_dict = {}
     for subj in subj_list_all:
 
@@ -313,7 +316,6 @@ def main():
 
         # Check logs for missing WM-eroded masks, session intersection mask,
         # deconvolution, or run-1 scaled files.
-        # TODO add check for resting state regression, scaled, intersect task
         ind_subj = df_log.index[df_log["subjID"] == subj]
         wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
         intersect_missing = pd.isnull(
@@ -335,7 +337,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
