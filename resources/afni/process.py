@@ -240,19 +240,20 @@ def resting_metrics(afni_data, work_dir):
         print(f"\nMaking SNR file {snr_file}")
         mean_file = epi_file.replace("scaled", "meanTS")
         sd_file = epi_file.replace("scaled", "sdTS")
-        used_vols, h_err = submit.submit_hpc_subprocess(
+        h_out, h_err = submit.submit_hpc_subprocess(
             f"1d_tool.py -infile {file_censor} -show_trs_uncensored encoded"
         )
+        used_vols = h_out.decode("utf-8").strip()
         h_cmd = f"""
             3dTstat \
                 -mean \
                 -prefix {mean_file} \
-                {epi_file}"[{used_vols}]"
+                {epi_file}'[{used_vols}]'
 
             3dTstat \
                 -stdev \
                 -prefix {sd_file} \
-                {reg_file}"[{used_vols}]"
+                {reg_file}'[{used_vols}]'
 
             3dcalc \
                 -a {mean_file} \
@@ -285,7 +286,7 @@ def resting_metrics(afni_data, work_dir):
             3dTstat \
                 -sos \
                 -prefix - \
-                {gmean_file}\' >{gcor_file}
+                {gmean_file}\\' >{gcor_file}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}GCOR", f"{work_dir}/sbatch_out"
@@ -295,39 +296,43 @@ def resting_metrics(afni_data, work_dir):
     noise_file = os.path.join(func_dir, "noise_est.1D")
     if not os.path.exists(noise_file):
         print("\nRunning noise simulations ...")
-        used_trs, h_err = submit.submit_hpc_subprocess(
+        h_out, h_err = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
                 -infile {func_dir}/X.{out_str}.xmat.1D \
                 -show_trs_uncensored encoded \
                 -show_trs_run 1 \
             """
         )
+        used_trs = h_out.decode("utf-8").strip()
         h_cmd = f"""
-            3dFWHMx \
-                -mask {int_mask} \
-                -ACF {func_dir}/ACF_epits.1D \
-                {epi_file}"[{used_trs}]" >{func_dir}/blur_epits.1D
+            if  [ ! -s {func_dir}/blur_epits.1D ] || [ ! -s {func_dir}/blur_errts.1D ]; then
+                3dFWHMx \
+                    -mask {int_mask} \
+                    -ACF {func_dir}/ACF_epits.1D \
+                    {epi_file}'[{used_trs}]' >{func_dir}/blur_epits.1D
 
-            3dFWHMx \
-                -mask {int_mask} \
-                -ACF {func_dir}/ACF_errts.1D \
-                {reg_file}"[{used_trs}]" >{func_dir}/blur_errts.1D
-
+                3dFWHMx \
+                    -mask {int_mask} \
+                    -ACF {func_dir}/ACF_errts.1D \
+                    {reg_file}'[{used_trs}]' >{func_dir}/blur_errts.1D
+            fi
             [ ! -s {func_dir}/blur_epits.1D ] || [ ! -s {func_dir}/blur_errts.1D ] \
                 && exit 1
 
-            blur_e0=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{0..$(2)}}'\')
-            blur_e1=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{1..$(2)}}'\')
-            blur_r0=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{0..$(2)}}'\')
-            blur_r1=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{1..$(2)}}'\')
+            blur_e0=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{0..$(2)}}'\\')
+            blur_e1=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{1..$(2)}}'\\')
+            blur_r0=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{0..$(2)}}'\\')
+            blur_r1=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{1..$(2)}}'\\')
 
-            cat <<-EOF >{noise_file}
-                $blur_e0    #epits FWHM blur est
-                $blur_e1    #epits ACF blur est
-                $blur_r0    #errts FWHM blur est
-                $blur_r1    #errts ACF blur est
-            EOF
+            >{noise_file}
+            echo -e '$blur_e0\\t#epits FWHM blur est' >>{noise_file}
+            echo -e '$blur_e1\\t#epits ACF blur est' >>{noise_file}
+            echo -e '$blur_r0\\t#errts FWHM blur est' >>{noise_file}
+            echo -e '$blur_r1\\t#errts ACF blur est' >>{noise_file}
         """
+        print(f"\n\n blur job : \n{h_cmd} \n\n")
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 4, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
         )
+
+    return afni_data

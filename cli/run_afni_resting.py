@@ -126,20 +126,22 @@ def submit_jobs(
         print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
         # clean up
-        shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
-        clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
-        clean_list = [
-            "preproc_bold",
-            "smoothed_bold",
-            "nuissance_bold",
-            "probseg",
-            "preproc_T1w",
-            "minval_mask",
-            "GMe_mask",
-        ]
-        for c_str in clean_list:
-            for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
-                os.remove(h_file)
+        # shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
+        # clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
+        # clean_list = [
+        #     "preproc_bold",
+        #     "smoothed_bold",
+        #     "nuissance_bold",
+        #     "probseg",
+        #     "preproc_T1w",
+        #     "minval_mask",
+        #     "GMe_mask",
+        #     "meanTS_bold",
+        #     "sdTS_bold",
+        # ]
+        # for c_str in clean_list:
+        #     for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
+        #         os.remove(h_file)
 
         # copy important files to /home/data
         # h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
