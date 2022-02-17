@@ -3,14 +3,16 @@
 """Check for completed data.
 
 Check <proj_dir> for a completed data, and generate/update
-logs/completed_preprocessing.tsv.
+logs/completed_preprocessing.tsv. Can be run locally on NAS
+or on the HPC via [-p].
 
-Requires internet connection for git pulling/pushing.
+Requires internet connection for git pulling/pushing, so run
+the HPC login node.
 
 Example
 -------
 python run_checks.py \\
-    -p $TOKEN_GITHUB_EMU
+    -t $TOKEN_GITHUB_EMU
 """
 
 # %%
@@ -25,6 +27,7 @@ def get_args():
     """Get and parse arguments"""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
+        "-p",
         "--proj-dir",
         type=str,
         default="/home/data/madlab/McMakin_EMUR01",
@@ -36,6 +39,7 @@ def get_args():
         ),
     )
     parser.add_argument(
+        "-n",
         "--new-df",
         action="store_true",
         help=textwrap.dedent(
@@ -48,7 +52,7 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-p",
+        "-t",
         "--pat",
         help="Personal Access Token for github.com/emu-project",
         type=str,
