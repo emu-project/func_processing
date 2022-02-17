@@ -213,9 +213,10 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
 
     epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
-    mask_str = afni_data["mask-brain"]
-    mask_min = mask_str.replace("desc-brain", "desc-minval")
-    mask_min = mask_min.replace(f"_{sess}", f"_{sess}_{task}")
+    mask_min = afni_data["mask-brain"]
+    rep_dict = {"desc-brain": "desc-minval", "_space": f"_{task}_space"}
+    for key, value in rep_dict.items():
+        mask_min = mask_min.replace(key, value)
 
     if not os.path.exists(mask_min):
         min_list = []

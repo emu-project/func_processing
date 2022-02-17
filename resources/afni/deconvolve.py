@@ -380,12 +380,12 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     # by minimum mask to avoid projecting into non-brain spaces. Then
     # conduct PC analysis to derive timeseries of CSF.
     file_pcomp = file_censor.replace("censor", "csfPC")
+    masked_epi = epi_file.replace("scaled", "masked")
     if not os.path.exists(file_pcomp):
-        print(f"Starting PCA for {epi_file} ...")
+        print(f"\nStarting PCA for {epi_file} ...")
 
         # set file strings
         tmp_censor = file_censor.replace("censor", "tmp-censor")
-        masked_epi = epi_file.replace("scaled", "masked")
         project_epi = epi_file.replace("scaled", "project")
         roi_pcomp = file_censor.replace("censor", "roiPC")
 
@@ -397,7 +397,6 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
         num_pol = 1 + math.ceil((tr_count * tr_len) / 150)
 
         # do PCA
-        # TODO fix this step
         h_cmd = f"""
             3dcalc \
                 -a {epi_file} \
@@ -426,13 +425,12 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
 
             1d_tool.py \
                 -censor_fill_parent {tmp_censor} \
-                -infile {roi_pcomp} \
+                -infile {roi_pcomp}_vec.1D \
                 -write - | 1d_tool.py \
                 -set_run_lengths {tr_count} \
                 -pad_into_many_runs 1 1 \
                 -infile - -write {file_pcomp}
         """
-        print(h_cmd)
         job_name, job_id = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}PC", f"{work_dir}/sbatch_out"
         )
@@ -444,7 +442,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     # This will load effects of no interest on fitts sub-brick, and
     # errts will contain cleaned time series. CSF time series is
     # used as a nuissance regressor.
-    print("Writing 3dDeconvolve for Resting data ...")
+    print("\nWriting 3dDeconvolve for Resting data ...")
     func_dir = os.path.join(work_dir, "func")
     out_str = "decon_task-rest"
     cmd_decon = f"""
@@ -471,7 +469,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     # generate x-matrices
     xmat_file = os.path.join(func_dir, f"X.{out_str}.xmat.1D")
     if not os.path.exists(xmat_file):
-        print("Running 3dDeconvolve for Resting data")
+        print("\nRunning 3dDeconvolve for Resting data")
         h_out, h_err = submit.submit_hpc_subprocess(cmd_decon)
     assert os.path.exists(
         xmat_file
@@ -481,7 +479,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     if proj_meth == "original":
         epi_tproject = os.path.join(func_dir, f"{out_str}_tproject+tlrc")
         if not os.path.exists(f"{epi_tproject}.HEAD"):
-            print(f"Project regression matrix as {epi_tproject}")
+            print(f"\nProject regression matrix as {epi_tproject}")
             h_cmd = f"""
                 3dTproject \
                     -polort 0 \
@@ -503,19 +501,19 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     if proj_meth == "anaticor":
         epi_anaticor = os.path.join(func_dir, f"{out_str}_anaticor+tlrc")
         if not os.path.exists(f"{epi_anaticor}.HEAD"):
-            print(f"Project regression matrix as {epi_anaticor}")
-            comb_mask = epi_file.replace("scaled", "combCSF")
-            blur_mask = epi_file.replace("scaled", "blurCSF")
+            print(f"\nProject regression matrix as {epi_anaticor}")
+            comb_mask = epi_file.replace("scaled", "combWM")
+            blur_mask = epi_file.replace("scaled", "blurWM")
             h_cmd = f"""
                 3dcalc \
                     -a {masked_epi} \
-                    -b {afni_data["mask-erodedCSF"]} \
-                    -expr "a*bool(b)" \
+                    -b {afni_data["mask-erodedWM"]} \
+                    -expr 'a*bool(b)' \
                     -datum float \
                     -prefix {comb_mask}
 
                 3dmerge \
-                    -1blur_fwhm 30 \
+                    -1blur_fwhm 60 \
                     -doall \
                     -prefix {blur_mask} \
                     {comb_mask}

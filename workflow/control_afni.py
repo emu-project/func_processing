@@ -103,10 +103,6 @@ def control_preproc(
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data)
 
-    # clean
-    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
-        os.remove(tmp_file)
-
     return afni_data
 
 
@@ -183,7 +179,7 @@ def control_deconvolution(
             }
         }
 
-    [decon_plan=False] yields decon_<task>_UniqueBehs*
+    [decon_plan=None] yields decon_<task>_UniqueBehs*
     """
 
     # setup directories
@@ -212,7 +208,8 @@ def control_deconvolution(
 def control_resting(afni_data, afni_dir, subj, sess):
     """Title.
 
-    Desc.
+    Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
+    of afni_data6.
     """
 
     # setup dir

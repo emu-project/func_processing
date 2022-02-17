@@ -237,7 +237,7 @@ def resting_metrics(afni_data, work_dir):
     # calc SNR
     snr_file = epi_file.replace("scaled", "tsnr")
     if not os.path.exists(snr_file):
-        print(f"Making SNR file {snr_file}")
+        print(f"\nMaking SNR file {snr_file}")
         mean_file = epi_file.replace("scaled", "meanTS")
         sd_file = epi_file.replace("scaled", "sdTS")
         used_vols, h_err = submit.submit_hpc_subprocess(
@@ -270,7 +270,7 @@ def resting_metrics(afni_data, work_dir):
     gmean_file = reg_file.replace("+tlrc", "_gmean.1D")
     gcor_file = reg_file.replace("+tlrc", "_gcor.1D")
     if not os.path.exists(gcor_file):
-        print(f"Calculating global correlation {gcor_file}")
+        print(f"\nCalculating global correlation {gcor_file}")
         h_cmd = f"""
             3dTnorm \
                 -norm2 \
@@ -294,7 +294,7 @@ def resting_metrics(afni_data, work_dir):
     # noise estimations - afni style
     noise_file = os.path.join(func_dir, "noise_est.1D")
     if not os.path.exists(noise_file):
-        print(f"Running noise simulations ...")
+        print("\nRunning noise simulations ...")
         used_trs, h_err = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
                 -infile {func_dir}/X.{out_str}.xmat.1D \
