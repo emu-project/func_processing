@@ -1,6 +1,6 @@
-"""Title.
+"""Functions for checking pre-processing status.
 
-Desc
+Pull and update logs of completed_preprocessing.tsv.
 """
 
 # %%

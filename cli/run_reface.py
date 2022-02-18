@@ -6,8 +6,9 @@ Submit a batch of subjects for de/refacing.
 
 Examples
 --------
+log_dir=$(pwd)/../logs
 sbatch --job-name=runReface \\
-    --output=runReface_log \\
+    --output=${log_dir}/runReface_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
@@ -211,8 +212,7 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

@@ -344,17 +344,26 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
 def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     """Construct regression matrix for resting state data.
 
+    Conduct a principal components analysis to identify
+    CSF timeseries. Use CSF timeseries as nuissance regressor,
+    along with motion etc to clean signal via deconvolution.
+    Residuals (cleaned signal) are then used to project regression
+    matrices. Anaticor uses WM as a nuissance regressor.
+
     Parameters
     ----------
-
+    afni_data : dict
+        contains names for various files
+    work_dir : str
+        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+    proj_meth : str
+        [anaticor | original] method of matrix progression.
 
     Returns
     -------
-
-
-    Notes
-    -----
-
+    afni_data : dict
+        updated fields
+        reg-matrix = regression matrix
     """
 
     # check for req files
@@ -396,7 +405,8 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
         tr_len = float(h_out.decode("utf-8").strip())
         num_pol = 1 + math.ceil((tr_count * tr_len) / 150)
 
-        # do PCA
+        # do PCA - account for censored vols so they do not
+        # influence detrending.
         h_cmd = f"""
             3dcalc \
                 -a {epi_file} \
@@ -504,6 +514,9 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
             print(f"\nProject regression matrix as {epi_anaticor}")
             comb_mask = epi_file.replace("scaled", "combWM")
             blur_mask = epi_file.replace("scaled", "blurWM")
+
+            # get WM timeseries, generate blurred anaticor (WM)
+            # regressors, project regression
             h_cmd = f"""
                 3dcalc \
                     -a {masked_epi} \

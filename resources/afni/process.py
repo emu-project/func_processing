@@ -176,10 +176,7 @@ def reface(subj, sess, t1_file, proj_dir, method):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
-    t1_out = os.path.join(
-        out_dir,
-        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
-    )
+    t1_out = os.path.join(out_dir, t1_file.replace("_T1w", f"_desc-{method}_T1w"),)
     h_cmd = f"""
         export TMPDIR={out_dir}
 
@@ -202,9 +199,16 @@ def reface(subj, sess, t1_file, proj_dir, method):
 
 
 def resting_metrics(afni_data, work_dir):
-    """Title.
+    """Generate info about resting data.
 
-    Desc.
+    Produce TSNR, GCOR, and noise estimations.
+
+    Parameters
+    ----------
+    afni_data : dict
+        contains names for various files
+    work_dir : str
+        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     """
 
     # check for req files
@@ -240,10 +244,15 @@ def resting_metrics(afni_data, work_dir):
         print(f"\nMaking SNR file {snr_file}")
         mean_file = epi_file.replace("scaled", "meanTS")
         sd_file = epi_file.replace("scaled", "sdTS")
+
+        # determine non-censored volumes
         h_out, h_err = submit.submit_hpc_subprocess(
             f"1d_tool.py -infile {file_censor} -show_trs_uncensored encoded"
         )
         used_vols = h_out.decode("utf-8").strip()
+
+        # make mean, sd of used volumes, then
+        # produce snr calc. Mask snr.
         h_cmd = f"""
             3dTstat \
                 -mean \
@@ -300,6 +309,8 @@ def resting_metrics(afni_data, work_dir):
 
     if not os.path.isfile(avg_reg):
         print("\nRunning noise simulations ...")
+
+        # determine used volumes in decon
         h_out, h_err = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
                 -infile {func_dir}/X.{out_str}.xmat.1D \
@@ -308,6 +319,8 @@ def resting_metrics(afni_data, work_dir):
             """
         )
         used_trs = h_out.decode("utf-8").strip()
+
+        # simulate noise, ACF method
         h_cmd = f"""
             if [ ! -s {avg_reg} ]; then
                 3dFWHMx \
