@@ -19,9 +19,9 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Examples
 --------
-log_dir=$(pwd)/../logs
-sbatch --job-name=runAfni \\
-    --output=${log_dir}/runAfni_log \\
+code_dir="$(dirname "$(pwd)")"
+sbatch --job-name=runAfniTask \\
+    --output=${code_dir}/logs/runAfniTask_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
@@ -29,7 +29,7 @@ sbatch --job-name=runAfni \\
     run_afni_task.py \\
     -s ses-S2 \\
     -t task-test \\
-    -c /home/nmuncy/compute/func_processing \\
+    -c $code_dir \\
     -p $TOKEN_GITHUB_EMU
 """
 
@@ -421,4 +421,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01\n")
+        sys.exit()
     main()

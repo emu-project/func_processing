@@ -87,4 +87,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01_unc" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01_unc\n")
+        sys.exit()
     main()

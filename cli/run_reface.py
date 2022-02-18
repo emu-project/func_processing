@@ -6,7 +6,7 @@ Submit a batch of subjects for de/refacing.
 
 Examples
 --------
-log_dir=$(pwd)/../logs
+code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runReface \\
     --output=${log_dir}/runReface_log \\
     --mem-per-cpu=4000 \\
@@ -14,7 +14,7 @@ sbatch --job-name=runReface \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_reface.py \\
-    -c /home/nmuncy/compute/func_processing \\
+    -c $code_dir \\
     --run
 """
 
@@ -212,7 +212,8 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir,
+        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
@@ -232,4 +233,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01\n")
+        sys.exit()
     main()

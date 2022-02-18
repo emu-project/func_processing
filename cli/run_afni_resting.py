@@ -18,15 +18,15 @@ SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
 
 Examples
 --------
-log_dir=$(pwd)/../logs
-sbatch --job-name=runAfni \\
-    --output=${log_dir}/runAfni_log \\
+code_dir="$(dirname "$(pwd)")"
+sbatch --job-name=runAfniRest \\
+    --output=${code_dir}/logs/runAfniRest_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_afni_resting.py \\
-    -c /home/nmuncy/compute/func_processing \\
+    -c $code_dir \\
     -p $TOKEN_GITHUB_EMU
 """
 
@@ -363,7 +363,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
@@ -387,4 +388,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01\n")
+        sys.exit()
     main()
