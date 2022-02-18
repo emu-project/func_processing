@@ -29,8 +29,7 @@ sbatch --job-name=runAfniTask \\
     run_afni_task.py \\
     -s ses-S2 \\
     -t task-test \\
-    -c $code_dir \\
-    -p $TOKEN_GITHUB_EMU
+    -c $code_dir
 """
 
 
@@ -60,7 +59,6 @@ def submit_jobs(
     dur,
     do_decon,
     decon_plan,
-    pat_github_emu,
 ):
     """Schedule work for single participant.
 
@@ -92,8 +90,6 @@ def submit_jobs(
         whether to conduct deconvolution
     decon_plan : dict/None
         planned deconvolution with behavior: timing file mappings
-    pat_github_emu : str
-        Personal Access Token to https://github.com/emu-project
 
     Returns
     -------
@@ -124,7 +120,6 @@ def submit_jobs(
         import subprocess
         sys.path.append("{code_dir}")
         from workflow import control_afni
-        from resources.reports.check_complete import check_preproc
 
         afni_data = control_afni.control_preproc(
             "{prep_dir}",
@@ -304,7 +299,6 @@ def get_args():
 def main():
 
     # # For testing
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
     # batch_num = 3
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
@@ -324,7 +318,6 @@ def main():
     json_dir = args.json_dir
     sess = args.session
     task = args.task
-    pat_github_emu = args.pat
     code_dir = args.code_dir
 
     # set up
@@ -414,7 +407,6 @@ def main():
             dur,
             value_dict["Decon"],
             value_dict["Decon_plan"],
-            pat_github_emu,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

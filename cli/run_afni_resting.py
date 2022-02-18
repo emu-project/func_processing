@@ -26,8 +26,7 @@ sbatch --job-name=runAfniRest \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_afni_resting.py \\
-    -c $code_dir \\
-    -p $TOKEN_GITHUB_EMU
+    -c $code_dir
 """
 
 
@@ -54,7 +53,6 @@ def submit_jobs(
     slurm_dir,
     tplflow_str,
     do_regress,
-    pat_github_emu,
 ):
     """Schedule work for single participant.
 
@@ -82,8 +80,6 @@ def submit_jobs(
         template_flow identifier string
     do_regress : bool
         whether to conduct deconvolution/regression
-    pat_github_emu : str
-        Personal Access Token to https://github.com/emu-project
 
     Returns
     -------
@@ -113,7 +109,6 @@ def submit_jobs(
         import subprocess
         sys.path.append("{code_dir}")
         from workflow import control_afni
-        from resources.reports.check_complete import check_preproc
 
         afni_data = control_afni.control_preproc(
             "{prep_dir}",
@@ -266,13 +261,6 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-p",
-        "--pat",
-        help="Personal Access Token for github.com/emu-project",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
         "-c",
         "--code-dir",
         required=True,
@@ -290,7 +278,6 @@ def get_args():
 def main():
 
     # # For testing
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # batch_num = 1
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
@@ -307,7 +294,6 @@ def main():
     afni_dir = args.afni_dir
     sess = args.session
     task = args.task
-    pat_github_emu = args.pat
     code_dir = args.code_dir
 
     # set up
@@ -381,7 +367,6 @@ def main():
             slurm_dir,
             tplflow_str,
             value_dict["Regress"],
-            pat_github_emu,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
