@@ -1,8 +1,7 @@
 #!/bin/bash
 
-
 function Usage {
-    cat << USAGE
+    cat <<USAGE
 
    Submitted via crontab, this scripts will first check
    whether previous jobs are still running, then determine
@@ -29,29 +28,30 @@ function Usage {
 USAGE
 }
 
-
 # Start record
-currentDate=`date`
+currentDate=$(date)
 echo "************************"
 echo "Cron Start: $currentDate"
 echo "************************"
 
-
 # Check options
 while getopts ":c:s:h" OPT; do
     case $OPT in
-        c) code_dir=${OPTARG}
-            ;;
-        s) sing_img=${OPTARG}
-            ;;
-        h)
-            Usage
-            exit 0
-            ;;
-        \?) echo -e "\n \t ERROR: invalid option." >&2
-            Usage
-            exit 1
-            ;;
+    c)
+        code_dir=${OPTARG}
+        ;;
+    s)
+        sing_img=${OPTARG}
+        ;;
+    h)
+        Usage
+        exit 0
+        ;;
+    \?)
+        echo -e "\n \t ERROR: invalid option." >&2
+        Usage
+        exit 1
+        ;;
     esac
 done
 
@@ -72,37 +72,39 @@ if [ ! -d $code_dir ]; then
     exit 1
 fi
 
-
 # check that previous jobs are done
-num_jobs=`squeue -u $(whoami) | wc -l`
+num_jobs=$(squeue -u $(whoami) | wc -l)
 if [ $num_jobs -gt 1 ]; then
     echo "Jobs still running, exiting ..."
     exit 0
 fi
 
-
 # check environment for singularity
-which singularity > /dev/null 2>&1; sing_found=$?
+which singularity >/dev/null 2>&1
+sing_found=$?
 try_count=0
 while [ $try_count -lt 3 ] && [ $sing_found != 0]; do
     echo "ERROR: did not find singularity in \$PATH,"
     echo -e "\tattempting to load module via option $try_count.\n"
     case $try_count in
-        0) module load singularity-3.8.2
-            ;;
-        1) mod=`module avail sing* | awk '{print $5}'` && module load $mod
-            ;;
-        2) echo "Failed to load singularity, exiting." >&2
-            exit 1
-            ;;
+    0)
+        module load singularity-3.8.2
+        ;;
+    1)
+        mod=$(module avail sing* | awk '{print $5}') && module load $mod
+        ;;
+    2)
+        echo "Failed to load singularity, exiting." >&2
+        exit 1
+        ;;
     esac
     let try_count+=1
-    which singularity > /dev/null 2>&1; sing_found=$?
+    which singularity >/dev/null 2>&1
+    sing_found=$?
 done
 
-
 # submit ashs CLI
-cat <<- EOF
+cat <<-EOF
 
     Success! Starting $code_dir/cli/run_ashs.py
     with the following parameters:

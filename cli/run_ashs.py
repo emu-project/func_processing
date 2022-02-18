@@ -13,14 +13,15 @@ written to derivatives.
 
 Examples
 --------
+code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runAshs \\
-    --output=runAshs_log \\
+    --output=${code_dir}/logs/runAshs_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_ashs.py \\
-    -c /home/nmuncy/compute/func_processing \\
+    -c $code_dir \\
     -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """
 # %%
@@ -298,4 +299,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01\n")
+        sys.exit()
     main()

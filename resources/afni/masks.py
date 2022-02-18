@@ -8,7 +8,7 @@ import os
 from . import submit
 
 
-def make_intersect_mask(work_dir, subj_num, afni_data):
+def make_intersect_mask(work_dir, subj_num, afni_data, sess, task):
     """Make EPI-struct intersection mask.
 
     Parameters
@@ -19,6 +19,8 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
         subject identifier, for sbatch job name
      afni_data : dict
         should contain smoothed data from process.blur_epi
+    sess :
+    task :
 
     Returns
     -------
@@ -43,12 +45,11 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
     epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
     # intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
-    sess = brain_mask.split("ses-")[1].split("/")[0]
     file_name = os.path.basename(brain_mask)
     file_path = os.path.dirname(brain_mask)
     subj, _, space, cohort, res, _, suff = file_name.split("_")
     intersect_mask = (
-        f"{file_path}/{subj}_ses-{sess}_{space}_{cohort}_{res}_desc-intersect_{suff}"
+        f"{file_path}/{subj}_{sess}_{task}_{space}_{cohort}_{res}_desc-intersect_{suff}"
     )
 
     if not os.path.exists(intersect_mask):
@@ -93,7 +94,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data):
 
 
 def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
-    """Make tissue masks.
+    """Make tissue class masks.
 
     Parameters
     ----------
@@ -133,6 +134,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     switch_name = {
         "GM": mask_str.replace("desc-brain", "desc-GMe"),
         "WM": mask_str.replace("desc-brain", "desc-WMe"),
+        "CSF": mask_str.replace("desc-brain", "desc-CSFe"),
     }
 
     # make eroded, binary tissue masks
@@ -211,9 +213,10 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
 
     epi_pre = [x for k, x in afni_data.items() if "epi-preproc" in k]
-    mask_str = afni_data["mask-brain"]
-    mask_min = mask_str.replace("desc-brain", "desc-minval")
-    mask_min = mask_min.replace(f"_{sess}", f"_{sess}_{task}")
+    mask_min = afni_data["mask-brain"]
+    rep_dict = {"desc-brain": "desc-minval", "_space": f"_{task}_space"}
+    for key, value in rep_dict.items():
+        mask_min = mask_min.replace(key, value)
 
     if not os.path.exists(mask_min):
         min_list = []
@@ -258,7 +261,7 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
 
     assert os.path.exists(
         mask_min
-    ), f"{mask_min} failed to write, check resources.afni.process.scale_epi."
+    ), f"{mask_min} failed to write, check resources.afni.masks.make_minimum_masks."
     afni_data["mask-min"] = mask_min
 
     return afni_data

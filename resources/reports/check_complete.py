@@ -1,6 +1,6 @@
-"""Title.
+"""Functions for checking pre-processing status.
 
-Desc
+Pull and update logs of completed_preprocessing.tsv.
 """
 
 # %%
@@ -42,7 +42,7 @@ def clone_guid(pat_github_emu):
 
 
 # %%
-def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=False):
+def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     """Check for files in expected_dict.
 
     In order to determine which participants need pre-processing,
@@ -67,7 +67,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
         Personal Access Token to https://github.com/emu-project
     new_df : bool
         Whether to generate a completely new logs/completed_preprocessing.tsv,
-        use "new_df=True" when expected_dict gets updated with new files.
+        "True" when expected_dict gets updated with new files.
     one_subj : bool/str
         Whether to check for data from single subject. If true, supply
         BIDS-formatted subject string.
@@ -99,18 +99,24 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
         "afni": [
             ("wme_mask", "desc-WMe_mask"),
             (
-                "intersect_ses-S1",
-                "ses-S1_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
+                "intersect_ses-S1_task-study",
+                "ses-S1_task-study_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
             (
-                "intersect_ses-S2",
-                "ses-S2_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
+                "intersect_ses-S2_task-test",
+                "ses-S2_task-test_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
+            ),
+            (
+                "intersect_ses-S2_task-rest",
+                "ses-S2_task-rest_space-MNIPediatricAsym_cohort-5_res-2_desc-intersect_mask.nii.gz",
             ),
             ("scaled_ses-S2_1", "run-1_*_desc-scaled_bold"),
             ("scaled_ses-S2_2", "run-2_*_desc-scaled_bold"),
             ("scaled_ses-S2_3", "run-3_*_desc-scaled_bold"),
+            ("scaled_resting", "task-rest_*_desc-scaled_bold"),
             ("decon_ses-S1_1", "decon_task-study_UniqueBehs_stats_REML+tlrc.HEAD"),
             ("decon_ses-S2_1", "decon_task-test_UniqueBehs_stats_REML+tlrc.HEAD"),
+            ("decon_resting", "X.decon_task-rest.xmat.1D"),
         ],
         "ashs": [
             ("ashs_L", "left_lfseg_corr_usegray"),
@@ -122,13 +128,16 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df=False, one_subj=Fal
     col_names = [
         "subjID",
         "wme_mask",
-        "intersect_ses-S1",
-        "intersect_ses-S2",
+        "intersect_ses-S1_task-study",
+        "intersect_ses-S2_task-test",
+        "intersect_ses-S2_task-rest",
         "scaled_ses-S2_1",
         "scaled_ses-S2_2",
         "scaled_ses-S2_3",
+        "scaled_resting",
         "decon_ses-S1_1",
         "decon_ses-S2_1",
+        "decon_resting",
         "ashs_L",
         "ashs_R",
         "reface",

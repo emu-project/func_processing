@@ -63,6 +63,14 @@ def control_preproc(
         mot-censor = binary censor vector for task
     """
 
+    # # for testing
+    # prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
+    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
+    # subj = "sub-4146"
+    # sess = "ses-S2"
+    # task = "task-rest"
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
     anat_dir = os.path.join(work_dir, "anat")
@@ -80,7 +88,7 @@ def control_preproc(
     afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 
     # make masks
-    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data)
+    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data, sess, task)
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
     afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
@@ -88,11 +96,7 @@ def control_preproc(
     afni_data = process.scale_epi(work_dir, subj_num, afni_data)
 
     # make mean, deriv, censor motion files
-    afni_data = motion.mot_files(work_dir, afni_data)
-
-    # clean
-    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
-        os.remove(tmp_file)
+    afni_data = motion.mot_files(work_dir, afni_data, task)
 
     return afni_data
 
@@ -163,7 +167,7 @@ def control_deconvolution(
             }
         }
 
-    [decon_plan=False] yields decon_<task>_UniqueBehs*
+    [decon_plan=None] yields decon_<task>_UniqueBehs*
     """
 
     # setup directories
@@ -181,6 +185,39 @@ def control_deconvolution(
 
     # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)
+
+    # clean
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+        os.remove(tmp_file)
+
+    return afni_data
+
+
+def control_resting(afni_data, afni_dir, subj, sess):
+    """Generate and control resting state regressions.
+
+    Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
+    of afni_data6. Projects regression matrix, and generates various
+    metrics like SNR, GCOR, etc.
+
+    Parameters
+    ----------
+    afni_data : dict
+        mapping of AFNI data, returned by control_preproc
+    afni_dir : str
+        /path/to/BIDS/project/derivatives/afni
+    subj : str
+        BIDS subject string (sub-1234)
+    sess : str
+        BIDS session string (ses-S1)
+    """
+
+    # setup dir
+    work_dir = os.path.join(afni_dir, subj, sess)
+
+    # generate regression matrix, determine snr/corr/noise
+    afni_data = deconvolve.regress_resting(afni_data, work_dir)
+    afni_data = process.resting_metrics(afni_data, work_dir)
 
     # clean
     for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):

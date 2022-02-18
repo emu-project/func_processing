@@ -6,14 +6,15 @@ Submit a batch of subjects for de/refacing.
 
 Examples
 --------
+code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runReface \\
-    --output=runReface_log \\
+    --output=${log_dir}/runReface_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     run_reface.py \\
-    -c /home/nmuncy/compute/func_processing \\
+    -c $code_dir \\
     --run
 """
 
@@ -232,4 +233,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # require environment
+    env_found = [x for x in sys.path if "emuR01" in x]
+    if not env_found:
+        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\tHint: $madlab_env emuR01\n")
+        sys.exit()
     main()

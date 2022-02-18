@@ -176,10 +176,7 @@ def reface(subj, sess, t1_file, proj_dir, method):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
-    t1_out = os.path.join(
-        out_dir,
-        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
-    )
+    t1_out = os.path.join(out_dir, t1_file.replace("_T1w", f"_desc-{method}_T1w"),)
     h_cmd = f"""
         export TMPDIR={out_dir}
 
@@ -199,3 +196,146 @@ def reface(subj, sess, t1_file, proj_dir, method):
         h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
     )
     print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+
+
+def resting_metrics(afni_data, work_dir):
+    """Generate info about resting data.
+
+    Produce TSNR, GCOR, and noise estimations.
+
+    Parameters
+    ----------
+    afni_data : dict
+        contains names for various files
+    work_dir : str
+        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+    """
+
+    # check for req files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi == 1
+    ), "ERROR: afni_data['epi-scale1'] not found, or too many RS files. Check resources.afni.process.scale_epi."
+
+    assert afni_data[
+        "reg-matrix"
+    ], "ERROR: no regression matrix, check resources.afni.deconvolve.regress_resting."
+
+    assert afni_data[
+        "mot-censor"
+    ], "ERROR: missing afni_data[mot-censor] file, check resources.afni.motion.mot_files."
+
+    assert afni_data[
+        "mask-int"
+    ], "ERROR: missing afni_data[mask-int] file, check resources.afni.masks.make_intersect_mask."
+
+    # set up
+    epi_file = afni_data["epi-scale1"]
+    reg_file = afni_data["reg-matrix"]
+    file_censor = afni_data["mot-censor"]
+    int_mask = afni_data["mask-int"]
+    out_str = "decon_task-rest"
+    func_dir = os.path.join(work_dir, "func")
+    subj_num = epi_file.split("sub-")[-1].split("_")[0]
+
+    # calc SNR
+    snr_file = epi_file.replace("scaled", "tsnr")
+    if not os.path.exists(snr_file):
+        print(f"\nMaking SNR file {snr_file}")
+        mean_file = epi_file.replace("scaled", "meanTS")
+        sd_file = epi_file.replace("scaled", "sdTS")
+
+        # determine non-censored volumes
+        h_out, h_err = submit.submit_hpc_subprocess(
+            f"1d_tool.py -infile {file_censor} -show_trs_uncensored encoded"
+        )
+        used_vols = h_out.decode("utf-8").strip()
+
+        # make mean, sd of used volumes, then
+        # produce snr calc. Mask snr.
+        h_cmd = f"""
+            3dTstat \
+                -mean \
+                -prefix {mean_file} \
+                {epi_file}'[{used_vols}]'
+
+            3dTstat \
+                -stdev \
+                -prefix {sd_file} \
+                {reg_file}'[{used_vols}]'
+
+            3dcalc \
+                -a {mean_file} \
+                -b {sd_file} \
+                -c {int_mask} \
+                -expr 'c*a/b' \
+                -prefix {snr_file}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 8, 1, f"{subj_num}SNR", f"{work_dir}/sbatch_out"
+        )
+
+    # calc global corr
+    unit_file = reg_file.replace("+tlrc", "_unit+tlrc")
+    gmean_file = reg_file.replace("+tlrc", "_gmean.1D")
+    gcor_file = reg_file.replace("+tlrc", "_gcor.1D")
+    if not os.path.exists(gcor_file):
+        print(f"\nCalculating global correlation {gcor_file}")
+        h_cmd = f"""
+            3dTnorm \
+                -norm2 \
+                -prefix {unit_file} \
+                {reg_file}
+
+            3dmaskave \
+                -quiet \
+                -mask {int_mask} \
+                {unit_file} >{gmean_file}
+
+            3dTstat \
+                -sos \
+                -prefix - \
+                {gmean_file}\\' >{gcor_file}
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 1, 8, 1, f"{subj_num}GCOR", f"{work_dir}/sbatch_out"
+        )
+
+    # noise estimations - afni style
+    acf_reg = reg_file.replace("+tlrc", "_ACF-estimates.1D")
+    avg_reg = reg_file.replace("+tlrc", "_ACF-average.1D")
+    acf_epi = epi_file.replace("_bold.nii.gz", "_ACF-estimates.1D")
+    avg_epi = epi_file.replace("_bold.nii.gz", "_ACF-average.1D")
+
+    if not os.path.isfile(avg_reg):
+        print("\nRunning noise simulations ...")
+
+        # determine used volumes in decon
+        h_out, h_err = submit.submit_hpc_subprocess(
+            f"""1d_tool.py \
+                -infile {func_dir}/X.{out_str}.xmat.1D \
+                -show_trs_uncensored encoded \
+                -show_trs_run 1 \
+            """
+        )
+        used_trs = h_out.decode("utf-8").strip()
+
+        # simulate noise, ACF method
+        h_cmd = f"""
+            if [ ! -s {avg_reg} ]; then
+                3dFWHMx \
+                    -mask {int_mask} \
+                    -ACF {acf_epi} \
+                    {epi_file}'[{used_trs}]' >{avg_epi}
+
+                3dFWHMx \
+                    -mask {int_mask} \
+                    -ACF {acf_reg} \
+                    {reg_file}'[{used_trs}]' >{avg_reg}
+            fi
+        """
+        job_name, job_id = submit.submit_hpc_sbatch(
+            h_cmd, 2, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
+        )
+
+    return afni_data
