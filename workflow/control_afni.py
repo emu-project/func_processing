@@ -219,8 +219,8 @@ def control_resting(afni_data, afni_dir, subj, sess):
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
     afni_data = process.resting_metrics(afni_data, work_dir)
 
-    # # clean
-    # for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
-    #     os.remove(tmp_file)
+    # clean
+    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+        os.remove(tmp_file)
 
     return afni_data

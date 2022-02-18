@@ -293,8 +293,12 @@ def resting_metrics(afni_data, work_dir):
         )
 
     # noise estimations - afni style
-    noise_file = os.path.join(func_dir, "noise_est.1D")
-    if not os.path.exists(noise_file):
+    acf_reg = reg_file.replace("+tlrc", "_ACF-estimates.1D")
+    avg_reg = reg_file.replace("+tlrc", "_ACF-average.1D")
+    acf_epi = epi_file.replace("_bold.nii.gz", "_ACF-estimates.1D")
+    avg_epi = epi_file.replace("_bold.nii.gz", "_ACF-average.1D")
+
+    if not os.path.isfile(avg_reg):
         print("\nRunning noise simulations ...")
         h_out, h_err = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
@@ -305,34 +309,20 @@ def resting_metrics(afni_data, work_dir):
         )
         used_trs = h_out.decode("utf-8").strip()
         h_cmd = f"""
-            if  [ ! -s {func_dir}/blur_epits.1D ] || [ ! -s {func_dir}/blur_errts.1D ]; then
+            if [ ! -s {avg_reg} ]; then
                 3dFWHMx \
                     -mask {int_mask} \
-                    -ACF {func_dir}/ACF_epits.1D \
-                    {epi_file}'[{used_trs}]' >{func_dir}/blur_epits.1D
+                    -ACF {acf_epi} \
+                    {epi_file}'[{used_trs}]' >{avg_epi}
 
                 3dFWHMx \
                     -mask {int_mask} \
-                    -ACF {func_dir}/ACF_errts.1D \
-                    {reg_file}'[{used_trs}]' >{func_dir}/blur_errts.1D
+                    -ACF {acf_reg} \
+                    {reg_file}'[{used_trs}]' >{avg_reg}
             fi
-            [ ! -s {func_dir}/blur_epits.1D ] || [ ! -s {func_dir}/blur_errts.1D ] \
-                && exit 1
-
-            blur_e0=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{0..$(2)}}'\\')
-            blur_e1=$(3dTstat -mean -prefix - {func_dir}/blur_epits.1D'{{1..$(2)}}'\\')
-            blur_r0=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{0..$(2)}}'\\')
-            blur_r1=$(3dTstat -mean -prefix - {func_dir}/blur_errts.1D'{{1..$(2)}}'\\')
-
-            >{noise_file}
-            echo -e '$blur_e0\\t#epits FWHM blur est' >>{noise_file}
-            echo -e '$blur_e1\\t#epits ACF blur est' >>{noise_file}
-            echo -e '$blur_r0\\t#errts FWHM blur est' >>{noise_file}
-            echo -e '$blur_r1\\t#errts ACF blur est' >>{noise_file}
         """
-        print(f"\n\n blur job : \n{h_cmd} \n\n")
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 4, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
+            h_cmd, 2, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
         )
 
     return afni_data
