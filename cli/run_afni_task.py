@@ -3,26 +3,25 @@
 """Pre-process and deconvolve fMRIprep output.
 
 Incorpoarte fMRIprep output into an AFNI workflow, finish
-pre-processing and deconvolve. Will attempt to submit a batch
-of participants to a Slurm scheduler every 12 hours over
-the course of a week.
-
-By default, all unique behaviors (and non-responses) are modelled
-for each subject/session, with user control via --json-dir. Input
-directory for --json-dir should contain a json for each subject
-in experiment (name format: subj-1234*.json). See
-workflow.control_afni.control_deconvolution for guidance
-in formatting the dictionary.
+pre-processing and deconvolve. By default, all unique behaviors
+(and non-responses) are modelled for each subject/session, with
+user control via --json-dir. Input directory for --json-dir should
+contain a json for each subject in experiment (name format: subj-1234*.json).
+See workflow.control_afni.control_deconvolution for guidance in formatting
+the dictionary.
 
 Default timing files written specifically for EMU (see
 resources.afni.deconvolve.timing_files).
 
-Supports task-based analyses, resting state will come soon.
+Submits batches of size N for processing, according to
+user input and based on which subejcts do not have output in
+logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Examples
 --------
+log_dir=$(pwd)/../logs
 sbatch --job-name=runAfni \\
-    --output=runAfni_log \\
+    --output=${log_dir}/runAfni_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
@@ -267,10 +266,18 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
+        "-s",
+        "--session",
+        help="BIDS session str (ses-S2)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
+        "-t",
+        "--task",
+        help="BIDS EPI task str (task-test)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
         "-p",
@@ -387,7 +394,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

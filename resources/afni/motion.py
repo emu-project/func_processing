@@ -10,7 +10,7 @@ import json
 import pandas as pd
 
 
-def mot_files(work_dir, afni_data):
+def mot_files(work_dir, afni_data, task):
     """Constuct motion and censor files
 
     Mine <fMRIprep>_desc-confounds_timeseries.tsv for motion events, make
@@ -27,6 +27,8 @@ def mot_files(work_dir, afni_data):
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     afni_data : dict
         contains names for various files
+    task : str
+        BIDS task string (task-test)
 
     Returns
     -------
@@ -160,7 +162,7 @@ def mot_files(work_dir, afni_data):
             "proportion_excluded": round(1 - (num_vol / num_tot), 3),
         }
         with open(
-            os.path.join(work_dir, "func/info_censored_volumes.json"), "w"
+            os.path.join(work_dir, f"func/info_{task}_censored_volumes.json"), "w"
         ) as jfile:
             json.dump(cen_dict, jfile)
 

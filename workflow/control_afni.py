@@ -101,7 +101,7 @@ def control_preproc(
     afni_data = process.scale_epi(work_dir, subj_num, afni_data)
 
     # make mean, deriv, censor motion files
-    afni_data = motion.mot_files(work_dir, afni_data)
+    afni_data = motion.mot_files(work_dir, afni_data, task)
 
     return afni_data
 

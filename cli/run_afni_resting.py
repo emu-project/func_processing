@@ -1,13 +1,26 @@
 #!/usr/bin/env python
 
-"""Title.
+"""Pre-process and regress resting fMRIprep output.
 
-Desc.
+Incorpoarte fMRIprep output into an AFNI workflow, finish
+pre-processing and project regression matrix. Default uses
+anaticor method for projection, but "original" method is
+supported (see resources.afni.deconvolve.regress_resting).
+
+Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
+of afni_data6. Submits batches of size N for processing, according to
+user input and based on which subejcts do not have output in
+logs/completed_preprocessing.tsv (see cli/run_checks.py).
+
+Final regression matrix is:
+<proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
+SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
 
 Examples
 --------
+log_dir=$(pwd)/../logs
 sbatch --job-name=runAfni \\
-    --output=runAfni_log \\
+    --output=${log_dir}/runAfni_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
@@ -67,12 +80,8 @@ def submit_jobs(
         path to location for capturing sbatch stdout/err
     tplflow_str : str
         template_flow identifier string
-    dur : int/float/str
-        duration of event to be modeled
-    do_decon : bool
-        whether to conduct deconvolution
-    decon_plan : dict/None
-        planned deconvolution with behavior: timing file mappings
+    do_regress : bool
+        whether to conduct deconvolution/regression
     pat_github_emu : str
         Personal Access Token to https://github.com/emu-project
 
@@ -313,8 +322,7 @@ def main():
 
     # make list of subjects who have fmriprep output and are
     # missing afni deconvolutions
-    # subj_list_all = df_log["subjID"].tolist()
-    subj_list_all = ["sub-4146"]
+    subj_list_all = df_log["subjID"].tolist()
     subj_dict = {}
     for subj in subj_list_all:
 
