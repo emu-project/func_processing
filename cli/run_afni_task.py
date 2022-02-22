@@ -166,9 +166,6 @@ def submit_jobs(
 
         # turn out the lights
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}"))
-
-        # update logs
-        # check_preproc({proj_dir}, {code_dir}, {pat_github_emu}, one_subj="{subj}")
     """
 
     # write script for review, run it

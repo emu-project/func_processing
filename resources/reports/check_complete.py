@@ -89,7 +89,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     """
 
     # # For testing
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # code_dir = "/home/nmuncy/compute/func_processing"
     # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
     # one_subj = "sub-4168"
@@ -226,7 +226,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
                     )
 
     # keep dataframe sorted, write
-    df_comp.sort_values(by=["subjID"])
+    df_comp.sort_values(by=["subjID"], inplace=True)
     df_comp.to_csv(completed_tsv, index=False, sep="\t")
 
     # update repo origin
