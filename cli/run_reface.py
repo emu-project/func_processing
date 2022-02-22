@@ -192,6 +192,7 @@ def main():
     for subj in subj_list_all:
 
         # check for t1 file
+        print(f"Checking {subj} for previous work ...")
         t1_files = sorted(glob.glob(f"{dset_dir}/{subj}/**/*T1w.nii*", recursive=True))
         t1_file = t1_files[-1].split("/")[-1]
         sess = t1_file.split("_")[1]
@@ -201,6 +202,7 @@ def main():
         reface_missing = pd.isnull(df_log.loc[ind_subj, "reface"]).bool()
 
         if t1_files and reface_missing:
+            print(f"\tAdding {subj} to working list (subj_dict).\n")
             subj_dict[subj] = {}
             subj_dict[subj]["sess"] = sess
             subj_dict[subj]["anat"] = t1_file

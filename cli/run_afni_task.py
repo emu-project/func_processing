@@ -374,7 +374,7 @@ def main():
         # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
             if intersect_missing or wme_missing or decon_missing or scaled_missing:
-                print(f"\tAdding {subj} to working list (subj_dict).")
+                print(f"\tAdding {subj} to working list (subj_dict).\n")
                 subj_dict[subj] = {
                     "Decon": decon_missing,
                     "Decon_plan": decon_plan,

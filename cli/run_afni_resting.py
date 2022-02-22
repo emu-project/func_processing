@@ -339,7 +339,7 @@ def main():
         # Append subj_list if fmriprep data exists and afni data is missing.
         if fmriprep_check:
             if intersect_missing or wme_missing or regress_missing or scaled_missing:
-                print(f"\tAdding {subj} to working list (subj_dict).")
+                print(f"\tAdding {subj} to working list (subj_dict).\n")
                 subj_dict[subj] = {"Regress": regress_missing}
 
     # kill for no subjects

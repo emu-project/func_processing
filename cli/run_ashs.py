@@ -254,6 +254,7 @@ def main():
     for subj in subj_list_all:
 
         # check log for missing left ASHS
+        print(f"Checking {subj} for previous work ...")
         ind_subj = df_log.index[df_log["subjID"] == subj]
         ashs_missing = pd.isnull(df_log.loc[ind_subj, "ashs_L"]).bool()
 
@@ -263,6 +264,7 @@ def main():
         if t1_files and t2_files and ashs_missing:
 
             # give list item in list for field map correction, multiple acquisitions
+            print(f"\tAdding {subj} to working list (subj_dict).\n")
             subj_dict[subj] = {}
             subj_dict[subj]["t1-file"] = t1_files[-1].split("/")[-1]
             subj_dict[subj]["t1-dir"] = t1_files[-1].rsplit("/", 1)[0]
