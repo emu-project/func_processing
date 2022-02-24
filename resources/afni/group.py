@@ -16,22 +16,24 @@ def resting_seed(coord_dict, afni_data, work_dir):
     Desc
     """
     # unpack afni_data to get file, reference strings
-    reg_file = afni_data["reg-martrix"]
+    reg_file = afni_data["reg-matrix"]
     int_mask = afni_data["mask-int"]
     file_censor = afni_data["mot-censor"]
-    subj_num = reg_file.split("sub-")[-1].split("_")[0]
+    subj_num = reg_file.split("sub-")[-1].split("/")[0]
 
     # make seed for coordinates, get timeseries
     for seed, coord in coord_dict.items():
         seed_file = int_mask.replace("desc-intersect", f"desc-RS{seed}")
         seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
         if not os.path.exists(seed_file):
+            print(f"Making Seed {seed}\n")
             h_cmd = f"""
+                echo {coord} > {work_dir}/anat/tmp.txt
                 3dUndump \
                     -prefix {seed_file} \
                     -master {reg_file} \
                     -srad 2 \
-                    -xyz {coord}
+                    -xyz {work_dir}/tmp.txt
 
                 3dROIstats \
                     -quiet \
@@ -43,10 +45,11 @@ def resting_seed(coord_dict, afni_data, work_dir):
 
     # project correlation matrix, z-transform
     for seed in coord_dict:
-        corr_file = reg_file.replace("+tlrc", "_corr")
-        ztrans_file = reg_file.replace("+tlrc", "_ztrans")
+        corr_file = reg_file.replace("+tlrc", f"_{seed}_corr")
+        ztrans_file = reg_file.replace("+tlrc", f"_{seed}_ztrans")
         seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
         if not os.path.exists(f"{ztrans_file}+tlrc.HEAD"):
+            print(f"Making Ztrans  {ztrans_file}\n")
             h_cmd = f"""
                 3dTcorr1D \
                     -mask {int_mask} \
@@ -66,6 +69,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
             f"{ztrans_file}+tlrc.HEAD"
         ), f"Failed to write {ztrans_file}+tlrc.HEAD"
         afni_data[f"S{seed}-ztrans"] = f"{ztrans_file}+tlrc"
+    return afni_data
 
 
 def int_mask(task, deriv_dir, group_data, group_dir):

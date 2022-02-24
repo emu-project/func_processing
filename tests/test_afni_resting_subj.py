@@ -5,12 +5,13 @@
 Examples
 --------
 sbatch --job-name=runAfniRest \\
-    --output=${code_dir}/logs/runAfniRest_log \\
+    --output=log_runAfniRest \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_afni_resting.py
+    test_afni_resting_subj.py \\
+        -r
 """
 
 
@@ -21,6 +22,7 @@ import time
 from datetime import datetime
 import textwrap
 import subprocess
+from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
@@ -171,6 +173,25 @@ def submit_jobs(
     return (h_out, h_err)
 
 
+def get_args():
+    """Get and parse arguments"""
+    parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
+        "-r",
+        "--run",
+        action="store_true",
+        required=True,
+        help="Whether to run code or print help",
+    )
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    return parser
+
+
 # %%
 def main():
 
@@ -182,6 +203,11 @@ def main():
     sess = "ses-S2"
     task = "task-rest"
     code_dir = "/home/nmuncy/compute/func_processing"
+
+    # get args
+    args = get_args().parse_args()
+    if not args.run:
+        sys.exit()
 
     # set up
     coord_dict = {"rPCC": "5 -55 25"}
@@ -196,7 +222,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
