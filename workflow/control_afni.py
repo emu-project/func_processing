@@ -11,7 +11,7 @@ import glob
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
 
-from resources.afni import copy, process, masks, motion, deconvolve
+from resources.afni import copy, process, masks, motion, deconvolve, group
 
 
 # %%
@@ -193,7 +193,7 @@ def control_deconvolution(
     return afni_data
 
 
-def control_resting(afni_data, afni_dir, subj, sess):
+def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     """Generate and control resting state regressions.
 
     Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
@@ -218,9 +218,24 @@ def control_resting(afni_data, afni_dir, subj, sess):
     # generate regression matrix, determine snr/corr/noise
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
     afni_data = process.resting_metrics(afni_data, work_dir)
+    afni_data = group.resting_seed(coord_dict, afni_data, work_dir)
 
     # clean
     for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
         os.remove(tmp_file)
 
     return afni_data
+
+
+def control_resting_group(seed, task, deriv_dir, group_data):
+    """Title.
+
+    Desc
+    """
+
+    # setup
+    group_dir = os.path.join(deriv_dir, "analyses")
+
+    group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
+    group_data = group.resting_etac(seed, group_data, group_dir)
+
