@@ -303,6 +303,7 @@ def main():
     code_dir = args.code_dir
 
     # set up
+    # TODO get coord_dict from user-specified JSON
     coord_dict = {"rPCC": "5 -55 25"}
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")

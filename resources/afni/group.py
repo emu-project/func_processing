@@ -33,7 +33,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
                     -prefix {seed_file} \
                     -master {reg_file} \
                     -srad 2 \
-                    -xyz {work_dir}/tmp.txt
+                    -xyz {work_dir}/anat/tmp.txt
 
                 3dROIstats \
                     -quiet \
