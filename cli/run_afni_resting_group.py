@@ -30,7 +30,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
-def submit_jobs(seed, task, deriv_dir, group_dir, group_data, slurm_dir, code_dir):
+def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir):
     """Title.
 
     Desc
@@ -55,13 +55,15 @@ def submit_jobs(seed, task, deriv_dir, group_dir, group_data, slurm_dir, code_di
         sys.path.append("{code_dir}")
         from workflow import control_afni
 
+        group_data = {group_data}
         group_data = control_afni.control_resting_group(
             "{seed}",
             "{task}",
-            "{deriv_dir}",
+            "{afni_dir}",
             "{group_dir}",
-            "{group_data}",
+            group_data,
         )
+        print(f"Job finished with group_data : \\n{{group_data}}")
     """
 
     # write script for review, run it
@@ -126,7 +128,7 @@ def get_args():
         "-s",
         "--seed",
         required=True,
-        help="Seed name, rPCC for decon_task-rest_anaticor_rPCC_ztrans+tlrc",
+        help="Seed name, e.g. 'rPCC' for decon_task-rest_anaticor_rPCC_ztrans+tlrc",
     )
 
     if len(sys.argv) == 1:
@@ -146,7 +148,6 @@ def main():
     # # For testing
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # seed = "rPCC"
-    # # sess = "ses-S2"
     # task = "task-rest"
     # code_dir = "/home/nmuncy/compute/func_processing"
     # atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
@@ -161,7 +162,7 @@ def main():
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
-    afni_dir = os.path.join(proj_dir, "afni")
+    afni_dir = os.path.join(proj_dir, "derivatives/afni")
     group_dir = os.path.join(afni_dir, "analyses")
     if not os.path.exists(group_dir):
         os.makedirs(group_dir)
@@ -202,13 +203,16 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
     print(f"\ngroup_data : \n {group_data}")
-    # h_out, h_err = submit_jobs(group_data)
+    h_out, h_err = submit_jobs(
+        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
+    )
 
 
 if __name__ == "__main__":

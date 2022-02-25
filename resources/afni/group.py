@@ -134,6 +134,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
                 -o {final_mask} \
                 && rm {group_dir}/tmp_gm.nii.gz
         """
+        h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
     assert os.path.exists(
         final_mask
     ), f"Failed to write {final_mask}, check resources.afni.group.int_mask."
@@ -158,9 +159,12 @@ def resting_etac(seed, group_data, group_dir):
             -ETAC \
             -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
             -setA \
-            {group_files}
+            {" ".join(group_files)}
     """
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 20, 4, 10, "rsETAC", f"{group_dir}"
     )
+    assert os.path.exists(
+        f"{group_dir}/{final_file}_clustsim.etac.ETACmask.global.2sid.5perc.nii.gz"
+    ), "ERROR: ETAC failed. Check resources.afni.group.resting_etac."
     return group_data
