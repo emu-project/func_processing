@@ -3,15 +3,137 @@
 """Title.
 
 Desc
+
+Examples
+--------
+code_dir="$(dirname "$(pwd)")"
+sbatch --job-name=runRSGroup \\
+    --output=${code_dir}/logs/runAfniRestGroup_log \\
+    --mem-per-cpu=4000 \\
+    --partition=IB_44C_512G \\
+    --account=iacc_madlab \\
+    --qos=pq_madlab \\
+    run_afni_resting_group.py \\
+    -c $code_dir \\
+    -s rPCC
 """
 
 # %%
 import os
 import sys
-import time
+from datetime import datetime
 import pandas as pd
 import textwrap
+import glob
+import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+
+
+# %%
+def submit_jobs(seed, task, deriv_dir, group_dir, group_data, slurm_dir, code_dir):
+    """Title.
+
+    Desc
+    """
+
+    h_cmd = f"""\
+        #!/bin/env {sys.executable}
+
+        #SBATCH --job-name=rsGroup
+        #SBATCH --output={slurm_dir}/out_rsGroup.txt
+        #SBATCH --time=10:00:00
+        #SBATCH --mem=4000
+        #SBATCH --partition=IB_44C_512G
+        #SBATCH --account=iacc_madlab
+        #SBATCH --qos=pq_madlab
+
+        import os
+        import sys
+        import shutil
+        import glob
+        import subprocess
+        sys.path.append("{code_dir}")
+        from workflow import control_afni
+
+        group_data = control_afni.control_resting_group(
+            "{seed}",
+            "{task}",
+            "{deriv_dir}",
+            "{group_dir}",
+            "{group_data}",
+        )
+    """
+
+    # write script for review, run it
+    cmd_dedent = textwrap.dedent(h_cmd)
+    py_script = os.path.join(slurm_dir, "RS_group.py")
+    with open(py_script, "w") as ps:
+        ps.write(cmd_dedent)
+    sbatch_response = subprocess.Popen(
+        f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
+    )
+    h_out, h_err = sbatch_response.communicate()
+    return (h_out, h_err)
+
+
+# %%
+def get_args():
+    """Get and parse arguments"""
+    parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument(
+        "--proj-dir",
+        type=str,
+        default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+            path to BIDS-formatted project directory
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--atlas-dir",
+        type=str,
+        default="/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5",
+        help=textwrap.dedent(
+            """\
+            Path to location of atlas GM mask
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--task",
+        type=str,
+        default="task-rest",
+        help=textwrap.dedent(
+            """\
+            BIDS EPI task str
+            (default : %(default)s)
+            """
+        ),
+    )
+
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
+        "-c",
+        "--code-dir",
+        required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
+    )
+    required_args.add_argument(
+        "-s",
+        "--seed",
+        required=True,
+        help="Seed name, rPCC for decon_task-rest_anaticor_rPCC_ztrans+tlrc",
+    )
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    return parser
 
 
 # %%
@@ -21,23 +143,32 @@ def main():
     Desc
     """
 
-    # For testing
-    proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    sess = "ses-S2"
-    task = "task-rest"
-    code_dir = "/home/nmuncy/compute/func_processing"
-    atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
+    # # For testing
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # seed = "rPCC"
+    # # sess = "ses-S2"
+    # task = "task-rest"
+    # code_dir = "/home/nmuncy/compute/func_processing"
+    # atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
+
+    # receive passed args
+    args = get_args().parse_args()
+    proj_dir = args.proj_dir
+    atlas_dir = args.atlas_dir
+    task = args.task
+    seed = args.seed
+    code_dir = args.code_dir
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
     afni_dir = os.path.join(proj_dir, "afni")
-    analysis_dir = os.path.join(afni_dir, "analyses")
-    for h_dir in [afni_dir, analysis_dir]:
-        if not os.path.exists(h_dir):
-            os.makedirs(h_dir)
+    group_dir = os.path.join(afni_dir, "analyses")
+    if not os.path.exists(group_dir):
+        os.makedirs(group_dir)
 
     # get completed logs
     df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
+    subj_list_all = df_log["subjID"].tolist()
 
     # start group_data with template gm mask
     group_data = {}
@@ -47,14 +178,37 @@ def main():
     assert os.path.exists(tpl_gm), f"Template GM not detected: {tpl_gm}"
     group_data["mask-gm"] = tpl_gm
 
-    # make list of subjs with req data
-    subj_list_all = df_log["subjID"].tolist()
+    # make list of subjs with required data
     subj_list = []
+    ztrans_list = []
     for subj in subj_list_all:
         print(f"Checking {subj} for required files ...")
+        mask_exists = glob.glob(
+            f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
+            recursive=True,
+        )
+        ztrans_exists = glob.glob(
+            f"{afni_dir}/{subj}/**/func/decon_{task}_anaticor_{seed}_ztrans+tlrc.HEAD",
+            recursive=True,
+        )
+        if mask_exists and ztrans_exists:
+            print(f"\tAdding {subj} to group_data\n")
+            subj_list.append(subj)
+            ztrans_list.append(ztrans_exists[0].split(".")[0])
+    assert len(subj_list) > 1, "No usable subject data found."
+    group_data["subj-list"] = subj_list
+    group_data["all-ztrans"] = ztrans_list
 
+    # submit work
+    current_time = datetime.now()
+    slurm_dir = os.path.join(
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+    )
+    if not os.path.exists(slurm_dir):
+        os.makedirs(slurm_dir)
 
-
+    print(f"\ngroup_data : \n {group_data}")
+    # h_out, h_err = submit_jobs(group_data)
 
 
 if __name__ == "__main__":

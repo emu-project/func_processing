@@ -41,7 +41,9 @@ def resting_seed(coord_dict, afni_data, work_dir):
                     {reg_file} > {seed_ts}
             """
             h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
-        assert os.path.exists(seed_file), f"Failed to write {seed_file}"
+        assert os.path.exists(
+            seed_file
+        ), f"Failed to write {seed_file}, check resources.afni.group.resting_seed."
 
     # project correlation matrix, z-transform
     for seed in coord_dict:
@@ -67,7 +69,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
             )
         assert os.path.exists(
             f"{ztrans_file}+tlrc.HEAD"
-        ), f"Failed to write {ztrans_file}+tlrc.HEAD"
+        ), f"Failed to write {ztrans_file}+tlrc.HEAD, check resources.afni.group.resting_seed."
         afni_data[f"S{seed}-ztrans"] = f"{ztrans_file}+tlrc"
     return afni_data
 
@@ -108,7 +110,9 @@ def int_mask(task, deriv_dir, group_data, group_dir):
                 -input {" ".join(mask_list)}
         """
         h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
-    assert os.path.exists(group_mask), f"Failed to write {group_mask}"
+    assert os.path.exists(
+        group_mask
+    ), f"Failed to write {group_mask}, check resources.afni.group.int_mask."
 
     # multiply intersection mask by template GM mask
     final_mask = group_mask.replace("grpIntx", "grpIntxGM")
@@ -130,7 +134,9 @@ def int_mask(task, deriv_dir, group_data, group_dir):
                 -o {final_mask} \
                 && rm {group_dir}/tmp_gm.nii.gz
         """
-    assert os.path.exists(final_mask), f"Failed to write {final_mask}"
+    assert os.path.exists(
+        final_mask
+    ), f"Failed to write {final_mask}, check resources.afni.group.int_mask."
     group_data["mask-int"] = final_mask
     return group_data
 
@@ -157,3 +163,4 @@ def resting_etac(seed, group_data, group_dir):
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 20, 4, 10, "rsETAC", f"{group_dir}"
     )
+    return group_data

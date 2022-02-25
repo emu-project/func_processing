@@ -227,15 +227,12 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     return afni_data
 
 
-def control_resting_group(seed, task, deriv_dir, group_data):
+def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
     """Title.
 
     Desc
     """
-
-    # setup
-    group_dir = os.path.join(deriv_dir, "analyses")
-
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
     group_data = group.resting_etac(seed, group_data, group_dir)
+    return group_data
 
