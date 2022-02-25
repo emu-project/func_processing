@@ -1,34 +1,34 @@
 #!/usr/bin/env python
 
-"""Pre-process and deconvolve fMRIprep output.
+"""Pre-process and regress resting fMRIprep output.
 
 Incorpoarte fMRIprep output into an AFNI workflow, finish
-pre-processing and deconvolve. By default, all unique behaviors
-(and non-responses) are modelled for each subject/session, with
-user control via --json-dir. Input directory for --json-dir should
-contain a json for each subject in experiment (name format: subj-1234*.json).
-See workflow.control_afni.control_deconvolution for guidance in formatting
-the dictionary.
+pre-processing and project regression matrix. Default uses
+anaticor method for projection, but "original" method is
+supported (see resources.afni.deconvolve.regress_resting).
 
-Default timing files written specifically for EMU (see
-resources.afni.deconvolve.timing_files).
-
-Submits batches of size N for processing, according to
+Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
+of afni_data6. Submits batches of size N for processing, according to
 user input and based on which subejcts do not have output in
 logs/completed_preprocessing.tsv (see cli/run_checks.py).
+
+Final regression matrix is:
+    <proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
+SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
+
+Seed-based regression matrix is:
+    decon_task-rest_<anaticor>_<seed>_ztrans+tlrc.
 
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runAfniTask \\
-    --output=${code_dir}/logs/runAfniTask_log \\
+sbatch --job-name=runAfniRest \\
+    --output=${code_dir}/logs/runAfniRest_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_afni_task.py \\
-    -s ses-S2 \\
-    -t task-test \\
+    afni_resting_subj.py \\
     -c $code_dir
 """
 
@@ -36,7 +36,6 @@ sbatch --job-name=runAfniTask \\
 # %%
 import os
 import sys
-import json
 import glob
 import time
 import pandas as pd
@@ -56,9 +55,8 @@ def submit_jobs(
     code_dir,
     slurm_dir,
     tplflow_str,
-    dur,
-    do_decon,
-    decon_plan,
+    do_regress,
+    coord_dict,
 ):
     """Schedule work for single participant.
 
@@ -84,12 +82,10 @@ def submit_jobs(
         path to location for capturing sbatch stdout/err
     tplflow_str : str
         template_flow identifier string
-    dur : int/float/str
-        duration of event to be modeled
-    do_decon : bool
-        whether to conduct deconvolution
-    decon_plan : dict/None
-        planned deconvolution with behavior: timing file mappings
+    do_regress : bool
+        whether to conduct deconvolution/regression
+    coord_dict : dict
+        seed name and coordinates
 
     Returns
     -------
@@ -99,7 +95,6 @@ def submit_jobs(
 
     subj_num = subj.split("-")[-1]
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
-    dset_dir = os.path.join(proj_dir, "dset")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
 
     h_cmd = f"""\
@@ -129,21 +124,19 @@ def submit_jobs(
             "{task}",
             "{tplflow_str}",
         )
+        print(f"afni_data : \\n {{afni_data}}")
 
-        if {do_decon}:
-            afni_data = control_afni.control_deconvolution(
+        if {do_regress}:
+            afni_data = control_afni.control_resting(
                 afni_data,
                 "{afni_dir}",
-                "{dset_dir}",
                 "{subj}",
                 "{sess}",
-                "{task}",
-                "{dur}",
-                {decon_plan},
+                {coord_dict},
             )
-            print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
+        print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
-        # clean up
+        # clean up niftis
         shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
         clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
         clean_list = [
@@ -154,9 +147,32 @@ def submit_jobs(
             "preproc_T1w",
             "minval_mask",
             "GMe_mask",
+            "meanTS_bold",
+            "sdTS_bold",
+            "blurWM_bold",
+            "combWM_bold",
+            "masked_bold",
         ]
         for c_str in clean_list:
             for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
+                os.remove(h_file)
+
+        # clean up other, based on extension
+        clean_list = [
+            "unit+tlrc.HEAD",
+            "unit+tlrc.BRIK",
+            "corr+tlrc.HEAD",
+            "corr+tlrc.BRIK",
+            "1D00.1D",
+            "1D01.1D",
+            "1D02.1D",
+            "1D_eig.1D",
+            "1D_vec.1D",
+            "csfPC_timeseries.1D",
+            "tmp-censor_timeseries.1D",
+        ]
+        for c_str in clean_list:
+            for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}", recursive=True):
                 os.remove(h_file)
 
         # copy important files to /home/data
@@ -170,7 +186,7 @@ def submit_jobs(
 
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
-    py_script = os.path.join(slurm_dir, f"preproc_decon_{subj_num}.py")
+    py_script = os.path.join(slurm_dir, f"preproc_regress_{subj_num}.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
@@ -219,17 +235,6 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--dur",
-        type=str,
-        default="2",
-        help=textwrap.dedent(
-            """\
-            event duration, for deconvolution modulation
-            (default : %(default)s)
-            """
-        ),
-    )
-    parser.add_argument(
         "--afni-dir",
         type=str,
         default="/scratch/madlab/McMakin_EMUR01/derivatives/afni",
@@ -241,43 +246,29 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--json-dir",
+        "--task",
         type=str,
-        default=None,
+        default="task-rest",
         help=textwrap.dedent(
             """\
-            Path to directory containing JSON deconvolution plans for each
-            subject. Must be titled <subject>*.json. See notes in
-            workflow.control_afni.control_deconvolution for description
-            of dictionary format. Default (None) results in all unique
-            behaviors modeled (decon_<task>_UniqueBehs*).
+            BIDS EPI task str
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--session",
+        type=str,
+        default="ses-S2",
+        help=textwrap.dedent(
+            """\
+            BIDS session str
             (default : %(default)s)
             """
         ),
     )
 
     required_args = parser.add_argument_group("Required Arguments")
-    required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
-        "-p",
-        "--pat",
-        help="Personal Access Token for github.com/emu-project",
-        type=str,
-        required=True,
-    )
     required_args.add_argument(
         "-c",
         "--code-dir",
@@ -294,30 +285,34 @@ def get_args():
 
 # %%
 def main():
+    """Set up for workflow.
+
+    Find subjects without resting state output, schedule
+    job for them.
+    """
 
     # # For testing
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # batch_num = 3
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # batch_num = 1
     # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # dur = 2
     # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # json_dir = None
     # sess = "ses-S2"
-    # task = "task-test"
+    # task = "task-rest"
+    # code_dir = "/home/nmuncy/compute/func_processing"
 
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     batch_num = args.batch_num
     tplflow_str = args.tplflow_str
-    dur = args.dur
     afni_dir = args.afni_dir
-    json_dir = args.json_dir
     sess = args.session
     task = args.task
     code_dir = args.code_dir
 
     # set up
+    # TODO get coord_dict from user-specified JSON
+    coord_dict = {"rPCC": "5 -55 25"}
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
@@ -347,15 +342,6 @@ def main():
         if anat_check and func_check:
             fmriprep_check = True
 
-        # determine decon plans
-        if json_dir:
-            decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
-            assert decon_glob, f"No JSON found for {subj} in {json_dir}."
-            with open(decon_glob[0]) as jf:
-                decon_plan = json.load(jf)
-        else:
-            decon_plan = None
-
         # Check logs for missing WM-eroded masks, session intersection mask,
         # deconvolution, or run-1 scaled files.
         ind_subj = df_log.index[df_log["subjID"] == subj]
@@ -363,19 +349,14 @@ def main():
         intersect_missing = pd.isnull(
             df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
         ).bool()
-        decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
-        scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
+        regress_missing = pd.isnull(df_log.loc[ind_subj, "decon_resting"]).bool()
+        scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
 
         # Append subj_list if fmriprep data exists and afni data is missing.
-        # Note - only add decon to dict, pre-processing is required to create
-        # the afni_data object required by control_afni.control_deconvolution.
         if fmriprep_check:
-            if intersect_missing or wme_missing or decon_missing or scaled_missing:
+            if intersect_missing or wme_missing or regress_missing or scaled_missing:
                 print(f"\tAdding {subj} to working list (subj_dict).\n")
-                subj_dict[subj] = {
-                    "Decon": decon_missing,
-                    "Decon_plan": decon_plan,
-                }
+                subj_dict[subj] = {"Regress": regress_missing}
 
     # kill for no subjects
     if len(subj_dict.keys()) == 0:
@@ -401,9 +382,8 @@ def main():
             code_dir,
             slurm_dir,
             tplflow_str,
-            dur,
-            value_dict["Decon"],
-            value_dict["Decon_plan"],
+            value_dict["Regress"],
+            coord_dict,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

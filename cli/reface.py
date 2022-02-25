@@ -13,7 +13,7 @@ sbatch --job-name=runReface \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_reface.py \\
+    reface.py \\
     -c $code_dir \\
     --run
 """
