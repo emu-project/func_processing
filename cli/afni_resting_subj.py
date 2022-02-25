@@ -13,8 +13,11 @@ user input and based on which subejcts do not have output in
 logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Final regression matrix is:
-<proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
+    <proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
 SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
+
+Seed-based regression matrix is:
+    decon_task-rest_<anaticor>_<seed>_ztrans+tlrc.
 
 Examples
 --------
@@ -25,7 +28,7 @@ sbatch --job-name=runAfniRest \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_afni_resting.py \\
+    afni_resting_subj.py \\
     -c $code_dir
 """
 
@@ -53,6 +56,7 @@ def submit_jobs(
     slurm_dir,
     tplflow_str,
     do_regress,
+    coord_dict,
 ):
     """Schedule work for single participant.
 
@@ -80,6 +84,8 @@ def submit_jobs(
         template_flow identifier string
     do_regress : bool
         whether to conduct deconvolution/regression
+    coord_dict : dict
+        seed name and coordinates
 
     Returns
     -------
@@ -126,6 +132,7 @@ def submit_jobs(
                 "{afni_dir}",
                 "{subj}",
                 "{sess}",
+                {coord_dict},
             )
         print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
@@ -152,8 +159,10 @@ def submit_jobs(
 
         # clean up other, based on extension
         clean_list = [
-            "unit_tlrc.HEAD",
-            "unit_tlrc.BRIK",
+            "unit+tlrc.HEAD",
+            "unit+tlrc.BRIK",
+            "corr+tlrc.HEAD",
+            "corr+tlrc.BRIK",
             "1D00.1D",
             "1D01.1D",
             "1D02.1D",
@@ -276,6 +285,11 @@ def get_args():
 
 # %%
 def main():
+    """Set up for workflow.
+
+    Find subjects without resting state output, schedule
+    job for them.
+    """
 
     # # For testing
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
@@ -297,6 +311,8 @@ def main():
     code_dir = args.code_dir
 
     # set up
+    # TODO get coord_dict from user-specified JSON
+    coord_dict = {"rPCC": "5 -55 25"}
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
@@ -367,6 +383,7 @@ def main():
             slurm_dir,
             tplflow_str,
             value_dict["Regress"],
+            coord_dict,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

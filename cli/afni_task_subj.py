@@ -26,7 +26,7 @@ sbatch --job-name=runAfniTask \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_afni_task.py \\
+    afni_task_subj.py \\
     -s ses-S2 \\
     -t task-test \\
     -c $code_dir

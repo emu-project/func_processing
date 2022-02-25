@@ -339,3 +339,96 @@ def resting_metrics(afni_data, work_dir):
         )
 
     return afni_data
+
+
+def resting_seed(coord_dict, afni_data, work_dir):
+    """Produce correlation matrices for seeds.
+
+    For each seed in coord_dict, produce a projected
+    correlation matrix.
+
+    Parameters
+    ----------
+    coord_dict : dict
+        seed name, coordinates
+        {"rPCC": "5 -55 25"}
+    afni_data : dict
+        contains names for various files
+    work_dir : str
+        location of subject's scratch directory
+
+    Returns
+    -------
+    afni_data : dict
+        updated with the fields
+        S<seed>-ztrans = Z-transformed correlation matrix of seed
+    """
+
+    # check for req files
+    assert afni_data[
+        "reg-matrix"
+    ], "ERROR: missing afni_data['reg-matrix'], check resources.afni.deconvolve.regress_resting."
+    assert afni_data[
+        "mask-int"
+    ], "ERROR: missing afni_data['mask-int'], check resources.afni.masks.make_intersection_mask."
+    assert afni_data[
+        "mot-censor"
+    ], "ERROR: missing afni_data['mot-censor'], check resources.afni.motion.mot_files."
+
+    # unpack afni_data to get file, reference strings
+    reg_file = afni_data["reg-matrix"]
+    int_mask = afni_data["mask-int"]
+    file_censor = afni_data["mot-censor"]
+    subj_num = reg_file.split("sub-")[-1].split("/")[0]
+
+    # make seed for coordinates, get timeseries
+    for seed, coord in coord_dict.items():
+        seed_file = int_mask.replace("desc-intersect", f"desc-RS{seed}")
+        seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
+        if not os.path.exists(seed_file):
+            print(f"Making Seed {seed}\n")
+            h_cmd = f"""
+                echo {coord} > {work_dir}/anat/tmp.txt
+                3dUndump \
+                    -prefix {seed_file} \
+                    -master {reg_file} \
+                    -srad 2 \
+                    -xyz {work_dir}/anat/tmp.txt
+
+                3dROIstats \
+                    -quiet \
+                    -mask {seed_file} \
+                    {reg_file} > {seed_ts}
+            """
+            h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+        assert os.path.exists(
+            seed_file
+        ), f"Failed to write {seed_file}, check resources.afni.group.resting_seed."
+
+    # project correlation matrix, z-transform
+    for seed in coord_dict:
+        corr_file = reg_file.replace("+tlrc", f"_{seed}_corr")
+        ztrans_file = reg_file.replace("+tlrc", f"_{seed}_ztrans")
+        seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
+        if not os.path.exists(f"{ztrans_file}+tlrc.HEAD"):
+            print(f"Making Ztrans  {ztrans_file}\n")
+            h_cmd = f"""
+                3dTcorr1D \
+                    -mask {int_mask} \
+                    -prefix {corr_file} \
+                    {reg_file} \
+                    {seed_ts}
+
+                3dcalc \
+                    -a {corr_file}+tlrc \
+                    -expr 'log((1+a)/(1-a))/2' \
+                    -prefix {ztrans_file}
+            """
+            job_name, job_id = submit.submit_hpc_sbatch(
+                h_cmd, 1, 4, 1, f"{subj_num}Ztran", f"{work_dir}/sbatch_out"
+            )
+        assert os.path.exists(
+            f"{ztrans_file}+tlrc.HEAD"
+        ), f"Failed to write {ztrans_file}+tlrc.HEAD, check resources.afni.group.resting_seed."
+        afni_data[f"S{seed}-ztrans"] = f"{ztrans_file}+tlrc"
+    return afni_data

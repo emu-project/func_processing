@@ -20,7 +20,7 @@ sbatch --job-name=runAshs \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    run_ashs.py \\
+    ashs.py \\
     -c $code_dir \\
     -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """

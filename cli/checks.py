@@ -11,7 +11,7 @@ the HPC login node.
 
 Example
 -------
-python run_checks.py \\
+python checks.py \\
     -t $TOKEN_GITHUB_EMU
 """
 

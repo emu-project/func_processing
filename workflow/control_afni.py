@@ -11,7 +11,7 @@ import glob
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
 
-from resources.afni import copy, process, masks, motion, deconvolve
+from resources.afni import copy, process, masks, motion, deconvolve, group
 
 
 # %%
@@ -193,7 +193,7 @@ def control_deconvolution(
     return afni_data
 
 
-def control_resting(afni_data, afni_dir, subj, sess):
+def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     """Generate and control resting state regressions.
 
     Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
@@ -210,6 +210,16 @@ def control_resting(afni_data, afni_dir, subj, sess):
         BIDS subject string (sub-1234)
     sess : str
         BIDS session string (ses-S1)
+    coord_dict : dict
+        seed name, coordinates
+        {"rPCC": "5 -55 25"}
+
+    Returns
+    -------
+    afni_data : dict
+        updated with the fields
+        reg-matrix = epi projection matrix
+        S<seed>-ztrans = Z-transformed seed-based correlation matrix
     """
 
     # setup dir
@@ -218,9 +228,41 @@ def control_resting(afni_data, afni_dir, subj, sess):
     # generate regression matrix, determine snr/corr/noise
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
     afni_data = process.resting_metrics(afni_data, work_dir)
+    afni_data = process.resting_seed(coord_dict, afni_data, work_dir)
 
     # clean
     for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
         os.remove(tmp_file)
 
     return afni_data
+
+
+def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
+    """Conduct group-level analyses.
+
+    Construct group GM intersection mask, then run on subject
+    correlation matrices.
+
+    Parameters
+    ----------
+    seed : str
+        seed name (rPCC)
+    task : str
+        BIDS string (task-rest)
+    deriv_dir : str
+        location of project AFNI derivatives
+    group_dir : str
+        output location of work
+    group_data : dict
+        contains the fields mask-gm, subj-list, all-ztrans
+
+    Returns
+    -------
+    group_data : dict
+        updated with the fields
+        mask-int = gray matter intersection mask
+        S<seed>-etac = seed stat output
+    """
+    group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
+    group_data = group.resting_etac(seed, group_data, group_dir)
+    return group_data
