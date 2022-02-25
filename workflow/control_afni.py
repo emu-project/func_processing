@@ -266,3 +266,36 @@ def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
     group_data = group.resting_etac(seed, group_data, group_dir)
     return group_data
+
+
+def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data):
+    """Conduct group-level analyses.
+
+    Construct group GM intersection mask, then run A-vs-B ETAC.
+
+    Parameters
+    ----------
+    beh_list : list
+        list of 2 behaviors which match sub-brick name
+        e.g. neg for neg#0_Coef
+    task : str
+        BIDS string (task-test)
+    sess : str
+        BIDS session (ses-S2)
+    deriv_dir : str
+        location of project AFNI derivatives
+    group_dir : str
+        output location of work
+    group_data : dict
+        contains the fields mask-gm, subj-list, dcn-file
+
+    Returns
+    -------
+    group_data : dict
+        updated with the fields
+        mask-int = gray matter intersection mask
+        behAB-etac = etac stat output
+    """
+    group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
+    group_data = group.task_etac(beh_list, deriv_dir, sess, group_data, group_dir)
+    return group_data
