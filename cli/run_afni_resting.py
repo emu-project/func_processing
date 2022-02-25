@@ -13,8 +13,11 @@ user input and based on which subejcts do not have output in
 logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Final regression matrix is:
-<proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
+    <proj_dir>/derivatives/afni/<subj>/ses-S2/func/decon_task-rest_<anaticor>+tlrc.
 SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
+
+Seed-based regression matrix is:
+    decon_task-rest_<anaticor>_<seed>_ztrans+tlrc.
 
 Examples
 --------
@@ -282,6 +285,11 @@ def get_args():
 
 # %%
 def main():
+    """Set up for workflow.
+
+    Find subjects without resting state output, schedule
+    job for them.
+    """
 
     # # For testing
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
@@ -357,8 +365,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

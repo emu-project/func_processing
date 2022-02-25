@@ -1,6 +1,6 @@
-"""Title.
+"""Functions for group-level analyses.
 
-Desc
+Makes group masks, conducts group statistics.
 """
 
 # %%
@@ -10,79 +10,34 @@ from . import submit
 
 
 # %%
-def resting_seed(coord_dict, afni_data, work_dir):
-    """Title.
-
-    Desc
-    """
-    # unpack afni_data to get file, reference strings
-    reg_file = afni_data["reg-matrix"]
-    int_mask = afni_data["mask-int"]
-    file_censor = afni_data["mot-censor"]
-    subj_num = reg_file.split("sub-")[-1].split("/")[0]
-
-    # make seed for coordinates, get timeseries
-    for seed, coord in coord_dict.items():
-        seed_file = int_mask.replace("desc-intersect", f"desc-RS{seed}")
-        seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
-        if not os.path.exists(seed_file):
-            print(f"Making Seed {seed}\n")
-            h_cmd = f"""
-                echo {coord} > {work_dir}/anat/tmp.txt
-                3dUndump \
-                    -prefix {seed_file} \
-                    -master {reg_file} \
-                    -srad 2 \
-                    -xyz {work_dir}/anat/tmp.txt
-
-                3dROIstats \
-                    -quiet \
-                    -mask {seed_file} \
-                    {reg_file} > {seed_ts}
-            """
-            h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
-        assert os.path.exists(
-            seed_file
-        ), f"Failed to write {seed_file}, check resources.afni.group.resting_seed."
-
-    # project correlation matrix, z-transform
-    for seed in coord_dict:
-        corr_file = reg_file.replace("+tlrc", f"_{seed}_corr")
-        ztrans_file = reg_file.replace("+tlrc", f"_{seed}_ztrans")
-        seed_ts = file_censor.replace("desc-censor", f"desc-RS{seed}")
-        if not os.path.exists(f"{ztrans_file}+tlrc.HEAD"):
-            print(f"Making Ztrans  {ztrans_file}\n")
-            h_cmd = f"""
-                3dTcorr1D \
-                    -mask {int_mask} \
-                    -prefix {corr_file} \
-                    {reg_file} \
-                    {seed_ts}
-
-                3dcalc \
-                    -a {corr_file}+tlrc \
-                    -expr 'log((1+a)/(1-a))/2' \
-                    -prefix {ztrans_file}
-            """
-            job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 4, 1, f"{subj_num}Ztran", f"{work_dir}/sbatch_out"
-            )
-        assert os.path.exists(
-            f"{ztrans_file}+tlrc.HEAD"
-        ), f"Failed to write {ztrans_file}+tlrc.HEAD, check resources.afni.group.resting_seed."
-        afni_data[f"S{seed}-ztrans"] = f"{ztrans_file}+tlrc"
-    return afni_data
-
-
 def int_mask(task, deriv_dir, group_data, group_dir):
-    """Title.
+    """Create group gray matter intersection mask.
 
-    Desc
+    Parameters
+    ----------
+    task : str
+        BIDS task string (task-rest)
+    deriv_dir : str
+        location of project AFNI derivatives
+    group_data : dict
+        passed files
+    group_dir : str
+        output location of work
+
+    Returns
+    -------
+    group_data : dict
+        updated with the field
+        mask-int = GM intersect mask
     """
 
-    # check for req files
-    assert group_data["mask-gm"], "ERROR: required template GM mask not found."
-    assert group_data["subj-list"], "ERROR: required subject list not found."
+    # check for req files, unpack
+    assert group_data[
+        "mask-gm"
+    ], "ERROR: required template GM mask not found, check cli.run_afni_resting_group.py"
+    assert group_data[
+        "subj-list"
+    ], "ERROR: required subject list not found, check cli.run_afni_resting_group.py"
     gm_mask = group_data["mask-gm"]
     subj_list = group_data["subj-list"]
 
@@ -143,9 +98,22 @@ def int_mask(task, deriv_dir, group_data, group_dir):
 
 
 def resting_etac(seed, group_data, group_dir):
-    """Title.
+    """Conduct A vs not-A via ETAC.
 
-    Desc
+    Parameters
+    ----------
+    seed : str
+        seed name (rPCC)
+    group_data : dict
+        dictionary of various files
+    group_dir : str
+        location of output directory
+
+    Returns
+    -------
+    group_data : dict
+        updated with the field
+        S<seed>-etac = final ETAC output file
     """
     int_mask = group_data["mask-int"]
     group_files = group_data["all-ztrans"]
@@ -164,7 +132,11 @@ def resting_etac(seed, group_data, group_dir):
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 20, 4, 10, "rsETAC", f"{group_dir}"
     )
-    assert os.path.exists(
+    etac_file = (
         f"{group_dir}/{final_file}_clustsim.etac.ETACmask.global.2sid.5perc.nii.gz"
+    )
+    assert os.path.exists(
+        etac_file
     ), "ERROR: ETAC failed. Check resources.afni.group.resting_etac."
+    group_data[f"S{seed}-etac"] = etac_file
     return group_data

@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 
-"""Title.
+"""Conduct group-level analyses on resting state data.
 
-Desc
+Construct a group intersection gray matter mask in template space,
+and then run an A vs not-A analysis via ETAC on seed-based
+correlation matrices.
+
+More advanced group testing to be added in the future.
+
+Final output is:
+    <proj_dir>/derivatives/afni/analyses/FINAL_RS-<seed>*
 
 Examples
 --------
@@ -31,9 +38,30 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir):
-    """Title.
+    """Schedule workflow for group analyses.
 
-    Desc
+    Parameters
+    ----------
+    seed : str
+        seed identifier from run_afni_resting.py,
+        'rPCC' for decon_task-rest_rPCC_ztrans+tlrc
+    task : str
+        BIDS task string (task-rest)
+    afni_dir : str
+        location of project afni derivatives
+    group_dir : str
+        output location of work
+    group_data : dict
+        dictionary of files, paths
+    slurm_dir : str
+        output location for sbatch stdout/err
+    code_dir : str
+        path to clone of github.com/emu-project/func_processing.git
+
+    Returns
+    -------
+    h_out, h_err : str
+        stdout, stderr of sbatch submission
     """
 
     h_cmd = f"""\
@@ -49,9 +77,6 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
 
         import os
         import sys
-        import shutil
-        import glob
-        import subprocess
         sys.path.append("{code_dir}")
         from workflow import control_afni
 
@@ -68,7 +93,7 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
 
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
-    py_script = os.path.join(slurm_dir, "RS_group.py")
+    py_script = os.path.join(slurm_dir, f"RS_{seed}_group.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
@@ -140,9 +165,10 @@ def get_args():
 
 # %%
 def main():
-    """Title.
+    """Set up for workflow.
 
-    Desc
+    Find subjects with required output, make a group_data
+    dictionary, submit workflow.
     """
 
     # # For testing
@@ -203,8 +229,7 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

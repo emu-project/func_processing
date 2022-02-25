@@ -210,6 +210,16 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
         BIDS subject string (sub-1234)
     sess : str
         BIDS session string (ses-S1)
+    coord_dict : dict
+        seed name, coordinates
+        {"rPCC": "5 -55 25"}
+
+    Returns
+    -------
+    afni_data : dict
+        updated with the fields
+        reg-matrix = epi projection matrix
+        S<seed>-ztrans = Z-transformed seed-based correlation matrix
     """
 
     # setup dir
@@ -218,7 +228,7 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     # generate regression matrix, determine snr/corr/noise
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
     afni_data = process.resting_metrics(afni_data, work_dir)
-    afni_data = group.resting_seed(coord_dict, afni_data, work_dir)
+    afni_data = process.resting_seed(coord_dict, afni_data, work_dir)
 
     # clean
     for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
@@ -228,11 +238,31 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
 
 
 def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
-    """Title.
+    """Conduct group-level analyses.
 
-    Desc
+    Construct group GM intersection mask, then run on subject
+    correlation matrices.
+
+    Parameters
+    ----------
+    seed : str
+        seed name (rPCC)
+    task : str
+        BIDS string (task-rest)
+    deriv_dir : str
+        location of project AFNI derivatives
+    group_dir : str
+        output location of work
+    group_data : dict
+        contains the fields mask-gm, subj-list, all-ztrans
+
+    Returns
+    -------
+    group_data : dict
+        updated with the fields
+        mask-int = gray matter intersection mask
+        S<seed>-etac = seed stat output
     """
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
     group_data = group.resting_etac(seed, group_data, group_dir)
     return group_data
-
