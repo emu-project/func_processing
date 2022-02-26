@@ -45,7 +45,8 @@ def int_mask(task, deriv_dir, group_data, group_dir):
 
     # make group intersection mask from all subjs who have intersect mask
     group_mask = os.path.join(
-        group_dir, "tpl-MNIPediatricAsym_cohort-5_res-2_desc-grpIntx_mask.nii.gz"
+        group_dir,
+        f"tpl-MNIPediatricAsym_cohort-5_res-2_{task}_desc-grpIntx_mask.nii.gz",
     )
     if not os.path.exists(group_mask):
         mask_list = []
@@ -203,12 +204,16 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
         b_out, b_err = submit.submit_hpc_subprocess(
             f"3dinfo -label2index '{beh_b}#0_Coef' {subj_dcn}"
         )
-        if a_out and b_out:
+        a_decode = a_out.decode("utf-8").strip()
+        b_decode = b_out.decode("utf-8").strip()
+        print(a_decode, b_decode)
+        if a_decode and b_decode:
             print(f"\tAdding {subj} to ETAC sets\n")
             set_a.append(subj)
-            set_a.append(f"'{subj_dcn}[{a_out}]'")
+            set_a.append(f"'{subj_dcn}[{a_decode}]'")
             set_b.append(subj)
-            set_b.append(f"'{subj_dcn}[{b_out}]'")
+            set_b.append(f"'{subj_dcn}[{b_decode}]'")
+    print(f"Set A: {set_a} \nSet B: {set_b}")
     assert (
         len(set_a) > 1
     ), "Insufficient subject data found, check resources.afni.group.task_etac."

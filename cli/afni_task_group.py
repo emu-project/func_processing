@@ -16,9 +16,9 @@ sbatch --job-name=runTaskGroup \\
     --qos=pq_madlab \\
     afni_task_group.py \\
     -c $code_dir \\
-    -s ses-S2 \\
-    -t task-test \\
-    -d decon_task-test_UniqueBehs_stats_REML+tlrc \\
+    -s ses-S1 \\
+    -t task-study \\
+    -d decon_task-study_UniqueBehs_stats_REML+tlrc \\
     -b neg neu
 """
 
@@ -53,7 +53,7 @@ def submit_jobs(
         #!/bin/env {sys.executable}
 
         #SBATCH --job-name=rsGroup
-        #SBATCH --output={slurm_dir}/out_rsGroup.txt
+        #SBATCH --output={slurm_dir}/out_taskGroup.txt
         #SBATCH --time=10:00:00
         #SBATCH --mem=4000
         #SBATCH --partition=IB_44C_512G
@@ -67,7 +67,7 @@ def submit_jobs(
 
         group_data = {group_data}
         beh_list = {beh_list}
-        group_data = control_afni.control_resting_group(
+        group_data = control_afni.control_task_group(
             beh_list,
             "{task}",
             "{sess}",
@@ -126,16 +126,22 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s", "--session", required=True, help="BIDS session (ses-S2)",
+        "-s",
+        "--session",
+        required=True,
+        help="BIDS session (ses-S1)",
     )
     required_args.add_argument(
-        "-t", "--task", required=True, help="BIDS task (task-test)",
+        "-t",
+        "--task",
+        required=True,
+        help="BIDS task (task-study)",
     )
     required_args.add_argument(
         "-d",
         "--dcn-str",
         required=True,
-        help="Decon string (decon_task-test_UniqueBehs_stats_REML+tlrc)",
+        help="Decon string (decon_task-study_UniqueBehs_stats_REML+tlrc)",
     )
     required_args.add_argument(
         "-b",
@@ -203,7 +209,9 @@ def main():
             f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
             recursive=True,
         )
-        decon_exists = glob.glob(f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",)
+        decon_exists = glob.glob(
+            f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",
+        )
         if mask_exists and decon_exists:
             print(f"\tAdding {subj} to group_data\n")
             subj_list.append(subj)
@@ -213,7 +221,8 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
