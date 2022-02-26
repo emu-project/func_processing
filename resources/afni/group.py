@@ -210,10 +210,10 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
         if a_decode and b_decode:
             print(f"\tAdding {subj} to ETAC sets\n")
             set_a.append(subj)
-            set_a.append(f"'{subj_dcn}[{a_decode}]'")
+            set_a.append(f"{subj_dcn}'[{a_decode}]'")
             set_b.append(subj)
-            set_b.append(f"'{subj_dcn}[{b_decode}]'")
-    print(f"Set A: {set_a} \nSet B: {set_b}")
+            set_b.append(f"{subj_dcn}'[{b_decode}]'")
+    print(f"Set A: \n{set_a} \n\nSet B: \n{set_b}")
     assert (
         len(set_a) > 1
     ), "Insufficient subject data found, check resources.afni.group.task_etac."
@@ -229,8 +229,8 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
             -prefix_clustsim {final_file}_clustsim \
             -ETAC \
             -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
-            -setA {" ".join(set_a)} \
-            -setB {" ".join(set_b)}
+            -setA {beh_a} {" ".join(set_a)} \
+            -setB {beh_b} {" ".join(set_b)}
     """
     etac_script = os.path.join(group_dir, f"{final_file}.sh")
     with open(etac_script, "w") as script:
