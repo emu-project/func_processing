@@ -287,13 +287,6 @@ def get_args():
         required=True,
     )
     required_args.add_argument(
-        "-p",
-        "--pat",
-        help="Personal Access Token for github.com/emu-project",
-        type=str,
-        required=True,
-    )
-    required_args.add_argument(
         "-c",
         "--code-dir",
         required=True,
