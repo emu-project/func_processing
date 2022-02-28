@@ -1,28 +1,25 @@
 #!/usr/bin/env python
 
-"""Conduct group-level analyses on resting state data.
-
-Construct a group intersection gray matter mask in template space,
-and then run an A vs not-A analysis via ETAC on seed-based
-correlation matrices.
-
-More advanced group testing to be added in the future.
+"""Title.
 
 Final output is:
-    <proj_dir>/derivatives/afni/analyses/FINAL_RS-<seed>*
+    <proj_dir>/derivatives/afni/analyses/FINAL_<behA>-<behB>_*
 
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runRSGroup \\
-    --output=${code_dir}/logs/runAfniRestGroup_log \\
+sbatch --job-name=runTaskGroup \\
+    --output=${code_dir}/logs/runAfniTaskGroup_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
-    afni_resting_group.py \\
+    afni_task_group.py \\
     -c $code_dir \\
-    -s rPCC
+    -s ses-S1 \\
+    -t task-study \\
+    -d decon_task-study_UniqueBehs_stats_REML+tlrc \\
+    -b neg neu
 """
 
 # %%
@@ -37,26 +34,14 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
-def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir):
+def submit_jobs(
+    beh_list, task, sess, afni_dir, group_dir, group_data, slurm_dir, code_dir
+):
     """Schedule workflow for group analyses.
 
     Parameters
     ----------
-    seed : str
-        seed identifier from run_afni_resting.py,
-        'rPCC' for decon_task-rest_rPCC_ztrans+tlrc
-    task : str
-        BIDS task string (task-rest)
-    afni_dir : str
-        location of project afni derivatives
-    group_dir : str
-        output location of work
-    group_data : dict
-        dictionary of files, paths
-    slurm_dir : str
-        output location for sbatch stdout/err
-    code_dir : str
-        path to clone of github.com/emu-project/func_processing.git
+
 
     Returns
     -------
@@ -68,7 +53,7 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
         #!/bin/env {sys.executable}
 
         #SBATCH --job-name=rsGroup
-        #SBATCH --output={slurm_dir}/out_rsGroup.txt
+        #SBATCH --output={slurm_dir}/out_taskGroup.txt
         #SBATCH --time=10:00:00
         #SBATCH --mem=4000
         #SBATCH --partition=IB_44C_512G
@@ -81,9 +66,11 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
         from workflow import control_afni
 
         group_data = {group_data}
-        group_data = control_afni.control_resting_group(
-            "{seed}",
+        beh_list = {beh_list}
+        group_data = control_afni.control_task_group(
+            beh_list,
             "{task}",
+            "{sess}",
             "{afni_dir}",
             "{group_dir}",
             group_data,
@@ -93,7 +80,7 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
 
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
-    py_script = os.path.join(slurm_dir, f"RS_{seed}_group.py")
+    py_script = os.path.join(slurm_dir, "Task_behAB_group.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
@@ -130,17 +117,6 @@ def get_args():
             """
         ),
     )
-    parser.add_argument(
-        "--task",
-        type=str,
-        default="task-rest",
-        help=textwrap.dedent(
-            """\
-            BIDS EPI task str
-            (default : %(default)s)
-            """
-        ),
-    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -151,9 +127,33 @@ def get_args():
     )
     required_args.add_argument(
         "-s",
-        "--seed",
+        "--session",
         required=True,
-        help="Seed name, e.g. 'rPCC' for decon_task-rest_anaticor_rPCC_ztrans+tlrc",
+        help="BIDS session (ses-S1)",
+    )
+    required_args.add_argument(
+        "-t",
+        "--task",
+        required=True,
+        help="BIDS task (task-study)",
+    )
+    required_args.add_argument(
+        "-d",
+        "--dcn-str",
+        required=True,
+        help="Decon string (decon_task-study_UniqueBehs_stats_REML+tlrc)",
+    )
+    required_args.add_argument(
+        "-b",
+        "--behaviors",
+        nargs=2,
+        required=True,
+        help=textwrap.dedent(
+            """\
+            Two behaviors, matching decon sub-brick labels
+            e.g. neg neu for neg#0_Coef, neu#0_Coef
+            """
+        ),
     )
 
     if len(sys.argv) == 1:
@@ -171,20 +171,15 @@ def main():
     dictionary, submit workflow.
     """
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # seed = "rPCC"
-    # task = "task-rest"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-    # atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     atlas_dir = args.atlas_dir
-    task = args.task
-    seed = args.seed
     code_dir = args.code_dir
+    task = args.task
+    sess = args.session
+    decon_str = args.dcn_str
+    beh_list = args.behaviors
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -197,46 +192,44 @@ def main():
     df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
     subj_list_all = df_log["subjID"].tolist()
 
-    # start group_data with template gm mask
+    # start group_data with template gm mask, decon string
     group_data = {}
     tpl_gm = os.path.join(
         atlas_dir, "tpl-MNIPediatricAsym_cohort-5_res-2_label-GM_probseg.nii.gz"
     )
     assert os.path.exists(tpl_gm), f"Template GM not detected: {tpl_gm}"
     group_data["mask-gm"] = tpl_gm
+    group_data["dcn-file"] = decon_str
 
     # make list of subjs with required data
     subj_list = []
-    ztrans_list = []
     for subj in subj_list_all:
         print(f"Checking {subj} for required files ...")
         mask_exists = glob.glob(
             f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
             recursive=True,
         )
-        ztrans_exists = glob.glob(
-            f"{afni_dir}/{subj}/**/func/decon_{task}_anaticor_{seed}_ztrans+tlrc.HEAD",
-            recursive=True,
+        decon_exists = glob.glob(
+            f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",
         )
-        if mask_exists and ztrans_exists:
+        if mask_exists and decon_exists:
             print(f"\tAdding {subj} to group_data\n")
             subj_list.append(subj)
-            ztrans_list.append(ztrans_exists[0].split(".")[0])
     assert len(subj_list) > 1, "Insufficient subject data found."
     group_data["subj-list"] = subj_list
-    group_data["all-ztrans"] = ztrans_list
 
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
     print(f"\ngroup_data : \n {group_data}")
     h_out, h_err = submit_jobs(
-        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
+        beh_list, task, sess, afni_dir, group_dir, group_data, slurm_dir, code_dir
     )
 
 
