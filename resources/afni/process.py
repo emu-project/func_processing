@@ -25,8 +25,8 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        afni struct, mask, epi, and tsv files, returned
-        by copy.copy_data
+        required keys
+            epi-preproc[1..N] = fmriprep pre-processed files
     blur-mult : int
         blur kernel multiplier (default = 1.5)
         e.g. vox=2, blur_mult=1.5, blur size is 3 (will round float up to nearest int)
@@ -39,7 +39,6 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
     Notes
     -----
-    Requires afni_data["epi-preproc*"] keys.
     Determining blur multiplier based off voxel's dimension K.
     """
 
@@ -95,16 +94,14 @@ def scale_epi(work_dir, subj_num, afni_data):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        afni data dict for passing files
+        required keys
+            epi-blur[1..N] = blurred/smoothed epi files
+            mask-min = mask of voxels with >minimum signal
 
     Returns
     -------
     afni_dict : dict
         epi-scale? = scaled EPI for run-?
-
-    Notes
-    -----
-    Requires afni_data["epi-blur*"], afni_data["mask-min"].
     """
 
     # determine relevant files
@@ -206,9 +203,18 @@ def resting_metrics(afni_data, work_dir):
     Parameters
     ----------
     afni_data : dict
-        contains names for various files
+        required keys
+            epi-scale1 = first/only scaled RS epi file
+            reg-matrix = project regression matrix
+            mot-censor = binary censor vector
+            mask-int = epi-anat intersection mask
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
+    Returns
+    -------
+    afni_data : dict
+        not currently adding any keys/values
     """
 
     # check for req files
@@ -353,7 +359,10 @@ def resting_seed(coord_dict, afni_data, work_dir):
         seed name, coordinates
         {"rPCC": "5 -55 25"}
     afni_data : dict
-        contains names for various files
+        required keys
+            reg-matrix = project regression matrix
+            mask-int = epi-anat intersection mask
+            mot-censor = binary censory vector
     work_dir : str
         location of subject's scratch directory
 

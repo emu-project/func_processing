@@ -15,9 +15,7 @@ from resources.afni import copy, process, masks, motion, deconvolve, group
 
 
 # %%
-def control_preproc(
-    prep_dir, afni_dir, subj, sess, task, tplflow_str,
-):
+def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -37,9 +35,11 @@ def control_preproc(
         BIDS session string (ses-S1)
     task : str
         BIDS task string (task-test)
-    tplflow_str = str
+    tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -85,7 +85,8 @@ def control_preproc(
 
     # blur data
     subj_num = subj.split("-")[-1]
-    afni_data = process.blur_epi(work_dir, subj_num, afni_data)
+    if do_blur:
+        afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 
     # make masks
     afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data, sess, task)

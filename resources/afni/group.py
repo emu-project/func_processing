@@ -22,7 +22,9 @@ def int_mask(task, deriv_dir, group_data, group_dir):
     deriv_dir : str
         location of project AFNI derivatives
     group_data : dict
-        passed files
+        required keys
+            mask-gm = gray matter mask
+            subj-list = list of subjects
     group_dir : str
         output location of work
 
@@ -108,7 +110,9 @@ def resting_etac(seed, group_data, group_dir):
     seed : str
         seed name (rPCC)
     group_data : dict
-        dictionary of various files
+        required keys
+            all-ztrans = list of Ztrans files
+            mask-int = group GM intersection mask
     group_dir : str
         location of output directory
 
@@ -167,9 +171,27 @@ def resting_etac(seed, group_data, group_dir):
 
 
 def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
-    """Title.
+    """Conduct A vs B via ETAC.
 
-    Desc
+    Parameters
+    ----------
+    beh_list : list
+        two behaviors for setA, setB
+    deriv_dir : str
+        path to project afni derivatives
+    sess : str
+        BIDS session (ses-S2)
+    group_data : dict
+        required keys
+            subj-list = list of subjects
+            mask-int = group GM intersection mask
+            dcn-file = decon file string
+
+    Returns
+    -------
+    group_data : dict
+        updated with the field
+        behAB-etac = final output ETAC file
     """
 
     # check req args

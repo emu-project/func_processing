@@ -26,7 +26,8 @@ def mot_files(work_dir, afni_data, task):
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     afni_data : dict
-        contains names for various files
+        required keys
+            mot-confound[1..N] = fmriprep motion confound timeseries
     task : str
         BIDS task string (task-test)
 
@@ -40,8 +41,6 @@ def mot_files(work_dir, afni_data, task):
 
     Notes
     -----
-    Requires afni_data[mot-confound*].
-
     As runs do not have an equal number of volumes, motion/censor files
     for each run are concatenated into a single file rather than managing
     zero padding.
