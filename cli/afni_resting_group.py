@@ -152,7 +152,7 @@ def get_args():
         help=textwrap.dedent(
             """\
             Toggle of whether blurring was used in pre-processing.
-            Boolean, use = True, non-use = False.
+            Boolean (True if "--blur", else False).
             """
         ),
     )

@@ -146,7 +146,7 @@ def get_args():
         help=textwrap.dedent(
             """\
             Toggle of whether blurring was used in pre-processing.
-            Boolean, use = True, non-use = False.
+            Boolean (True if "--blur", else False).
             """
         ),
     )
@@ -159,10 +159,16 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s", "--session", required=True, help="BIDS session (ses-S1)",
+        "-s",
+        "--session",
+        required=True,
+        help="BIDS session (ses-S1)",
     )
     required_args.add_argument(
-        "-t", "--task", required=True, help="BIDS task (task-study)",
+        "-t",
+        "--task",
+        required=True,
+        help="BIDS task (task-study)",
     )
     required_args.add_argument(
         "-d",
@@ -237,7 +243,9 @@ def main():
             f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
             recursive=True,
         )
-        decon_exists = glob.glob(f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",)
+        decon_exists = glob.glob(
+            f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",
+        )
         if mask_exists and decon_exists:
             print(f"\tAdding {subj} to group_data\n")
             subj_list.append(subj)
@@ -247,7 +255,8 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

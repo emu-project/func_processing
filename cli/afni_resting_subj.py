@@ -277,7 +277,7 @@ def get_args():
         help=textwrap.dedent(
             """\
             Toggle of whether to use blurring option in pre-processing.
-            Boolean, use = True, non-use = False.
+            Boolean (True if "--blur", else False).
             """
         ),
     )
@@ -371,7 +371,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
