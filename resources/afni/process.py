@@ -179,6 +179,11 @@ def reface(subj, sess, t1_file, proj_dir, method):
         (/path/to/BIDS/proj)
     method : str
         "deface", "reface", or "reface_plus" method
+
+    Returns
+    -------
+    return_str : str
+        Success message
     """
     out_dir = os.path.join(proj_dir, f"derivatives/{method}", subj, sess, "anat")
     if not os.path.exists(out_dir):
@@ -204,6 +209,11 @@ def reface(subj, sess, t1_file, proj_dir, method):
         h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
     )
     print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+    assert os.path.exists(
+        t1_out
+    ), f"ERROR: failed to write {t1_out}, check resources.afni.process.reface."
+    return_str = f"Wrote {t1_out}"
+    return return_str
 
 
 def resting_metrics(afni_data, work_dir):
