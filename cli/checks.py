@@ -69,10 +69,6 @@ def get_args():
 # %%
 def main():
 
-    # # For testing
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     pat_github_emu = args.pat

@@ -156,12 +156,6 @@ def get_args():
 # %%
 def main():
 
-    # # For testing
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # method = "reface"
-    # batch_num = 1
-    # code_dir = /home/nmuncy/compute/func_processing
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -214,8 +208,7 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

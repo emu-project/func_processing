@@ -301,16 +301,11 @@ def get_args():
 
 # %%
 def main():
+    """Set up for workflow.
 
-    # # For testing
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # batch_num = 3
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # dur = 2
-    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # json_dir = None
-    # sess = "ses-S2"
-    # task = "task-test"
+    Find subjects without deconvolved output, schedule
+    job for them.
+    """
 
     # receive passed args
     args = get_args().parse_args()

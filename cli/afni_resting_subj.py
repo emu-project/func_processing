@@ -305,15 +305,6 @@ def main():
     job for them.
     """
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # batch_num = 1
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # sess = "ses-S2"
-    # task = "task-rest"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir

@@ -186,13 +186,6 @@ def main():
     dictionary, submit workflow.
     """
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # seed = "rPCC"
-    # task = "task-rest"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-    # atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir

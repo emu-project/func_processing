@@ -64,14 +64,6 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
         mot-censor = binary censor vector for task
     """
 
-    # # for testing
-    # prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
-    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # subj = "sub-4146"
-    # sess = "ses-S2"
-    # task = "task-rest"
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
     anat_dir = os.path.join(work_dir, "anat")
