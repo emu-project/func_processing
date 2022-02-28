@@ -8,7 +8,7 @@ import os
 from . import submit
 
 
-def make_intersect_mask(work_dir, subj_num, afni_data, sess, task):
+def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
     """Make EPI-struct intersection mask.
 
     Parameters
@@ -18,33 +18,44 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task):
     subj_num : int/str
         subject identifier, for sbatch job name
      afni_data : dict
-        should contain smoothed data from process.blur_epi
-    sess :
-    task :
+        required keys
+            mask-brain = anatomic brain mask
+        conditionally required keys
+            do_blur = T : epi-blur[1..N] = list of blurred EPI files
+            do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files
+    sess : str
+        BIDS session string (ses-S1)
+    task : str
+        BIDS task string (task-study)
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
     afni_data : dict
-        updated with mask key "mask-int"
-
-    Notes
-    -----
-    Requires afni_data["epi-blur*"] and afni_data["mask-brain"].
+        mask-int = subject epi-anat intersection mask
     """
 
-    # get list of smoothed/blurred EPI data, determine mask strings
-    num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
-    assert (
-        num_epi > 0
-    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi"
+    # get required EPI, mask files
+    if do_blur:
+        num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi"
+        epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
+    else:
+        num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-preproc?'] not found. Check resources.afni.copy.copy_data."
+        epi_list = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     assert afni_data[
         "mask-brain"
     ], "ERROR: afni_data['mask-brain'] not found. Check resources.afni.copy.copy_data."
-
-    epi_list = [x for k, x in afni_data.items() if "epi-blur" in k]
     brain_mask = afni_data["mask-brain"]
-    # intersect_mask = brain_mask.replace("desc-brain", "desc-intersect")
+
+    # set up
     file_name = os.path.basename(brain_mask)
     file_path = os.path.dirname(brain_mask)
     subj, _, space, cohort, res, _, suff = file_name.split("_")
@@ -52,6 +63,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task):
         f"{file_path}/{subj}_{sess}_{task}_{space}_{cohort}_{res}_desc-intersect_{suff}"
     )
 
+    # work
     if not os.path.exists(intersect_mask):
 
         # automask across all runs
@@ -103,19 +115,17 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        afni dictionary used for passing files
+        required keys
+            mask-prob[GM|CSF|WM] = tissue probability masks
+            mask-brain = anatomic brain mask
     thresh : float [default=0.5]
         value for thresholding probseg files
 
     Returns
     -------
     afni_data : dict
-        updated with "mask-erodedGM", "mask-erodedWM" keys
-        for eroded, binary gray and white matter masks
-
-    Notes
-    -----
-    Requires afni_data["mask-prob"], afni_data["mask-brain"].
+        updated fields
+        mask-eroded[GM|WM|CSF] = eroded gray, white matter, CSF masks
     """
 
     # determine GM, WM tissue list, mask string, set up switch
@@ -190,23 +200,22 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     task : str
         BIDS task string (task-test)
     afni_data : dict
-        afni dictionary used for passing files
+        required keys
+            epi-preproc[1..N] = fmriprep pre-processed files
+            mask-brain = anatomic brain mask
 
     Returns
     -------
     afni_dict : dict
+        updated fields
         mask-min = mask of minimum value for task
-
-    Notes
-    -----
-    Requires afni_data["epi-preproc*"], afni_data["mask-brain"].
     """
 
     # make masks of voxels where some data exists (mask_min)
     num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
     assert (
         num_epi > 0
-    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.copy.copy_data"
+    ), "ERROR: afni_data['epi-preproc?'] not found. Check resources.afni.copy.copy_data"
 
     assert afni_data[
         "mask-brain"

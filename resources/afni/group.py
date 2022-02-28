@@ -22,7 +22,9 @@ def int_mask(task, deriv_dir, group_data, group_dir):
     deriv_dir : str
         location of project AFNI derivatives
     group_data : dict
-        passed files
+        required keys
+            mask-gm = gray matter mask
+            subj-list = list of subjects
     group_dir : str
         output location of work
 
@@ -100,7 +102,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
     return group_data
 
 
-def resting_etac(seed, group_data, group_dir):
+def resting_etac(seed, group_data, group_dir, do_blur):
     """Conduct A vs not-A via ETAC.
 
     Parameters
@@ -108,9 +110,13 @@ def resting_etac(seed, group_data, group_dir):
     seed : str
         seed name (rPCC)
     group_data : dict
-        dictionary of various files
+        required keys
+            all-ztrans = list of Ztrans files
+            mask-int = group GM intersection mask
     group_dir : str
         location of output directory
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -133,15 +139,18 @@ def resting_etac(seed, group_data, group_dir):
     final_file = f"FINAL_RS-{seed}"
 
     # build ETAC, write for review
+    # TODO determine blur sizes rather than hardcode
+    etac_blur = "0" if do_blur else "4 8"
     h_cmd = f"""
         cd {group_dir}
-        3dttest++ \
-            -mask {int_mask} \
-            -prefix {final_file} \
-            -prefix_clustsim {final_file}_clustsim \
-            -ETAC \
-            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
-            -setA \
+        3dttest++ \\
+            -mask {int_mask} \\
+            -prefix {final_file} \\
+            -prefix_clustsim {final_file}_clustsim \\
+            -ETAC \\
+            -ETAC_blur {etac_blur} \\
+            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \\
+            -setA \\
             {" ".join(group_files)}
     """
     etac_script = os.path.join(group_dir, f"{final_file}.sh")
@@ -166,10 +175,30 @@ def resting_etac(seed, group_data, group_dir):
     return group_data
 
 
-def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
-    """Title.
+def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
+    """Conduct A vs B via ETAC.
 
-    Desc
+    Parameters
+    ----------
+    beh_list : list
+        two behaviors for setA, setB
+    deriv_dir : str
+        path to project afni derivatives
+    sess : str
+        BIDS session (ses-S2)
+    group_data : dict
+        required keys
+            subj-list = list of subjects
+            mask-int = group GM intersection mask
+            dcn-file = decon file string
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
+
+    Returns
+    -------
+    group_data : dict
+        updated with the field
+        behAB-etac = final output ETAC file
     """
 
     # check req args
@@ -220,17 +249,22 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
 
     # build ETAC, write for review
     final_file = f"FINAL_{beh_a}-{beh_b}"
+    # TODO determine blur sizes rather than hardcode
+    etac_blur = "0" if do_blur else "4 8"
     h_cmd = f"""
         cd {group_dir}
-        3dttest++ \
-            -paired \
-            -mask {int_mask} \
-            -prefix {final_file} \
-            -prefix_clustsim {final_file}_clustsim \
-            -ETAC \
-            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
-            -setA {beh_a} {" ".join(set_a)} \
-            -setB {beh_b} {" ".join(set_b)}
+        3dttest++ \\
+            -paired \\
+            -mask {int_mask} \\
+            -prefix {final_file} \\
+            -prefix_clustsim {final_file}_clustsim \\
+            -ETAC \\
+            -ETAC_blur {etac_blur} \\
+            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \\
+            -setA {beh_a} \\
+            {" ".join(set_a)} \\
+            -setB {beh_b} \\
+            {" ".join(set_b)}
     """
     etac_script = os.path.join(group_dir, f"{final_file}.sh")
     with open(etac_script, "w") as script:

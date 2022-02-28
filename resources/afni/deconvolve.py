@@ -36,7 +36,11 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
         timing files dictionary, behavior string is key
         e.g. {"lureFA": "/path/to/tf_task-test_lureFA.txt"}
     afni_data : dict
-        contains names for various files
+        required keys
+            epi-scale[1..N] = list of scaled files
+            mot-mean = mean motion timeseries
+            mot-deriv = derivative motion timeseries
+            mot-censor = binary censory vector
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     dur : int/float/str
@@ -46,12 +50,10 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
     -------
     afni_data : dict
         updated with REML commands
-        {"dcn-<decon_name>": foo_stats.REML_cmd}
+        dcn-<decon_name> = name of decon reml command
 
     Notes
     -----
-    Requires afni_data["epi-scale*"], afni_data["mot-mean"],
-        afni_data["mot-deriv"], and afni_data["mot-censor"].
     Deconvolution files will be written in AFNI format, rather
         than BIDS. This includes the X.files (cue spooky theme), script,
         and deconvolved output. Files names will have the format:
@@ -149,7 +151,9 @@ def run_reml(work_dir, afni_data):
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     afni_data : dict
-        contains names for various files
+        required keys
+            epi-scale[1..N] = list of scaled files
+            mask-erodedWM = eroded WM mask
 
     Returns
     -------
@@ -353,7 +357,13 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     Parameters
     ----------
     afni_data : dict
-        contains names for various files
+        required keys
+            epi-scale1 = single/first scaled file
+            mask-min = mask of voxels with >min signal
+            mask-erodedCSF = eroded CSF mask
+            mot-mean = mean motion timeseries
+            mot-deriv = derivative motion timeseries
+            mot-censor = binary censor vector
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
     proj_meth : str
@@ -364,6 +374,10 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     afni_data : dict
         updated fields
         reg-matrix = regression matrix
+
+    Notes
+    -----
+    Only supports RS conducted in single run
     """
 
     # check for req files

@@ -25,8 +25,8 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        afni struct, mask, epi, and tsv files, returned
-        by copy.copy_data
+        required keys
+            epi-preproc[1..N] = fmriprep pre-processed files
     blur-mult : int
         blur kernel multiplier (default = 1.5)
         e.g. vox=2, blur_mult=1.5, blur size is 3 (will round float up to nearest int)
@@ -39,7 +39,6 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
     Notes
     -----
-    Requires afni_data["epi-preproc*"] keys.
     Determining blur multiplier based off voxel's dimension K.
     """
 
@@ -83,7 +82,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     return afni_data
 
 
-def scale_epi(work_dir, subj_num, afni_data):
+def scale_epi(work_dir, subj_num, afni_data, do_blur):
     """Scale EPI runs.
 
     Scale timeseries to center = 100 using AFNI's 3dcalc.
@@ -95,34 +94,43 @@ def scale_epi(work_dir, subj_num, afni_data):
     subj_num : int/str
         subject identifier, for sbatch job name
     afni_data : dict
-        afni data dict for passing files
+        required keys
+            mask-min = mask of voxels with >minimum signal
+        conditionally required keys
+            do_blur = T : epi-blur[1..N] = list of blurred EPI files
+            do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
     afni_dict : dict
         epi-scale? = scaled EPI for run-?
-
-    Notes
-    -----
-    Requires afni_data["epi-blur*"], afni_data["mask-min"].
     """
 
-    # determine relevant files
-    num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
-    assert (
-        num_epi > 0
-    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi."
+    # determine required files
+    if do_blur:
+        num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi"
+        epi_files = [x for k, x in afni_data.items() if "epi-blur" in k]
+    else:
+        num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-preproc?'] not found. Check resources.afni.copy.copy_data."
+        epi_files = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     assert afni_data[
         "mask-min"
     ], "ERROR: afni_data['mask-min'] not found. Check resources.afni.masks.make_minimum_masks."
-
-    epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
     mask_min = afni_data["mask-min"]
 
     # scale each blurred/smoothed file
-    for run in epi_blur:
-        epi_scale = run.replace("desc-smoothed", "desc-scaled")
+    for run in epi_files:
+        h_str = "desc-smoothed" if do_blur else "desc-preproc"
+        epi_scale = run.replace(h_str, "desc-scaled")
         run_num = run.split("run-")[1].split("_")[0]
 
         # do work if missing
@@ -171,6 +179,11 @@ def reface(subj, sess, t1_file, proj_dir, method):
         (/path/to/BIDS/proj)
     method : str
         "deface", "reface", or "reface_plus" method
+
+    Returns
+    -------
+    return_str : str
+        Success message
     """
     out_dir = os.path.join(proj_dir, f"derivatives/{method}", subj, sess, "anat")
     if not os.path.exists(out_dir):
@@ -196,6 +209,11 @@ def reface(subj, sess, t1_file, proj_dir, method):
         h_cmd, 1, 1, 1, f"{subj_num}{method}", f"{out_dir}"
     )
     print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+    assert os.path.exists(
+        t1_out
+    ), f"ERROR: failed to write {t1_out}, check resources.afni.process.reface."
+    return_str = f"Wrote {t1_out}"
+    return return_str
 
 
 def resting_metrics(afni_data, work_dir):
@@ -206,9 +224,18 @@ def resting_metrics(afni_data, work_dir):
     Parameters
     ----------
     afni_data : dict
-        contains names for various files
+        required keys
+            epi-scale1 = first/only scaled RS epi file
+            reg-matrix = project regression matrix
+            mot-censor = binary censor vector
+            mask-int = epi-anat intersection mask
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
+    Returns
+    -------
+    afni_data : dict
+        not currently adding any keys/values
     """
 
     # check for req files
@@ -353,7 +380,10 @@ def resting_seed(coord_dict, afni_data, work_dir):
         seed name, coordinates
         {"rPCC": "5 -55 25"}
     afni_data : dict
-        contains names for various files
+        required keys
+            reg-matrix = project regression matrix
+            mask-int = epi-anat intersection mask
+            mot-censor = binary censory vector
     work_dir : str
         location of subject's scratch directory
 

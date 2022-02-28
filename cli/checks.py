@@ -69,10 +69,6 @@ def get_args():
 # %%
 def main():
 
-    # # For testing
-    # pat_github_emu = os.environ["TOKEN_GITHUB_EMU"]
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     pat_github_emu = args.pat
@@ -91,7 +87,7 @@ if __name__ == "__main__":
     # require environment
     env_found = [x for x in sys.path if "emuR01" in x]
     if not env_found:
-        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\nERROR: madlab conda env emuR01 required.")
         print("\tHint: $madlab_env emuR01\n")
         sys.exit()
     main()

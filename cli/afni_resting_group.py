@@ -37,7 +37,9 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
-def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir):
+def submit_jobs(
+    seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
+):
     """Schedule workflow for group analyses.
 
     Parameters
@@ -57,6 +59,8 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
         output location for sbatch stdout/err
     code_dir : str
         path to clone of github.com/emu-project/func_processing.git
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -87,6 +91,7 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
             "{afni_dir}",
             "{group_dir}",
             group_data,
+            {do_blur},
         )
         print(f"Job finished with group_data : \\n{{group_data}}")
     """
@@ -141,6 +146,16 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether blurring was used in pre-processing.
+            Boolean (True if "--blur", else False).
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -171,13 +186,6 @@ def main():
     dictionary, submit workflow.
     """
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # seed = "rPCC"
-    # task = "task-rest"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-    # atlas_dir = "/home/data/madlab/atlases/templateflow/tpl-MNIPediatricAsym/cohort-5"
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -185,6 +193,7 @@ def main():
     task = args.task
     seed = args.seed
     code_dir = args.code_dir
+    do_blur = args.blur
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -236,7 +245,7 @@ def main():
 
     print(f"\ngroup_data : \n {group_data}")
     h_out, h_err = submit_jobs(
-        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
+        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
     )
 
 
@@ -245,7 +254,7 @@ if __name__ == "__main__":
     # require environment
     env_found = [x for x in sys.path if "emuR01" in x]
     if not env_found:
-        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\nERROR: madlab conda env emuR01 required.")
         print("\tHint: $madlab_env emuR01\n")
         sys.exit()
     main()

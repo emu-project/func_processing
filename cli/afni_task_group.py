@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-"""Title.
+"""Conduct group-level analyses of task EPI data.
+
+Currently employs A-vs-B ETAC method, more complex models
+to follow.
 
 Final output is:
     <proj_dir>/derivatives/afni/analyses/FINAL_<behA>-<behB>_*
@@ -15,6 +18,7 @@ sbatch --job-name=runTaskGroup \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     afni_task_group.py \\
+    --blur \\
     -c $code_dir \\
     -s ses-S1 \\
     -t task-study \\
@@ -35,13 +39,31 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    beh_list, task, sess, afni_dir, group_dir, group_data, slurm_dir, code_dir
+    beh_list, task, sess, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
 ):
     """Schedule workflow for group analyses.
 
     Parameters
     ----------
-
+    beh_list : list
+        list of 2 behaviors which match sub-brick name
+        e.g. neg for negTH#0_Coef
+    task : str
+        BIDS string (task-test)
+    sess : str
+        BIDS session (ses-S2)
+    afni_dir : str
+        location of project AFNI derivatives
+    group_dir : str
+        location of project AFNI analyses dir
+    group_data : dict
+        contains key: values generated in main()
+    slurm_dir : str
+        output location for sbatch stdout/err
+    code_dir : str
+        path to clone of github.com/emu-project/func_processing.git
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -52,7 +74,7 @@ def submit_jobs(
     h_cmd = f"""\
         #!/bin/env {sys.executable}
 
-        #SBATCH --job-name=rsGroup
+        #SBATCH --job-name=taskGroup
         #SBATCH --output={slurm_dir}/out_taskGroup.txt
         #SBATCH --time=10:00:00
         #SBATCH --mem=4000
@@ -74,6 +96,7 @@ def submit_jobs(
             "{afni_dir}",
             "{group_dir}",
             group_data,
+            {do_blur},
         )
         print(f"Job finished with group_data : \\n{{group_data}}")
     """
@@ -114,6 +137,16 @@ def get_args():
             """\
             Path to location of atlas GM mask
             (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether blurring was used in pre-processing.
+            Boolean (True if "--blur", else False).
             """
         ),
     )
@@ -180,6 +213,7 @@ def main():
     sess = args.session
     decon_str = args.dcn_str
     beh_list = args.behaviors
+    do_blur = args.blur
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -229,7 +263,15 @@ def main():
 
     print(f"\ngroup_data : \n {group_data}")
     h_out, h_err = submit_jobs(
-        beh_list, task, sess, afni_dir, group_dir, group_data, slurm_dir, code_dir
+        beh_list,
+        task,
+        sess,
+        afni_dir,
+        group_dir,
+        group_data,
+        slurm_dir,
+        code_dir,
+        do_blur,
     )
 
 
@@ -238,7 +280,7 @@ if __name__ == "__main__":
     # require environment
     env_found = [x for x in sys.path if "emuR01" in x]
     if not env_found:
-        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\nERROR: madlab conda env emuR01 required.")
         print("\tHint: $madlab_env emuR01\n")
         sys.exit()
     main()

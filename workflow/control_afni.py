@@ -15,9 +15,7 @@ from resources.afni import copy, process, masks, motion, deconvolve, group
 
 
 # %%
-def control_preproc(
-    prep_dir, afni_dir, subj, sess, task, tplflow_str,
-):
+def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     """Move data through AFNI pre-processing.
 
     Copy relevant files from derivatives/fmriprep to derivatives/afni,
@@ -37,9 +35,11 @@ def control_preproc(
         BIDS session string (ses-S1)
     task : str
         BIDS task string (task-test)
-    tplflow_str = str
+    tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -56,20 +56,13 @@ def control_preproc(
         mask-min = mask of EPI space with >minimum signal
         epi-preproc? = pre-processed EPI run-?
         epi-blur? = blurred/smoothed EPI run-?
+            if do_blur = T
         epi-scale? = scaled EPI run-?
         mot-confound? = confounds timeseries for run-?
         mot-mean = mean motion for task (6dof)
         mot-deriv = derivative motion for task (6dof)
         mot-censor = binary censor vector for task
     """
-
-    # # for testing
-    # prep_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/fmriprep"
-    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # subj = "sub-4146"
-    # sess = "ses-S2"
-    # task = "task-rest"
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
@@ -85,15 +78,18 @@ def control_preproc(
 
     # blur data
     subj_num = subj.split("-")[-1]
-    afni_data = process.blur_epi(work_dir, subj_num, afni_data)
+    if do_blur:
+        afni_data = process.blur_epi(work_dir, subj_num, afni_data)
 
     # make masks
-    afni_data = masks.make_intersect_mask(work_dir, subj_num, afni_data, sess, task)
+    afni_data = masks.make_intersect_mask(
+        work_dir, subj_num, afni_data, sess, task, do_blur
+    )
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
     afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
 
     # scale data
-    afni_data = process.scale_epi(work_dir, subj_num, afni_data)
+    afni_data = process.scale_epi(work_dir, subj_num, afni_data, do_blur)
 
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data, task)
@@ -237,7 +233,7 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     return afni_data
 
 
-def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
+def control_resting_group(seed, task, deriv_dir, group_dir, group_data, do_blur):
     """Conduct group-level analyses.
 
     Construct group GM intersection mask, then run on subject
@@ -254,7 +250,12 @@ def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
     group_dir : str
         output location of work
     group_data : dict
-        contains the fields mask-gm, subj-list, all-ztrans
+        required keys
+            mask-gm = gray matter mask
+            subj-list = list of subjects
+            all-ztrans = list of Ztrans files
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -264,11 +265,11 @@ def control_resting_group(seed, task, deriv_dir, group_dir, group_data):
         S<seed>-etac = seed stat output
     """
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
-    group_data = group.resting_etac(seed, group_data, group_dir)
+    group_data = group.resting_etac(seed, group_data, group_dir, do_blur)
     return group_data
 
 
-def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data):
+def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data, do_blur):
     """Conduct group-level analyses.
 
     Construct group GM intersection mask, then run A-vs-B ETAC.
@@ -287,7 +288,12 @@ def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data):
     group_dir : str
         output location of work
     group_data : dict
-        contains the fields mask-gm, subj-list, dcn-file
+        required keys
+            mask-gm = gray matter mask
+            subj-list = list of subjects
+            dcn-file = decon file string
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -297,5 +303,7 @@ def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data):
         behAB-etac = etac stat output
     """
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
-    group_data = group.task_etac(beh_list, deriv_dir, sess, group_data, group_dir)
+    group_data = group.task_etac(
+        beh_list, deriv_dir, sess, group_data, group_dir, do_blur
+    )
     return group_data

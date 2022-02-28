@@ -8,14 +8,13 @@ Examples
 --------
 code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runReface \\
-    --output=${log_dir}/runReface_log \\
+    --output=${code_dir}/logs/runReface_log \\
     --mem-per-cpu=4000 \\
     --partition=IB_44C_512G \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     reface.py \\
-    -c $code_dir \\
-    --run
+    -c $code_dir
 """
 
 
@@ -33,7 +32,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
-    """Submit refacing module.
+    """Submit refacing workflow.
 
     Also writes a python script to slurm_dir for review.
 
@@ -75,12 +74,19 @@ def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
 
         import sys
         sys.path.append("{code_dir}")
-        from resources.afni import process
+        from workflow import control_reface
 
-        process.reface("{subj}", "{sess}", "{t1_file}", "{proj_dir}", "{method}")
+        msg_out = control_reface.control_reface(
+            "{subj}",
+            "{sess}",
+            "{t1_file}",
+            "{proj_dir}",
+            "{method}",
+        )
+        print(msg_out)
     """
     cmd_dedent = textwrap.dedent(h_cmd)
-    py_script = os.path.join(slurm_dir, f"deface_{subj_num}.py")
+    py_script = os.path.join(slurm_dir, f"reface_{subj_num}.py")
     with open(py_script, "w") as ps:
         ps.write(cmd_dedent)
 
@@ -137,14 +143,6 @@ def get_args():
         required=True,
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
-    required_args.add_argument(
-        "--run",
-        dest="run",
-        required=True,
-        action="store_true",
-        help="use to start script",
-    )
-    required_args.set_defaults(run=False)
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -156,22 +154,12 @@ def get_args():
 # %%
 def main():
 
-    # # For testing
-    # proj_dir = "/Volumes/homes/MaDLab/projects/McMakin_EMUR01"
-    # method = "reface"
-    # batch_num = 1
-    # code_dir = /home/nmuncy/compute/func_processing
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     batch_num = args.batch_num
     method = args.method
     code_dir = args.code_dir
-    run_script = args.run
-
-    if not run_script:
-        sys.exit()
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -239,7 +227,7 @@ if __name__ == "__main__":
     # require environment
     env_found = [x for x in sys.path if "emuR01" in x]
     if not env_found:
-        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\nERROR: madlab conda env emuR01 required.")
         print("\tHint: $madlab_env emuR01\n")
         sys.exit()
     main()

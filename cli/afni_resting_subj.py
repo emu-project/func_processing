@@ -57,6 +57,7 @@ def submit_jobs(
     tplflow_str,
     do_regress,
     coord_dict,
+    do_blur,
 ):
     """Schedule work for single participant.
 
@@ -86,6 +87,8 @@ def submit_jobs(
         whether to conduct deconvolution/regression
     coord_dict : dict
         seed name and coordinates
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -123,6 +126,7 @@ def submit_jobs(
             "{sess}",
             "{task}",
             "{tplflow_str}",
+            {do_blur},
         )
         print(f"afni_data : \\n {{afni_data}}")
 
@@ -267,6 +271,16 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether to use blurring option in pre-processing.
+            Boolean (True if "--blur", else False).
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -291,15 +305,6 @@ def main():
     job for them.
     """
 
-    # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # batch_num = 1
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
-    # sess = "ses-S2"
-    # task = "task-rest"
-    # code_dir = "/home/nmuncy/compute/func_processing"
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -309,6 +314,7 @@ def main():
     sess = args.session
     task = args.task
     code_dir = args.code_dir
+    do_blur = args.blur
 
     # set up
     # TODO get coord_dict from user-specified JSON
@@ -384,6 +390,7 @@ def main():
             tplflow_str,
             value_dict["Regress"],
             coord_dict,
+            do_blur,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
@@ -394,7 +401,7 @@ if __name__ == "__main__":
     # require environment
     env_found = [x for x in sys.path if "emuR01" in x]
     if not env_found:
-        print("\nERROR: madlab conda env emuR01 or emuR01_unc required.")
+        print("\nERROR: madlab conda env emuR01 required.")
         print("\tHint: $madlab_env emuR01\n")
         sys.exit()
     main()
