@@ -102,7 +102,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
     return group_data
 
 
-def resting_etac(seed, group_data, group_dir):
+def resting_etac(seed, group_data, group_dir, do_blur):
     """Conduct A vs not-A via ETAC.
 
     Parameters
@@ -115,6 +115,8 @@ def resting_etac(seed, group_data, group_dir):
             mask-int = group GM intersection mask
     group_dir : str
         location of output directory
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -137,15 +139,18 @@ def resting_etac(seed, group_data, group_dir):
     final_file = f"FINAL_RS-{seed}"
 
     # build ETAC, write for review
+    # TODO determine blur sizes rather than hardcode
+    etac_blur = "0" if do_blur else "4 8"
     h_cmd = f"""
         cd {group_dir}
-        3dttest++ \
-            -mask {int_mask} \
-            -prefix {final_file} \
-            -prefix_clustsim {final_file}_clustsim \
-            -ETAC \
-            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
-            -setA \
+        3dttest++ \\
+            -mask {int_mask} \\
+            -prefix {final_file} \\
+            -prefix_clustsim {final_file}_clustsim \\
+            -ETAC \\
+            -ETAC_blur {etac_blur} \\
+            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \\
+            -setA \\
             {" ".join(group_files)}
     """
     etac_script = os.path.join(group_dir, f"{final_file}.sh")
@@ -170,7 +175,7 @@ def resting_etac(seed, group_data, group_dir):
     return group_data
 
 
-def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
+def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
     """Conduct A vs B via ETAC.
 
     Parameters
@@ -186,6 +191,8 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
             subj-list = list of subjects
             mask-int = group GM intersection mask
             dcn-file = decon file string
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -242,17 +249,22 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir):
 
     # build ETAC, write for review
     final_file = f"FINAL_{beh_a}-{beh_b}"
+    # TODO determine blur sizes rather than hardcode
+    etac_blur = "0" if do_blur else "4 8"
     h_cmd = f"""
         cd {group_dir}
-        3dttest++ \
-            -paired \
-            -mask {int_mask} \
-            -prefix {final_file} \
-            -prefix_clustsim {final_file}_clustsim \
-            -ETAC \
-            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \
-            -setA {beh_a} {" ".join(set_a)} \
-            -setB {beh_b} {" ".join(set_b)}
+        3dttest++ \\
+            -paired \\
+            -mask {int_mask} \\
+            -prefix {final_file} \\
+            -prefix_clustsim {final_file}_clustsim \\
+            -ETAC \\
+            -ETAC_blur {etac_blur} \\
+            -ETAC_opt NN=2:sid=2:hpow=0:pthr=0.01,0.005,0.002,0.001:name=etac \\
+            -setA {beh_a} \\
+            {" ".join(set_a)} \\
+            -setB {beh_b} \\
+            {" ".join(set_b)}
     """
     etac_script = os.path.join(group_dir, f"{final_file}.sh")
     with open(etac_script, "w") as script:

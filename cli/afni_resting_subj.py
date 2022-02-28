@@ -57,6 +57,7 @@ def submit_jobs(
     tplflow_str,
     do_regress,
     coord_dict,
+    do_blur,
 ):
     """Schedule work for single participant.
 
@@ -86,6 +87,8 @@ def submit_jobs(
         whether to conduct deconvolution/regression
     coord_dict : dict
         seed name and coordinates
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -123,6 +126,7 @@ def submit_jobs(
             "{sess}",
             "{task}",
             "{tplflow_str}",
+            {do_blur},
         )
         print(f"afni_data : \\n {{afni_data}}")
 
@@ -267,6 +271,16 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether to use blurring option in pre-processing.
+            Boolean, use = True, non-use = False.
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -309,6 +323,7 @@ def main():
     sess = args.session
     task = args.task
     code_dir = args.code_dir
+    do_blur = args.blur
 
     # set up
     # TODO get coord_dict from user-specified JSON
@@ -365,8 +380,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
@@ -384,6 +398,7 @@ def main():
             tplflow_str,
             value_dict["Regress"],
             coord_dict,
+            do_blur,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

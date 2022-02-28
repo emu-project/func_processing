@@ -37,7 +37,9 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 
 # %%
-def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir):
+def submit_jobs(
+    seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
+):
     """Schedule workflow for group analyses.
 
     Parameters
@@ -57,6 +59,8 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
         output location for sbatch stdout/err
     code_dir : str
         path to clone of github.com/emu-project/func_processing.git
+    do_blur : bool
+        [T/F] whether blur was done in pre-processing
 
     Returns
     -------
@@ -87,6 +91,7 @@ def submit_jobs(seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
             "{afni_dir}",
             "{group_dir}",
             group_data,
+            {do_blur},
         )
         print(f"Job finished with group_data : \\n{{group_data}}")
     """
@@ -141,6 +146,16 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether blurring was used in pre-processing.
+            Boolean, use = True, non-use = False.
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -185,6 +200,7 @@ def main():
     task = args.task
     seed = args.seed
     code_dir = args.code_dir
+    do_blur = args.blur
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -236,7 +252,7 @@ def main():
 
     print(f"\ngroup_data : \n {group_data}")
     h_out, h_err = submit_jobs(
-        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir
+        seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
     )
 
 

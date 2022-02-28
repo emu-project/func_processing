@@ -82,7 +82,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     return afni_data
 
 
-def scale_epi(work_dir, subj_num, afni_data):
+def scale_epi(work_dir, subj_num, afni_data, do_blur):
     """Scale EPI runs.
 
     Scale timeseries to center = 100 using AFNI's 3dcalc.
@@ -95,8 +95,12 @@ def scale_epi(work_dir, subj_num, afni_data):
         subject identifier, for sbatch job name
     afni_data : dict
         required keys
-            epi-blur[1..N] = blurred/smoothed epi files
             mask-min = mask of voxels with >minimum signal
+        conditionally required keys
+            do_blur = T : epi-blur[1..N] = list of blurred EPI files
+            do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -104,22 +108,29 @@ def scale_epi(work_dir, subj_num, afni_data):
         epi-scale? = scaled EPI for run-?
     """
 
-    # determine relevant files
-    num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
-    assert (
-        num_epi > 0
-    ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi."
+    # determine required files
+    if do_blur:
+        num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-blur?'] not found. Check resources.afni.process.blur_epi"
+        epi_files = [x for k, x in afni_data.items() if "epi-blur" in k]
+    else:
+        num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
+        assert (
+            num_epi > 0
+        ), "ERROR: afni_data['epi-preproc?'] not found. Check resources.afni.copy.copy_data."
+        epi_files = [x for k, x in afni_data.items() if "epi-preproc" in k]
 
     assert afni_data[
         "mask-min"
     ], "ERROR: afni_data['mask-min'] not found. Check resources.afni.masks.make_minimum_masks."
-
-    epi_blur = [x for k, x in afni_data.items() if "epi-blur" in k]
     mask_min = afni_data["mask-min"]
 
     # scale each blurred/smoothed file
-    for run in epi_blur:
-        epi_scale = run.replace("desc-smoothed", "desc-scaled")
+    for run in epi_files:
+        h_str = "desc-smoothed" if do_blur else "desc-preproc"
+        epi_scale = run.replace(h_str, "desc-scaled")
         run_num = run.split("run-")[1].split("_")[0]
 
         # do work if missing

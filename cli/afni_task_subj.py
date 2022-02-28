@@ -27,6 +27,7 @@ sbatch --job-name=runAfniTask \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     afni_task_subj.py \\
+    --blur \\
     -s ses-S2 \\
     -t task-test \\
     -c $code_dir
@@ -59,6 +60,7 @@ def submit_jobs(
     dur,
     do_decon,
     decon_plan,
+    do_blur,
 ):
     """Schedule work for single participant.
 
@@ -90,6 +92,8 @@ def submit_jobs(
         whether to conduct deconvolution
     decon_plan : dict/None
         planned deconvolution with behavior: timing file mappings
+    do_blur : bool
+        [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
@@ -128,6 +132,7 @@ def submit_jobs(
             "{sess}",
             "{task}",
             "{tplflow_str}",
+            {do_blur},
         )
 
         if {do_decon}:
@@ -255,21 +260,23 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--blur",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether to use blurring option in pre-processing.
+            Boolean, use = True, non-use = False.
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
+        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
+        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
     )
     required_args.add_argument(
         "-p",
@@ -316,6 +323,7 @@ def main():
     sess = args.session
     task = args.task
     code_dir = args.code_dir
+    do_blur = args.blur
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -384,8 +392,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
@@ -404,6 +411,7 @@ def main():
             dur,
             value_dict["Decon"],
             value_dict["Decon_plan"],
+            do_blur,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
