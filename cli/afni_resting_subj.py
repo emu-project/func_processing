@@ -334,9 +334,8 @@ def main():
     subj_dict = {}
     for subj in subj_list_all:
 
-        # check for fmriprep output
+        # check for required fmriprep output
         print(f"Checking {subj} for previous work ...")
-        fmriprep_check = False
         anat_check = glob.glob(
             f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
             recursive=True,
@@ -345,8 +344,8 @@ def main():
             f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
             recursive=True,
         )
-        if anat_check and func_check:
-            fmriprep_check = True
+        if not anat_check or not func_check:
+            continue
 
         # Check logs for missing WM-eroded masks, session intersection mask,
         # deconvolution, or run-1 scaled files.
@@ -359,10 +358,9 @@ def main():
         scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
 
         # Append subj_list if fmriprep data exists and afni data is missing.
-        if fmriprep_check:
-            if intersect_missing or wme_missing or regress_missing or scaled_missing:
-                print(f"\tAdding {subj} to working list (subj_dict).\n")
-                subj_dict[subj] = {"Regress": regress_missing}
+        if intersect_missing or wme_missing or regress_missing or scaled_missing:
+            print(f"\tAdding {subj} to working list (subj_dict).\n")
+            subj_dict[subj] = {"Regress": regress_missing}
 
     # kill for no subjects
     if len(subj_dict.keys()) == 0:

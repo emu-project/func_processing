@@ -27,10 +27,10 @@ sbatch --job-name=runAfniTask \\
     --account=iacc_madlab \\
     --qos=pq_madlab \\
     afni_task_subj.py \\
-    --blur \\
     -s ses-S2 \\
     -t task-test \\
-    -c $code_dir
+    -c $code_dir \\
+    --blur
 """
 
 
@@ -308,6 +308,14 @@ def main():
     job for them.
     """
 
+    # # For testing
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # json_dir = "/home/nmuncy/compute/qc_emst/for_testing/tf_noValence"
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
+    # sess = "ses-S2"
+    # task = "task-test"
+    # code_dir = "/home/nmuncy/compute/func_processing"
+
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -337,9 +345,8 @@ def main():
     subj_dict = {}
     for subj in subj_list_all:
 
-        # check for fmriprep output
+        # check for required fmriprep output
         print(f"Checking {subj} for previous work ...")
-        fmriprep_check = False
         anat_check = glob.glob(
             f"{prep_dir}/{subj}/**/*_{tplflow_str}_desc-preproc_T1w.nii.gz",
             recursive=True,
@@ -348,17 +355,19 @@ def main():
             f"{prep_dir}/{subj}/**/*{task}*{tplflow_str}_desc-preproc_bold.nii.gz",
             recursive=True,
         )
-        if anat_check and func_check:
-            fmriprep_check = True
+        if not anat_check or not func_check:
+            continue
 
-        # determine decon plans
+        # determine decon plans, None is default
+        decon_plan = None
         if json_dir:
             decon_glob = glob.glob(os.path.join(json_dir, f"{subj}*.json"))
-            assert decon_glob, f"No JSON found for {subj} in {json_dir}."
+            if not decon_glob:
+                # assert decon_glob, f"No JSON found for {subj} in {json_dir}."
+                print(f"\tNo JSON found for {subj}, skipping ...")
+                continue
             with open(decon_glob[0]) as jf:
                 decon_plan = json.load(jf)
-        else:
-            decon_plan = None
 
         # Check logs for missing WM-eroded masks, session intersection mask,
         # deconvolution, or run-1 scaled files.
@@ -367,19 +376,28 @@ def main():
         intersect_missing = pd.isnull(
             df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
         ).bool()
-        decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
         scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
 
-        # Append subj_list if fmriprep data exists and afni data is missing.
+        # determine if deconvolution is needed, account for user-specified jsons
+        if json_dir:
+            decon_beh = list(decon_plan.keys())[0]
+            subj_final = os.path.join(afni_final, subj, sess, "func")
+            decon_exists = glob.glob(
+                f"{subj_final}/decon_{task}_{decon_beh}_stats_REML+tlrc.HEAD"
+            )
+            decon_missing = False if decon_exists else True
+        else:
+            decon_missing = pd.isnull(df_log.loc[ind_subj, f"decon_{sess}_1"]).bool()
+
+        # Append subj_list if afni data is missing.
         # Note - only add decon to dict, pre-processing is required to create
         # the afni_data object required by control_afni.control_deconvolution.
-        if fmriprep_check:
-            if intersect_missing or wme_missing or decon_missing or scaled_missing:
-                print(f"\tAdding {subj} to working list (subj_dict).\n")
-                subj_dict[subj] = {
-                    "Decon": decon_missing,
-                    "Decon_plan": decon_plan,
-                }
+        if intersect_missing or wme_missing or decon_missing or scaled_missing:
+            print(f"\tAdding {subj} to working list (subj_dict).\n")
+            subj_dict[subj] = {
+                "Decon": decon_missing,
+                "Decon_plan": decon_plan,
+            }
 
     # kill for no subjects
     if len(subj_dict.keys()) == 0:
