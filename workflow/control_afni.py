@@ -163,6 +163,8 @@ def control_deconvolution(
             }
         }
 
+    Also, see example in qc/no_valence.
+
     [decon_plan=None] yields decon_<task>_UniqueBehs*
     """
 
