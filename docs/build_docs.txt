@@ -19,7 +19,7 @@ Edit conf.py (pip install sphinx_rtd_theme if necessary)
 Edit index.rst - add modules
 
 	.. toctree::
-	:maxdepth: 2
+	:maxdepth: 3
 	:caption: Contents:
 
 	modules
@@ -27,4 +27,5 @@ Edit index.rst - add modules
 $ sphinx-apidoc -o . .. --ext-autodoc
 
 $ make html
+	and "$make html" after any updates to conf.py, index.rst
 	
