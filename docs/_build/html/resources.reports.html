@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resources.reports package &#8212; func_processing  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="workflow package" href="workflow.html" />
+    <link rel="prev" title="resources.ashs package" href="resources.ashs.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="resources-reports-package">
+<h1>resources.reports package<a class="headerlink" href="#resources-reports-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-resources.reports.check_complete">
+<span id="resources-reports-check-complete-module"></span><h2>resources.reports.check_complete module<a class="headerlink" href="#module-resources.reports.check_complete" title="Permalink to this headline">¶</a></h2>
+<p>Functions for checking pre-processing status.</p>
+<p>Pull and update logs of completed_preprocessing.tsv.</p>
+<dl class="py function">
+<dt id="resources.reports.check_complete.check_preproc">
+<code class="sig-prename descclassname">resources.reports.check_complete.</code><code class="sig-name descname">check_preproc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">code_dir</span></em>, <em class="sig-param"><span class="n">pat_github_emu</span></em>, <em class="sig-param"><span class="n">new_df</span></em>, <em class="sig-param"><span class="n">one_subj</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.reports.check_complete.check_preproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for files in expected_dict.</p>
+<p>In order to determine which participants need pre-processing,
+and which have files on either the NAS or HPC, make a dataframe
+of which participants have which pre-processed files.</p>
+<p>This will use strings from expected_dict to create a dataframe. In
+order to keep things synchronized, it will git clone/pull the repo
+and add/commit/push the updated logs/completed_preprocessing.tsv.</p>
+<p>Subject list is made from pseudo_guid_list, so only consented data
+is reflected in log.</p>
+<dl class="simple">
+<dt>proj_dir<span class="classifier">str</span></dt><dd><p>Path to BIDS-organized project directory, for
+finding dset and derivatives</p>
+</dd>
+<dt>code_dir<span class="classifier">str</span></dt><dd><p>Path to desired/existing location of <a class="reference external" href="https://github.com/emu-project/func_processing.git">https://github.com/emu-project/func_processing.git</a></p>
+</dd>
+<dt>pat_github_emu<span class="classifier">str</span></dt><dd><p>Personal Access Token to <a class="reference external" href="https://github.com/emu-project">https://github.com/emu-project</a></p>
+</dd>
+<dt>new_df<span class="classifier">bool</span></dt><dd><p>Whether to generate a completely new logs/completed_preprocessing.tsv,
+“True” when expected_dict gets updated with new files.</p>
+</dd>
+<dt>one_subj<span class="classifier">bool/str</span></dt><dd><p>Whether to check for data from single subject. If true, supply
+BIDS-formatted subject string.
+(e.g. one_subj=”sub-4001”)</p>
+</dd>
+</dl>
+<p>Internet connection is required!</p>
+<dl class="simple">
+<dt>expected_dict should have the following organization:</dt><dd><ul class="simple">
+<li><p>each key corresponds to a derivatives directory</p></li>
+<li><p>the value of each key is a list of tuples</p></li>
+<li><p>one tuple per file to search for</p></li>
+<li><dl class="simple">
+<dt>tuple[0] is a string that matches a column in col_names</dt><dd><p>and a column of logs/completed_preprocessing.tsv</p>
+</dd>
+</dl>
+</li>
+<li><p>tuple[1] is a string used to find the single file via glob</p></li>
+<li><dl class="simple">
+<dt>multiple decons are supported for each session via</dt><dd><p>decon_&lt;sess&gt;_&lt;int&gt;</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="resources.reports.check_complete.clone_guid">
+<code class="sig-prename descclassname">resources.reports.check_complete.</code><code class="sig-name descname">clone_guid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pat_github_emu</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.reports.check_complete.clone_guid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clone pseudo_guid_list.csv.</p>
+<dl class="simple">
+<dt>pat_github_emu: str</dt><dd><p>personal access token for github.com/emu-project</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>df_guid<span class="classifier">pandas.DataFrame</span></dt><dd><p>dataframe of subject ID, GUIDs, comments</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-resources.reports">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-resources.reports" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">func_processing</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="resources.html">resources package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html">workflow package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">func_processing</a><ul>
+  <li><a href="resources.html">resources package</a><ul>
+      <li>Previous: <a href="resources.ashs.html" title="previous chapter">resources.ashs package</a></li>
+      <li>Next: <a href="workflow.html" title="next chapter">workflow package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Nathan Muncy.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/resources.reports.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
