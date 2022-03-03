@@ -12,3 +12,5 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 - workflow: Manages resources, controlled by cli.
 
 Wiki to follow ...
+
+Module documentation: https://emu-func-processing.readthedocs.io/en/latest/
