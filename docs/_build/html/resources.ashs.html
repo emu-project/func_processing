@@ -35,7 +35,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Package Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="resources.html">resources package</a><ul class="current">
@@ -94,36 +94,31 @@
 <p>Use singularity image of docker://nmuncy/ashs to generate
 HC subfield labels. Relevant output copied from work_dir
 to deriv_dir.</p>
-<dl class="simple">
-<dt>t1_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing T1-weighted file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t1_dir</strong> (<em>str</em>) – absolute path to directory containing T1-weighted file</p></li>
+<li><p><strong>t2_dir</strong> (<em>str</em>) – absolute path to directory containing T2-weighted file</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – absolute path to desired output location</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – absolute path to desired working directory,
+relevant files are copied to deriv_dir</p></li>
+<li><p><strong>atlas_dir</strong> (<em>str</em>) – absolute path to directory containing ASHS atlas</p></li>
+<li><p><strong>sing_img</strong> (<em>str</em>) – /path/to/ashs_singularity.simg</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDs subject (sub-1234)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)</p></li>
+<li><p><strong>t2_file</strong> (<em>str</em>) – file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)</p></li>
+<li><p><strong>atlas_str</strong> (<em>str</em>) – ASHS atlas directory, found within atlas_dir
+(ashs_atlas_magdeburg)</p></li>
+</ul>
 </dd>
-<dt>t2_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing T2-weighted file</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – If ASHS is run but files are not detected in work_dir/final.</p>
 </dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>absolute path to desired output location</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>final ASHS files</p>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>absolute path to desired working directory,
-relevant files are copied to deriv_dir</p>
-</dd>
-<dt>atlas_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing ASHS atlas</p>
-</dd>
-<dt>sing_img<span class="classifier">str</span></dt><dd><p>/path/to/ashs_singularity.simg</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDs subject (sub-1234)</p>
-</dd>
-<dt>t1_file<span class="classifier">str</span></dt><dd><p>file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)</p>
-</dd>
-<dt>t2_file<span class="classifier">str</span></dt><dd><p>file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)</p>
-</dd>
-<dt>atlas_str<span class="classifier">str</span></dt><dd><p>ASHS atlas directory, found within atlas_dir
-(ashs_atlas_magdeburg)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>If ASHS is run but files are not detected in work_dir/final.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>list</dt><dd><p>final ASHS files</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>

@@ -35,7 +35,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Package Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="resources.html">resources package</a><ul class="current">
@@ -95,29 +95,32 @@ finishing pre-processing, deconvolution, and group-level analyses.</p>
 <dd><p>Get relevant fMRIprep files, rename.</p>
 <p>Copies select fMRIprep files into AFNI derivatives, prepares
 for AFNI pre-processing steps.</p>
-<dl class="simple">
-<dt>prep_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/fmriprep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prep_dir</strong> (<em>str</em>) – /path/to/derivatives/fmriprep</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>tplflow_str</strong> (<em>str</em>) – template ID string, for finding fMRIprep output in
+template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
+</ul>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-<dt>tplflow_str<span class="classifier">str</span></dt><dd><p>template ID string, for finding fMRIprep output in
-template space (space-MNIPediatricAsym_cohort-5_res-2)</p>
-</dd>
-</dl>
-<dl>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>files copied from derivatives/fMRIprep to derivatives/afni
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – files copied from derivatives/fMRIprep to derivatives/afni
 e.g. {</p>
 <blockquote>
-<div><p>“mask-brain”: “/path/to/anat/&lt;BIDS-str&gt;_desc-brain_mask.nii.gz”,
+<div><p>”mask-brain”: “/path/to/anat/&lt;BIDS-str&gt;_desc-brain_mask.nii.gz”,
 “struct-t1”: “/path/to/anat/&lt;BIDS-str&gt;_desc-preproc_T1w.nii.gz”,
 }</p>
 </div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
 <dl class="simple">
 <dt>afni_data keys:</dt><dd><p>struct-t1 = T1w structural
 mask-brain = brain mask
@@ -136,8 +139,7 @@ mot-confound? = confounds (motion) file for EPI data for run-?</p>
 <p>Write and run deconvolution commands.</p>
 <p>Use AFNI’s 3dDeconvolve and 3dREMLfit to deconvolve
 pre-processed EPI data.</p>
-<div class="section" id="notes">
-<h3>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h3>
+<p class="rubric">Notes</p>
 <p>Requires “submit” module at same level.</p>
 <dl class="py function">
 <dt id="resources.afni.deconvolve.regress_resting">
@@ -148,8 +150,10 @@ CSF timeseries. Use CSF timeseries as nuissance regressor,
 along with motion etc to clean signal via deconvolution.
 Residuals (cleaned signal) are then used to project regression
 matrices. Anaticor uses WM as a nuissance regressor.</p>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-scale1 = single/first scaled file
 mask-min = mask of voxels with &gt;min signal
 mask-erodedCSF = eroded CSF mask
@@ -158,17 +162,20 @@ mot-deriv = derivative motion timeseries
 mot-censor = binary censor vector</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>proj_meth</strong> (<em>str</em>) – [anaticor | original] method of matrix progression.</p></li>
+</ul>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/project_dir/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>proj_meth<span class="classifier">str</span></dt><dd><p>[anaticor | original] method of matrix progression.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated fields
 reg-matrix = regression matrix</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>Only supports RS conducted in single run</p>
 </dd></dl>
 
@@ -178,20 +185,25 @@ reg-matrix = regression matrix</p>
 <dd><p>Deconvolve EPI timeseries.</p>
 <p>Generate an idea of nuissance signal from the white matter and
 include this in the generated 3dREMLfit command.</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/project_dir/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-scale[1..N] = list of scaled files
 mask-erodedWM = eroded WM mask</p>
 </dd>
 </dl>
+</p></li>
+</ul>
 </dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated for nuissance, deconvolved files
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated for nuissance, deconvolved files
 epi-nuiss = nuissance signal file
 rml-&lt;decon_name&gt; = deconvolved file (&lt;decon_name&gt;_stats_REML+tlrc)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -203,22 +215,19 @@ rml-&lt;decon_name&gt; = deconvolved file (&lt;decon_name&gt;_stats_REML+tlrc)</
 <p>Written specifically for the EMU study. Use dset/func/events.tsv
 files to generate AFNI-style timing files for each unique
 behavior (trial_type).</p>
-<dl class="simple">
-<dt>dset_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/dset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dset_dir</strong> (<em>str</em>) – /path/to/BIDS/dset</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – /path/to/BIDS/derivatives/afni</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>decon_name</strong> (<em>str</em>) – name of deconvolution given all unique behaviors [default=UniqueBehs]</p></li>
+</ul>
 </dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/derivatives/afni</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-A)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-<dt>decon_name<span class="classifier">str</span></dt><dd><p>name of deconvolution given all unique behaviors [default=UniqueBehs]</p>
-</dd>
-</dl>
-<dl>
-<dt>decon_plan<span class="classifier">dict</span></dt><dd><p>Matches behaviors to timing file
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>decon_plan</strong> – Matches behaviors to timing file
 {&lt;decon_name&gt;: {</p>
 <blockquote>
 <div><p>beh-A: /path/to/<a href="#id1"><span class="problematic" id="id2">*</span></a>_desc-behA_events.1D,
@@ -226,8 +235,13 @@ beh-B: /path/to/<a href="#id3"><span class="problematic" id="id4">*</span></a>_d
 }</p>
 </div></blockquote>
 <p>}</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>Currently only writes onset time, not married duration.
 Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.</p>
 </dd></dl>
@@ -242,32 +256,35 @@ censored files passed by afni_data. Uses a 2GAM basis function
 foo_stats.REML_cmd.</p>
 <p>Timing files should contain AFNI-formatted onset times (duration is hardcoded),
 using the asterisk for runs in which a certain behavior does not occur.</p>
-<dl class="simple">
-<dt>decon_name: str</dt><dd><p>name of deconvolution, useful when conducting multiple
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decon_name</strong> (<em>str</em>) – name of deconvolution, useful when conducting multiple
 deconvolutions on same session. Will be appended to
-BIDS task name (decon_&lt;task-name&gt;_&lt;decon_name&gt;).</p>
-</dd>
-<dt>tf_dict<span class="classifier">dict</span></dt><dd><p>timing files dictionary, behavior string is key
-e.g. {“lureFA”: “/path/to/tf_task-test_lureFA.txt”}</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+BIDS task name (decon_&lt;task-name&gt;_&lt;decon_name&gt;).</p></li>
+<li><p><strong>tf_dict</strong> (<em>dict</em>) – timing files dictionary, behavior string is key
+e.g. {“lureFA”: “/path/to/tf_task-test_lureFA.txt”}</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-scale[1..N] = list of scaled files
 mot-mean = mean motion timeseries
 mot-deriv = derivative motion timeseries
 mot-censor = binary censory vector</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of event to model</p></li>
+</ul>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/project_dir/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>dur<span class="classifier">int/float/str</span></dt><dd><p>duration of event to model</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with REML commands
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with REML commands
 dcn-&lt;decon_name&gt; = name of decon reml command</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
 <dl>
 <dt>Deconvolution files will be written in AFNI format, rather</dt><dd><p>than BIDS. This includes the X.files (cue spooky theme), script,
 and deconvolved output. Files names will have the format:</p>
@@ -279,7 +296,6 @@ and deconvolved output. Files names will have the format:</p>
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-resources.afni.group">
 <span id="resources-afni-group-module"></span><h2>resources.afni.group module<a class="headerlink" href="#module-resources.afni.group" title="Permalink to this headline">¶</a></h2>
 <p>Functions for group-level analyses.</p>
@@ -289,23 +305,26 @@ and deconvolved output. Files names will have the format:</p>
 <code class="sig-prename descclassname">resources.afni.group.</code><code class="sig-name descname">int_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">group_dir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.group.int_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create group gray matter intersection mask.</p>
 <p>For a specific task.</p>
-<dl class="simple">
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-rest)</p>
-</dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>location of project AFNI derivatives</p>
-</dd>
-<dt>group_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-rest)</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mask-gm = gray matter mask
 subj-list = list of subjects</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
+</ul>
 </dd>
-<dt>group_dir<span class="classifier">str</span></dt><dd><p>output location of work</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>group_data<span class="classifier">dict</span></dt><dd><p>updated with the field
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>group_data</strong> – updated with the field
 mask-int = GM intersect mask</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -314,23 +333,26 @@ mask-int = GM intersect mask</p>
 <dt id="resources.afni.group.resting_etac">
 <code class="sig-prename descclassname">resources.afni.group.</code><code class="sig-name descname">resting_etac</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.group.resting_etac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct A vs not-A via ETAC.</p>
-<dl class="simple">
-<dt>seed<span class="classifier">str</span></dt><dd><p>seed name (rPCC)</p>
-</dd>
-<dt>group_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>str</em>) – seed name (rPCC)</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>all-ztrans = list of Ztrans files
 mask-int = group GM intersection mask</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – location of output directory</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
 </dd>
-<dt>group_dir<span class="classifier">str</span></dt><dd><p>location of output directory</p>
-</dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether blur was done in pre-processing</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>group_data<span class="classifier">dict</span></dt><dd><p>updated with the field
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>group_data</strong> – updated with the field
 S&lt;seed&gt;-etac = final ETAC output file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -339,26 +361,28 @@ S&lt;seed&gt;-etac = final ETAC output file</p>
 <dt id="resources.afni.group.task_etac">
 <code class="sig-prename descclassname">resources.afni.group.</code><code class="sig-name descname">task_etac</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.group.task_etac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct A vs B via ETAC.</p>
-<dl class="simple">
-<dt>beh_list<span class="classifier">list</span></dt><dd><p>two behaviors for setA, setB</p>
-</dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>path to project afni derivatives</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session (ses-S2)</p>
-</dd>
-<dt>group_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beh_list</strong> (<em>list</em>) – two behaviors for setA, setB</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – path to project afni derivatives</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session (ses-S2)</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>subj-list = list of subjects
 mask-int = group GM intersection mask
 dcn-file = decon file string</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
 </dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether blur was done in pre-processing</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>group_data<span class="classifier">dict</span></dt><dd><p>updated with the field
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>group_data</strong> – updated with the field
 behAB-etac = final output ETAC file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -367,39 +391,38 @@ behAB-etac = final output ETAC file</p>
 <div class="section" id="module-resources.afni.masks">
 <span id="resources-afni-masks-module"></span><h2>resources.afni.masks module<a class="headerlink" href="#module-resources.afni.masks" title="Permalink to this headline">¶</a></h2>
 <p>Functions for making various masks.</p>
-<div class="section" id="id5">
-<h3>Notes<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p class="rubric">Notes</p>
 <p>Requires “submit” module at same level.</p>
 <dl class="py function">
 <dt id="resources.afni.masks.make_intersect_mask">
 <code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_intersect_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_intersect_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make EPI-struct intersection mask.</p>
-<dl>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj_num<span class="classifier">int/str</span></dt><dd><blockquote>
-<div><p>subject identifier, for sbatch job name</p>
-</div></blockquote>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – <p>subject identifier, for sbatch job name
+afni_data : dict</p>
+<blockquote>
+<div><dl class="simple">
 <dt>required keys</dt><dd><p>mask-brain = anatomic brain mask</p>
 </dd>
 <dt>conditionally required keys</dt><dd><p>do_blur = T : epi-blur[1..N] = list of blurred EPI files
 do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files</p>
 </dd>
 </dl>
+</div></blockquote>
+</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-study)</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether to blur as part of pre-processing</p></li>
+</ul>
 </dd>
-</dl>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – mask-int = subject epi-anat intersection mask</p>
 </dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-S1)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-study)</p>
-</dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether to blur as part of pre-processing</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>mask-int = subject epi-anat intersection mask</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -410,25 +433,27 @@ do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files</p>
 <dd><p>Make a mask of where minimum signal exists in EPI space.</p>
 <p>Used to help with the scaling step, so low values do not
 bias the scale. Based off “3dTstat -min”.</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj_num<span class="classifier">int/str</span></dt><dd><p>subject identifier, for sbatch job name</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-A)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-preproc[1..N] = fmriprep pre-processed files
 mask-brain = anatomic brain mask</p>
 </dd>
 </dl>
+</p></li>
+</ul>
 </dd>
-</dl>
-<dl class="simple">
-<dt>afni_dict<span class="classifier">dict</span></dt><dd><p>updated fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_dict</strong> – updated fields
 mask-min = mask of minimum value for task</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -437,28 +462,30 @@ mask-min = mask of minimum value for task</p>
 <dt id="resources.afni.masks.make_tissue_masks">
 <code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_tissue_masks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">thresh</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_tissue_masks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make tissue class masks.</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj_num<span class="classifier">int/str</span></dt><dd><p>subject identifier, for sbatch job name</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mask-prob[GM|CSF|WM] = tissue probability masks
 mask-brain = anatomic brain mask</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>thresh</strong> (<em>float</em><em> [</em><em>default=0.5</em><em>]</em>) – value for thresholding probseg files</p></li>
+</ul>
 </dd>
-<dt>thresh<span class="classifier">float [default=0.5]</span></dt><dd><p>value for thresholding probseg files</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated fields
 mask-eroded[GM|WM|CSF] = eroded gray, white matter, CSF masks</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
-</div>
 </div>
 <div class="section" id="module-resources.afni.motion">
 <span id="resources-afni-motion-module"></span><h2>resources.afni.motion module<a class="headerlink" href="#module-resources.afni.motion" title="Permalink to this headline">¶</a></h2>
@@ -476,24 +503,29 @@ create motion censor file. Volume preceding a motion event is also
 censored. Finally, report the number of censored volumes.</p>
 <p>I’m not sure if motion is demeaned or not, given that
 it is output by fMRIprep (mined from confounds.tsv file).</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/project_dir/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mot-confound[1..N] = fmriprep motion confound timeseries</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+</ul>
 </dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with names of motion files
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with names of motion files
 mot-mean = motion mean file
 mot-deriv = motion derivative file
 mot-censor = binary censory vector</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>As runs do not have an equal number of volumes, motion/censor files
 for each run are concatenated into a single file rather than managing
 zero padding.</p>
@@ -506,33 +538,36 @@ zero padding.</p>
 <p>Functions for processing EPI data.</p>
 <p>Finish pre-processing on fMRIprep output
 using an AFNI workflow.</p>
-<div class="section" id="id6">
-<h3>Notes<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p class="rubric">Notes</p>
 <p>Requires “submit” module at same level.</p>
 <dl class="py function">
 <dt id="resources.afni.process.blur_epi">
 <code class="sig-prename descclassname">resources.afni.process.</code><code class="sig-name descname">blur_epi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">blur_mult</span><span class="o">=</span><span class="default_value">1.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.process.blur_epi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Blur EPI data.</p>
 <p>Blur pre-processed EPI runs with AFNI’s 3dmerge.</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj_num<span class="classifier">int/str</span></dt><dd><p>subject identifier, for sbatch job name</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-preproc[1..N] = fmriprep pre-processed files</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>blur-mult</strong> (<em>int</em>) – blur kernel multiplier (default = 1.5)
+e.g. vox=2, blur_mult=1.5, blur size is 3 (will round float up to nearest int)</p></li>
+</ul>
 </dd>
-<dt>blur-mult<span class="classifier">int</span></dt><dd><p>blur kernel multiplier (default = 1.5)
-e.g. vox=2, blur_mult=1.5, blur size is 3 (will round float up to nearest int)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with names of blurred data,
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with names of blurred data,
 epi-blur? = blurred/smoothed EPI data of run-?</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>Determining blur multiplier based off voxel’s dimension K.</p>
 </dd></dl>
 
@@ -542,22 +577,23 @@ epi-blur? = blurred/smoothed EPI data of run-?</p>
 <dd><p>De/Reface T1-weighted files.</p>
 <p>Use AFNI’s refacer to deface or reface T1-weighted
 structural files.</p>
-<dl class="simple">
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file
+(sub-1234_ses-A_T1w.nii.gz)</p></li>
+<li><p><strong>proj_dir</strong> (<em>str</em>) – path to BIDS project dir
+(/path/to/BIDS/proj)</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – “deface”, “reface”, or “reface_plus” method</p></li>
+</ul>
 </dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-A)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>return_str</strong> – Success message</p>
 </dd>
-<dt>t1_file<span class="classifier">str</span></dt><dd><p>file name of T1-weighted file
-(sub-1234_ses-A_T1w.nii.gz)</p>
-</dd>
-<dt>proj_dir<span class="classifier">str</span></dt><dd><p>path to BIDS project dir
-(/path/to/BIDS/proj)</p>
-</dd>
-<dt>method<span class="classifier">str</span></dt><dd><p>“deface”, “reface”, or “reface_plus” method</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>return_str<span class="classifier">str</span></dt><dd><p>Success message</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -567,20 +603,25 @@ structural files.</p>
 <code class="sig-prename descclassname">resources.afni.process.</code><code class="sig-name descname">resting_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">work_dir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.process.resting_metrics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate info about resting data.</p>
 <p>Produce TSNR, GCOR, and noise estimations.</p>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>epi-scale1 = first/only scaled RS epi file
 reg-matrix = project regression matrix
 mot-censor = binary censor vector
 mask-int = epi-anat intersection mask</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+</ul>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/project_dir/derivatives/afni/sub-1234/ses-A</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – not currently adding any keys/values</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>not currently adding any keys/values</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -591,23 +632,27 @@ mask-int = epi-anat intersection mask</p>
 <dd><p>Produce correlation matrices for seeds.</p>
 <p>For each seed in coord_dict, produce a projected
 correlation matrix.</p>
-<dl class="simple">
-<dt>coord_dict<span class="classifier">dict</span></dt><dd><p>seed name, coordinates
-{“rPCC”: “5 -55 25”}</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord_dict</strong> (<em>dict</em>) – seed name, coordinates
+{“rPCC”: “5 -55 25”}</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>reg-matrix = project regression matrix
 mask-int = epi-anat intersection mask
 mot-censor = binary censory vector</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – location of subject’s scratch directory</p></li>
+</ul>
 </dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>location of subject’s scratch directory</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with the fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with the fields
 S&lt;seed&gt;-ztrans = Z-transformed correlation matrix of seed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -617,29 +662,31 @@ S&lt;seed&gt;-ztrans = Z-transformed correlation matrix of seed</p>
 <code class="sig-prename descclassname">resources.afni.process.</code><code class="sig-name descname">scale_epi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.process.scale_epi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale EPI runs.</p>
 <p>Scale timeseries to center = 100 using AFNI’s 3dcalc.</p>
-<dl class="simple">
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>/path/to/derivatives/afni/sub-1234/ses-A</p>
-</dd>
-<dt>subj_num<span class="classifier">int/str</span></dt><dd><p>subject identifier, for sbatch job name</p>
-</dd>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mask-min = mask of voxels with &gt;minimum signal</p>
 </dd>
 <dt>conditionally required keys</dt><dd><p>do_blur = T : epi-blur[1..N] = list of blurred EPI files
 do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether to blur as part of pre-processing</p></li>
+</ul>
 </dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether to blur as part of pre-processing</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_dict</strong> – epi-scale? = scaled EPI for run-?</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>afni_dict<span class="classifier">dict</span></dt><dd><p>epi-scale? = scaled EPI for run-?</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
-</div>
 </div>
 <div class="section" id="module-resources.afni.submit">
 <span id="resources-afni-submit-module"></span><h2>resources.afni.submit module<a class="headerlink" href="#module-resources.afni.submit" title="Permalink to this headline">¶</a></h2>
@@ -655,25 +702,26 @@ commands.</p>
 <p>Sbatch submit a larger job with scheduled resources. Waits for
 job_name to no longer be found in squeue. Stderr/out written to
 out_dir/sbatch_&lt;job_name&gt;.err/out. Supports AFNI and c3d commands.</p>
-<dl class="simple">
-<dt>command<span class="classifier">str</span></dt><dd><p>Bash code to be scheduled</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>command</strong> (<em>str</em>) – Bash code to be scheduled</p></li>
+<li><p><strong>wall_hours</strong> (<em>int</em>) – number of desired walltime hours</p></li>
+<li><p><strong>mem_gig</strong> (<em>int</em>) – amount of desired RAM</p></li>
+<li><p><strong>num_proc</strong> (<em>int</em>) – number of desired processors</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – job name</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – location for &lt;job_name&gt;.err/out</p></li>
+</ul>
 </dd>
-<dt>wall_hours<span class="classifier">int</span></dt><dd><p>number of desired walltime hours</p>
-</dd>
-<dt>mem_gig<span class="classifier">int</span></dt><dd><p>amount of desired RAM</p>
-</dd>
-<dt>num_proc<span class="classifier">int</span></dt><dd><p>number of desired processors</p>
-</dd>
-<dt>job_name<span class="classifier">str</span></dt><dd><p>job name</p>
-</dd>
-<dt>out_dir<span class="classifier">str</span></dt><dd><p>location for &lt;job_name&gt;.err/out</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>(job_name, job_id)<span class="classifier">tuple of str</span></dt><dd><p>job_name = scheduled job name
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>(job_name, job_id)</strong> – job_name = scheduled job name
 job_id = scheduled job ID</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple of str</p>
+</dd>
 </dl>
+<p class="rubric">Example</p>
 <p>submit_hpc_sbatch(“afni -ver”)</p>
 </dd></dl>
 
@@ -683,15 +731,19 @@ job_id = scheduled job ID</p>
 <dd><p>Submit quick job as subprocess.</p>
 <p>Run a quick job as a subprocess and capture stdout/err. Use
 for AFNI and c3d commands.</p>
-<dl class="simple">
-<dt>bash_command<span class="classifier">str</span></dt><dd><p>Bash syntax, to be executed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bash_command</strong> (<em>str</em>) – Bash syntax, to be executed</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>(job_out, job_err)<span class="classifier">tuple of str</span></dt><dd><p>job_out = subprocess stdout
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>(job_out, job_err)</strong> – job_out = subprocess stdout
 job_out = subprocess stderr</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple of str</p>
+</dd>
 </dl>
+<p class="rubric">Example</p>
 <p>submit_hpc_subprocess(“afni -ver”)</p>
 </dd></dl>
 

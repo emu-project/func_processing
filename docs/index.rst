@@ -7,9 +7,10 @@ Welcome to func_processing's documentation!
 ===========================================
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Package Contents:
 
+   intro
    modules
 
 Indices and tables

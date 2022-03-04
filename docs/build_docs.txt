@@ -11,7 +11,8 @@ Edit conf.py (pip install sphinx_rtd_theme if necessary)
 	sys.path.insert(0, os.path.abspath('..'))
 
 	--General configuration
-	extensions = ['sphinx.ext.autodoc']
+	# extensions = ['sphinx.ext.autodoc']
+	extensions = ["sphinx.ext.napoleon"]
 
 	--Options for HTML output
 	html_theme = 'sphinx_rtd_theme'
@@ -19,13 +20,14 @@ Edit conf.py (pip install sphinx_rtd_theme if necessary)
 Edit index.rst - add modules
 
 	.. toctree::
-	:maxdepth: 3
+	:maxdepth: 2
 	:caption: Contents:
 
+	intro
 	modules
 
-$ sphinx-apidoc -o . .. --ext-autodoc
+# $ sphinx-apidoc -o . .. --ext-autodoc
+$ sphinx-apidoc -f -o . ..
 
 $ make html
 	and "$make html" after any updates to conf.py, index.rst
-	

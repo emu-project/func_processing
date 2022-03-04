@@ -34,7 +34,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Package Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="resources.html">resources package</a></li>
@@ -99,32 +99,31 @@ deconvolves the EPI data.</p>
 <p>Will make a nuissance file for each &lt;task&gt;, and condcut a
 deconvolution for each key (&lt;decon_title&gt;) in decon_json. See
 <cite>Notes</cite> below.</p>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>mapping of AFNI data, returned by control_preproc</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – mapping of AFNI data, returned by control_preproc</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>dset_dir</strong> (<em>str</em>) – /path/to/BIDS/project/dset</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of task to model (2)</p></li>
+<li><p><strong>decon_plan</strong> (<em>dict</em>) – mapping of behvavior to timing files for planned
+deconvolutions, see notes below [default=None]</p></li>
+</ul>
 </dd>
-<dt>afni_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/project/derivatives/afni</p>
-</dd>
-<dt>dset_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/project/dset</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-S1)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-<dt>dur<span class="classifier">int/float/str</span></dt><dd><p>duration of task to model (2)</p>
-</dd>
-<dt>decon_plan<span class="classifier">dict</span></dt><dd><p>mapping of behvavior to timing files for planned
-deconvolutions, see notes below [default=None]</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with decon output
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with decon output
 dcn-&lt;decon_title&gt; = decon_&lt;task&gt;_&lt;decon_title&gt;_stats.REML_cmd
 epi-nuiss = nuissance signal file
 rml-&lt;decon_title&gt; = deconvolved file (decon_&lt;task&gt;_&lt;decon_title&gt;_stats_REML+tlrc)</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>Only onset timing files accepted, not married onset:duration! Timing files
 must be AFNI formatted, (one row/run for each beahvior).</p>
 <dl>
@@ -137,7 +136,9 @@ must be AFNI formatted, (one row/run for each beahvior).</p>
 </dl>
 <p>}</p>
 </dd>
-<dt>Example:</dt><dd><dl class="simple">
+</dl>
+<p class="rubric">Example</p>
+<dl class="simple">
 <dt>{“NegNeuPosTargLureFoil”: {</dt><dd><p>“negTH”: “/path/to/negative_target_hit.txt”,
 “negTM”: “/path/to/negative_target_miss.txt”,
 “negLC”: “/path/to/negative_lure_cr.txt”,
@@ -145,8 +146,6 @@ must be AFNI formatted, (one row/run for each beahvior).</p>
 </dd>
 </dl>
 <p>}</p>
-</dd>
-</dl>
 <p>Also, see example in qc/no_valence.</p>
 <p>[decon_plan=None] yields decon_&lt;task&gt;_UniqueBehs*</p>
 </dd></dl>
@@ -159,25 +158,21 @@ must be AFNI formatted, (one row/run for each beahvior).</p>
 then blur and scale EPI data. Also creates EPI-T1 intersection
 and tissue class masks. Finally, generate motion mean, derivative,
 and censor files.</p>
-<dl class="simple">
-<dt>prep_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/project/derivatives/fmriprep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prep_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/fmriprep</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>tplflow_str</strong> (<em>str</em>) – template ID string, for finding fMRIprep output in
+template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether to blur as part of pre-processing</p></li>
+</ul>
 </dd>
-<dt>afni_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/project/derivatives/afni</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-S1)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS task string (task-test)</p>
-</dd>
-<dt>tplflow_str<span class="classifier">str</span></dt><dd><p>template ID string, for finding fMRIprep output in
-template space (space-MNIPediatricAsym_cohort-5_res-2)</p>
-</dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether to blur as part of pre-processing</p>
-</dd>
-</dl>
-<dl>
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>dictionary containing mappings for AFNI files</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – dictionary containing mappings for AFNI files</p>
 <p>struct-t1 = pre-processed T1w
 mask-brain = brain mask
 mask-probGM = gray matter probability label
@@ -196,6 +191,10 @@ mot-confound? = confounds timeseries for run-?
 mot-mean = mean motion for task (6dof)
 mot-deriv = derivative motion for task (6dof)
 mot-censor = binary censor vector for task</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -207,23 +206,24 @@ mot-censor = binary censor vector for task</p>
 <p>Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
 of afni_data6. Projects regression matrix, and generates various
 metrics like SNR, GCOR, etc.</p>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>mapping of AFNI data, returned by control_preproc</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – mapping of AFNI data, returned by control_preproc</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>coord_dict</strong> (<em>dict</em>) – seed name, coordinates
+{“rPCC”: “5 -55 25”}</p></li>
+</ul>
 </dd>
-<dt>afni_dir<span class="classifier">str</span></dt><dd><p>/path/to/BIDS/project/derivatives/afni</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-S1)</p>
-</dd>
-<dt>coord_dict<span class="classifier">dict</span></dt><dd><p>seed name, coordinates
-{“rPCC”: “5 -55 25”}</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>afni_data<span class="classifier">dict</span></dt><dd><p>updated with the fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>afni_data</strong> – updated with the fields
 reg-matrix = epi projection matrix
 S&lt;seed&gt;-ztrans = Z-transformed seed-based correlation matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -234,29 +234,30 @@ S&lt;seed&gt;-ztrans = Z-transformed seed-based correlation matrix</p>
 <dd><p>Conduct group-level analyses.</p>
 <p>Construct group GM intersection mask, then run on subject
 correlation matrices.</p>
-<dl class="simple">
-<dt>seed<span class="classifier">str</span></dt><dd><p>seed name (rPCC)</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS string (task-rest)</p>
-</dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>location of project AFNI derivatives</p>
-</dd>
-<dt>group_dir<span class="classifier">str</span></dt><dd><p>output location of work</p>
-</dd>
-<dt>group_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>str</em>) – seed name (rPCC)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-rest)</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mask-gm = gray matter mask
 subj-list = list of subjects
 all-ztrans = list of Ztrans files</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
 </dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether blur was done in pre-processing</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>group_data<span class="classifier">dict</span></dt><dd><p>updated with the fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>group_data</strong> – updated with the fields
 mask-int = gray matter intersection mask
 S&lt;seed&gt;-etac = seed stat output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -266,32 +267,32 @@ S&lt;seed&gt;-etac = seed stat output</p>
 <code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_task_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_task_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct group-level analyses.</p>
 <p>Construct group GM intersection mask, then run A-vs-B ETAC.</p>
-<dl class="simple">
-<dt>beh_list<span class="classifier">list</span></dt><dd><p>list of 2 behaviors which match sub-brick name
-e.g. neg for neg#0_Coef</p>
-</dd>
-<dt>task<span class="classifier">str</span></dt><dd><p>BIDS string (task-test)</p>
-</dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session (ses-S2)</p>
-</dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>location of project AFNI derivatives</p>
-</dd>
-<dt>group_dir<span class="classifier">str</span></dt><dd><p>output location of work</p>
-</dd>
-<dt>group_data<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beh_list</strong> (<em>list</em>) – list of 2 behaviors which match sub-brick name
+e.g. neg for neg#0_Coef</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-test)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session (ses-S2)</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
 <dt>required keys</dt><dd><p>mask-gm = gray matter mask
 subj-list = list of subjects
 dcn-file = decon file string</p>
 </dd>
 </dl>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
 </dd>
-<dt>do_blur<span class="classifier">bool</span></dt><dd><p>[T/F] whether blur was done in pre-processing</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>group_data<span class="classifier">dict</span></dt><dd><p>updated with the fields
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>group_data</strong> – updated with the fields
 mask-int = gray matter intersection mask
 behAB-etac = etac stat output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -313,32 +314,28 @@ to &lt;work_dir&gt;, and then removed after copyfing &lt;work_dir&gt;/final
 contents to &lt;deriv_dir&gt;.</p>
 <p>This work is equal to merely calling the resources.ashs.hipseg module, but
 written as a workflow for the sake of consistency.</p>
-<dl class="simple">
-<dt>t1_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing T1-weighted file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t1_dir</strong> (<em>str</em>) – absolute path to directory containing T1-weighted file</p></li>
+<li><p><strong>t2_dir</strong> (<em>str</em>) – absolute path to directory containing T2-weighted file</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – absolute path to desired output location</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – absolute path to desired working directory,
+relevant files are copied to deriv_dir</p></li>
+<li><p><strong>atlas_dir</strong> (<em>str</em>) – absolute path to directory containing ASHS atlas</p></li>
+<li><p><strong>sing_img</strong> (<em>str</em>) – /path/to/ashs_singularity.simg</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDs subject (sub-1234)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)</p></li>
+<li><p><strong>t2_file</strong> (<em>str</em>) – file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)</p></li>
+<li><p><strong>atlas_str</strong> (<em>str</em>) – ASHS atlas directory, found within atlas_dir
+(ashs_atlas_magdeburg)</p></li>
+</ul>
 </dd>
-<dt>t2_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing T2-weighted file</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ashs_out</strong> – final ASHS labels</p>
 </dd>
-<dt>deriv_dir<span class="classifier">str</span></dt><dd><p>absolute path to desired output location</p>
-</dd>
-<dt>work_dir<span class="classifier">str</span></dt><dd><p>absolute path to desired working directory,
-relevant files are copied to deriv_dir</p>
-</dd>
-<dt>atlas_dir<span class="classifier">str</span></dt><dd><p>absolute path to directory containing ASHS atlas</p>
-</dd>
-<dt>sing_img<span class="classifier">str</span></dt><dd><p>/path/to/ashs_singularity.simg</p>
-</dd>
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDs subject (sub-1234)</p>
-</dd>
-<dt>t1_file<span class="classifier">str</span></dt><dd><p>file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)</p>
-</dd>
-<dt>t2_file<span class="classifier">str</span></dt><dd><p>file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)</p>
-</dd>
-<dt>atlas_str<span class="classifier">str</span></dt><dd><p>ASHS atlas directory, found within atlas_dir
-(ashs_atlas_magdeburg)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>ashs_out<span class="classifier">list</span></dt><dd><p>final ASHS labels</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -352,22 +349,23 @@ relevant files are copied to deriv_dir</p>
 <dt id="workflow.control_reface.control_reface">
 <code class="sig-prename descclassname">workflow.control_reface.</code><code class="sig-name descname">control_reface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_reface.control_reface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Control de/refacing of T1-weighted files.</p>
-<dl class="simple">
-<dt>subj<span class="classifier">str</span></dt><dd><p>BIDS subject string (sub-1234)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file
+(sub-1234_ses-A_T1w.nii.gz)</p></li>
+<li><p><strong>proj_dir</strong> (<em>str</em>) – path to BIDS project dir
+(/path/to/BIDS/proj)</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – “deface”, “reface”, or “reface_plus” method</p></li>
+</ul>
 </dd>
-<dt>sess<span class="classifier">str</span></dt><dd><p>BIDS session string (ses-A)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>msg_out</strong> – Success message</p>
 </dd>
-<dt>t1_file<span class="classifier">str</span></dt><dd><p>file name of T1-weighted file
-(sub-1234_ses-A_T1w.nii.gz)</p>
-</dd>
-<dt>proj_dir<span class="classifier">str</span></dt><dd><p>path to BIDS project dir
-(/path/to/BIDS/proj)</p>
-</dd>
-<dt>method<span class="classifier">str</span></dt><dd><p>“deface”, “reface”, or “reface_plus” method</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>msg_out<span class="classifier">str</span></dt><dd><p>Success message</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>

@@ -35,7 +35,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Package Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="resources.html">resources package</a><ul class="current">
@@ -100,22 +100,22 @@ order to keep things synchronized, it will git clone/pull the repo
 and add/commit/push the updated logs/completed_preprocessing.tsv.</p>
 <p>Subject list is made from pseudo_guid_list, so only consented data
 is reflected in log.</p>
-<dl class="simple">
-<dt>proj_dir<span class="classifier">str</span></dt><dd><p>Path to BIDS-organized project directory, for
-finding dset and derivatives</p>
-</dd>
-<dt>code_dir<span class="classifier">str</span></dt><dd><p>Path to desired/existing location of <a class="reference external" href="https://github.com/emu-project/func_processing.git">https://github.com/emu-project/func_processing.git</a></p>
-</dd>
-<dt>pat_github_emu<span class="classifier">str</span></dt><dd><p>Personal Access Token to <a class="reference external" href="https://github.com/emu-project">https://github.com/emu-project</a></p>
-</dd>
-<dt>new_df<span class="classifier">bool</span></dt><dd><p>Whether to generate a completely new logs/completed_preprocessing.tsv,
-“True” when expected_dict gets updated with new files.</p>
-</dd>
-<dt>one_subj<span class="classifier">bool/str</span></dt><dd><p>Whether to check for data from single subject. If true, supply
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proj_dir</strong> (<em>str</em>) – Path to BIDS-organized project directory, for
+finding dset and derivatives</p></li>
+<li><p><strong>code_dir</strong> (<em>str</em>) – Path to desired/existing location of <a class="reference external" href="https://github.com/emu-project/func_processing.git">https://github.com/emu-project/func_processing.git</a></p></li>
+<li><p><strong>pat_github_emu</strong> (<em>str</em>) – Personal Access Token to <a class="reference external" href="https://github.com/emu-project">https://github.com/emu-project</a></p></li>
+<li><p><strong>new_df</strong> (<em>bool</em>) – Whether to generate a completely new logs/completed_preprocessing.tsv,
+“True” when expected_dict gets updated with new files.</p></li>
+<li><p><strong>one_subj</strong> (<em>bool/str</em>) – Whether to check for data from single subject. If true, supply
 BIDS-formatted subject string.
-(e.g. one_subj=”sub-4001”)</p>
+(e.g. one_subj=”sub-4001”)</p></li>
+</ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
 <p>Internet connection is required!</p>
 <dl class="simple">
 <dt>expected_dict should have the following organization:</dt><dd><ul class="simple">
@@ -142,12 +142,15 @@ BIDS-formatted subject string.
 <dt id="resources.reports.check_complete.clone_guid">
 <code class="sig-prename descclassname">resources.reports.check_complete.</code><code class="sig-name descname">clone_guid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pat_github_emu</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.reports.check_complete.clone_guid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clone pseudo_guid_list.csv.</p>
-<dl class="simple">
-<dt>pat_github_emu: str</dt><dd><p>personal access token for github.com/emu-project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pat_github_emu</strong> (<em>str</em>) – personal access token for github.com/emu-project</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>df_guid<span class="classifier">pandas.DataFrame</span></dt><dd><p>dataframe of subject ID, GUIDs, comments</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>df_guid</strong> – dataframe of subject ID, GUIDs, comments</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
