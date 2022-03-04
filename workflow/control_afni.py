@@ -30,10 +30,8 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
 
     afni_dir : str
         /path/to/BIDS/project/derivatives/afni
-
     subj : str
         BIDS subject string (sub-1234)
-
     sess : str
         BIDS session string (ses-S1)
 

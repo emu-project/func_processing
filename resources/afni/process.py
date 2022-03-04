@@ -406,6 +406,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
     ----------
     coord_dict : dict
         seed name, coordinates
+
         {"rPCC": "5 -55 25"}
 
     afni_data : dict
