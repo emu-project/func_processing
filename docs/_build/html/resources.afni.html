@@ -107,28 +107,21 @@ template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>afni_data</strong> – files copied from derivatives/fMRIprep to derivatives/afni
-e.g. {</p>
-<blockquote>
-<div><p>”mask-brain”: “/path/to/anat/&lt;BIDS-str&gt;_desc-brain_mask.nii.gz”,
-“struct-t1”: “/path/to/anat/&lt;BIDS-str&gt;_desc-preproc_T1w.nii.gz”,
-}</p>
-</div></blockquote>
+<dd class="field-even"><p><p><strong>afni_data</strong> – files copied from derivatives/fMRIprep to derivatives/afni</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[struct-t1] = T1w structural</p></li>
+<li><p>[mask-brain] = brain mask</p></li>
+<li><p>[mask-probGM] = probability gray matter mask</p></li>
+<li><p>[mask-probWM] = probability white matter mask</p></li>
+<li><p>[mask-probCSF] = probability csf mask</p></li>
+<li><p>[epi-preproc?] = fMRIprep preprocessed EPI for run-?</p></li>
+<li><p>[mot-confound?] = confounds (motion) file for EPI data for run-?</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<dl class="simple">
-<dt>afni_data keys:</dt><dd><p>struct-t1 = T1w structural
-mask-brain = brain mask
-mask-probGM = probability gray matter mask
-mask-probWM = probability white matter mask
-mask-probCSF = probability csf mask
-epi-preproc? = fMRIprep preprocessed EPI for run-?
-mot-confound? = confounds (motion) file for EPI data for run-?</p>
 </dd>
 </dl>
 </dd></dl>

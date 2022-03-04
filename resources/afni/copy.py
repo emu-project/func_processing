@@ -33,21 +33,22 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     -------
     afni_data : dict
         files copied from derivatives/fMRIprep to derivatives/afni
-        e.g. {
-            "mask-brain": "/path/to/anat/<BIDS-str>_desc-brain_mask.nii.gz",
-            "struct-t1": "/path/to/anat/<BIDS-str>_desc-preproc_T1w.nii.gz",
-            }
 
-    Notes
-    -----
-    afni_data keys:
-        struct-t1 = T1w structural
-        mask-brain = brain mask
-        mask-probGM = probability gray matter mask
-        mask-probWM = probability white matter mask
-        mask-probCSF = probability csf mask
-        epi-preproc? = fMRIprep preprocessed EPI for run-?
-        mot-confound? = confounds (motion) file for EPI data for run-?
+        added afni_data keys:
+
+        - [struct-t1] = T1w structural
+
+        - [mask-brain] = brain mask
+
+        - [mask-probGM] = probability gray matter mask
+
+        - [mask-probWM] = probability white matter mask
+
+        - [mask-probCSF] = probability csf mask
+
+        - [epi-preproc?] = fMRIprep preprocessed EPI for run-?
+
+        - [mot-confound?] = confounds (motion) file for EPI data for run-?
     """
 
     # determine anat string

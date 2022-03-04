@@ -10,7 +10,6 @@ Welcome to func_processing's documentation!
    :maxdepth: 2
    :caption: Package Contents:
 
-   intro
    modules
 
 Indices and tables

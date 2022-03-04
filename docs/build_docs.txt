@@ -1,4 +1,4 @@
-# Use sphinx to build documentation from docstrings
+Use sphinx to build documentation from docstrings, napoleon for interpreting numpy docstrings.
 
 $ sphinx-quickstart
 	use defaults
@@ -23,7 +23,6 @@ Edit index.rst - add modules
 	:maxdepth: 2
 	:caption: Contents:
 
-	intro
 	modules
 
 # $ sphinx-apidoc -o . .. --ext-autodoc
