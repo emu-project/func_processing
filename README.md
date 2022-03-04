@@ -13,4 +13,4 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 
 Wiki to follow ...
 
-Module documentation: https://emu-func-processing.readthedocs.io/en/latest/
+Module documentation: https://func-processing.readthedocs.io/en/latest/
