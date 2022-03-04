@@ -149,12 +149,12 @@ matrices. Anaticor uses WM as a nuissance regressor.</p>
 <li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
 <p>required keys:</p>
 <ul>
-<li><p>epi-scale1 = single/first scaled file</p></li>
-<li><p>mask-min = mask of voxels with &gt;min signal</p></li>
-<li><p>mask-erodedCSF = eroded CSF mask</p></li>
-<li><p>mot-mean = mean motion timeseries</p></li>
-<li><p>mot-deriv = derivative motion timeseries</p></li>
-<li><p>mot-censor = binary censor vector</p></li>
+<li><p>[epi-scale1] = single/first scaled file</p></li>
+<li><p>[mask-min] = mask of voxels with &gt;min signal</p></li>
+<li><p>[mask-erodedCSF] = eroded CSF mask</p></li>
+<li><p>[mot-mean] = mean motion timeseries</p></li>
+<li><p>[mot-deriv] = derivative motion timeseries</p></li>
+<li><p>[mot-censor] = binary censor vector</p></li>
 </ul>
 </p></li>
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
@@ -233,8 +233,8 @@ behavior (trial_type).</p>
 <dd class="field-even"><p><p><strong>decon_plan</strong> – Matches behaviors to timing file</p>
 <p>keys description:</p>
 <ul class="simple">
-<li><p>[beh-A] = /path/to/<a href="#id1"><span class="problematic" id="id2">*</span></a>_desc-behA_events.1D</p></li>
-<li><p>[beh-B] = /path/to/<a href="#id3"><span class="problematic" id="id4">*</span></a>_desc-behB_events.1D</p></li>
+<li><p>[beh-A] = /path/to/foo_desc-behA_events.1D</p></li>
+<li><p>[beh-B] = /path/to/foo_desc-behB_events.1D</p></li>
 </ul>
 </p>
 </dd>
@@ -294,7 +294,8 @@ BIDS task name (decon_&lt;task-name&gt;_&lt;decon_name&gt;).</p></li>
 <p class="rubric">Notes</p>
 <p>Deconvolution files will be written in AFNI format, rather
 than BIDS. This includes the X.files (cue spooky theme), script,
-and deconvolved output. Files names will have the format:</p>
+and deconvolved output.</p>
+<p>Files names will have the format:</p>
 <ul class="simple">
 <li><p>decon_&lt;bids-task&gt;_&lt;decon_name&gt;</p></li>
 </ul>
@@ -309,24 +310,29 @@ and deconvolved output. Files names will have the format:</p>
 <dt id="resources.afni.group.int_mask">
 <code class="sig-prename descclassname">resources.afni.group.</code><code class="sig-name descname">int_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">group_dir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.group.int_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create group gray matter intersection mask.</p>
-<p>For a specific task.</p>
+<p>For EPI data of a specific task.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-rest)</p></li>
 <li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
-<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>mask-gm = gray matter mask
-subj-list = list of subjects</p>
-</dd>
-</dl>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>mask-gm = gray matter mask</p></li>
+<li><p>subj-list = list of subjects</p></li>
+</ul>
 </p></li>
 <li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>group_data</strong> – updated with the field
-mask-int = GM intersect mask</p>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with the intersection field</p>
+<p>added group_data key:</p>
+<ul class="simple">
+<li><p>mask-int = GM intersect mask</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -342,19 +348,24 @@ mask-int = GM intersect mask</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>seed</strong> (<em>str</em>) – seed name (rPCC)</p></li>
-<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>all-ztrans = list of Ztrans files
-mask-int = group GM intersection mask</p>
-</dd>
-</dl>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[all-ztrans] = list of Ztrans files</p></li>
+<li><p>[mask-int] = group GM intersection mask</p></li>
+</ul>
 </p></li>
 <li><p><strong>group_dir</strong> (<em>str</em>) – location of output directory</p></li>
 <li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>group_data</strong> – updated with the field
-S&lt;seed&gt;-etac = final ETAC output file</p>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with the generated files</p>
+<p>added group_data keys:</p>
+<ul class="simple">
+<li><p>[S&lt;seed&gt;-etac] = final ETAC output file</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -366,25 +377,32 @@ S&lt;seed&gt;-etac = final ETAC output file</p>
 <dt id="resources.afni.group.task_etac">
 <code class="sig-prename descclassname">resources.afni.group.</code><code class="sig-name descname">task_etac</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.group.task_etac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct A vs B via ETAC.</p>
+<p>Write and then run an ETAC command (3dttest++) to compare
+behavior A to behavior B.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beh_list</strong> (<em>list</em>) – two behaviors for setA, setB</p></li>
 <li><p><strong>deriv_dir</strong> (<em>str</em>) – path to project afni derivatives</p></li>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session (ses-S2)</p></li>
-<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>subj-list = list of subjects
-mask-int = group GM intersection mask
-dcn-file = decon file string</p>
-</dd>
-</dl>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[subj-list] = list of subjects</p></li>
+<li><p>[mask-int] = group GM intersection mask</p></li>
+<li><p>[dcn-file] = decon file string</p></li>
+</ul>
 </p></li>
 <li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>group_data</strong> – updated with the field
-behAB-etac = final output ETAC file</p>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with generated files</p>
+<p>added group_data keys:</p>
+<ul class="simple">
+<li><p>[behAB-etac] = final output ETAC file</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -453,17 +471,22 @@ bias the scale. Based off “3dTstat -min”.</p>
 <li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
-<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>epi-preproc[1..N] = fmriprep pre-processed files
-mask-brain = anatomic brain mask</p>
-</dd>
-</dl>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[epi-preproc&lt;1..N&gt;] = fmriprep pre-processed files</p></li>
+<li><p>[mask-brain] = anatomic brain mask</p></li>
+</ul>
 </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_dict</strong> – updated fields
-mask-min = mask of minimum value for task</p>
+<dd class="field-even"><p><p><strong>afni_dict</strong> – adds keys for generated files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[mask-min] = mask of minimum value for task</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -480,18 +503,23 @@ mask-min = mask of minimum value for task</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
 <li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
-<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>mask-prob[GM|CSF|WM] = tissue probability masks
-mask-brain = anatomic brain mask</p>
-</dd>
-</dl>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-prob&lt;GM|CSF|WM&gt;] = tissue probability masks</p></li>
+<li><p>[mask-brain] = anatomic brain mask</p></li>
+</ul>
 </p></li>
 <li><p><strong>thresh</strong> (<em>float</em><em> [</em><em>default=0.5</em><em>]</em>) – value for thresholding probseg files</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated fields
-mask-eroded[GM|WM|CSF] = eroded gray, white matter, CSF masks</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – adds keys for generated files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[mask-eroded&lt;GM|WM|CSF&gt;] = eroded gray, white matter, CSF masks</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>

@@ -297,9 +297,9 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
 
         keys description:
 
-        - [beh-A] = /path/to/*_desc-behA_events.1D
+        - [beh-A] = /path/to/foo_desc-behA_events.1D
 
-        - [beh-B] = /path/to/*_desc-behB_events.1D
+        - [beh-B] = /path/to/foo_desc-behB_events.1D
 
     Notes
     -----

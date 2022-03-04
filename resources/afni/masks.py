@@ -127,20 +127,30 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj_num : int/str
         subject identifier, for sbatch job name
+
     afni_data : dict
-        required keys
-            mask-prob[GM|CSF|WM] = tissue probability masks
-            mask-brain = anatomic brain mask
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mask-prob<GM|CSF|WM>] = tissue probability masks
+
+        - [mask-brain] = anatomic brain mask
+
     thresh : float [default=0.5]
         value for thresholding probseg files
 
     Returns
     -------
     afni_data : dict
-        updated fields
-        mask-eroded[GM|WM|CSF] = eroded gray, white matter, CSF masks
+        adds keys for generated files
+
+        added afni_data keys:
+
+        - [mask-eroded<GM|WM|CSF>] = eroded gray, white matter, CSF masks
     """
 
     # determine GM, WM tissue list, mask string, set up switch
@@ -208,22 +218,33 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj_num : int/str
         subject identifier, for sbatch job name
+
     sess : str
         BIDS session string (ses-A)
+
     task : str
         BIDS task string (task-test)
+
     afni_data : dict
-        required keys
-            epi-preproc[1..N] = fmriprep pre-processed files
-            mask-brain = anatomic brain mask
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-preproc<1..N>] = fmriprep pre-processed files
+
+        - [mask-brain] = anatomic brain mask
 
     Returns
     -------
     afni_dict : dict
-        updated fields
-        mask-min = mask of minimum value for task
+        adds keys for generated files
+
+        added afni_data keys:
+
+        - [mask-min] = mask of minimum value for task
     """
 
     # make masks of voxels where some data exists (mask_min)

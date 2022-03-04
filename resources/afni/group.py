@@ -13,26 +13,36 @@ from . import submit
 def int_mask(task, deriv_dir, group_data, group_dir):
     """Create group gray matter intersection mask.
 
-    For a specific task.
+    For EPI data of a specific task.
 
     Parameters
     ----------
     task : str
         BIDS task string (task-rest)
+
     deriv_dir : str
         location of project AFNI derivatives
+
     group_data : dict
-        required keys
-            mask-gm = gray matter mask
-            subj-list = list of subjects
+        contains keys pointing to required files
+
+        required keys:
+
+        - mask-gm = gray matter mask
+
+        - subj-list = list of subjects
+
     group_dir : str
         output location of work
 
     Returns
     -------
     group_data : dict
-        updated with the field
-        mask-int = GM intersect mask
+        updated with the intersection field
+
+        added group_data key:
+
+        - mask-int = GM intersect mask
     """
 
     # check for req files, unpack
@@ -109,20 +119,30 @@ def resting_etac(seed, group_data, group_dir, do_blur):
     ----------
     seed : str
         seed name (rPCC)
+
     group_data : dict
-        required keys
-            all-ztrans = list of Ztrans files
-            mask-int = group GM intersection mask
+        contains keys pointing to required files
+
+        required keys:
+
+        - [all-ztrans] = list of Ztrans files
+
+        - [mask-int] = group GM intersection mask
+
     group_dir : str
         location of output directory
+
     do_blur : bool
         [T/F] whether blur was done in pre-processing
 
     Returns
     -------
     group_data : dict
-        updated with the field
-        S<seed>-etac = final ETAC output file
+        updated with the generated files
+
+        added group_data keys:
+
+        - [S<seed>-etac] = final ETAC output file
     """
 
     # check req args
@@ -178,27 +198,42 @@ def resting_etac(seed, group_data, group_dir, do_blur):
 def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
     """Conduct A vs B via ETAC.
 
+    Write and then run an ETAC command (3dttest++) to compare
+    behavior A to behavior B.
+
     Parameters
     ----------
     beh_list : list
         two behaviors for setA, setB
+
     deriv_dir : str
         path to project afni derivatives
+
     sess : str
         BIDS session (ses-S2)
+
     group_data : dict
-        required keys
-            subj-list = list of subjects
-            mask-int = group GM intersection mask
-            dcn-file = decon file string
+        contains keys pointing to required files
+
+        required keys:
+
+        - [subj-list] = list of subjects
+
+        - [mask-int] = group GM intersection mask
+
+        - [dcn-file] = decon file string
+
     do_blur : bool
         [T/F] whether blur was done in pre-processing
 
     Returns
     -------
     group_data : dict
-        updated with the field
-        behAB-etac = final output ETAC file
+        updated with generated files
+
+        added group_data keys:
+
+        - [behAB-etac] = final output ETAC file
     """
 
     # check req args
