@@ -25,9 +25,14 @@ def mot_files(work_dir, afni_data, task):
     ----------
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
     afni_data : dict
-        required keys
-            mot-confound[1..N] = fmriprep motion confound timeseries
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mot-confound<1..N>] = fmriprep motion confound timeseries
+
     task : str
         BIDS task string (task-test)
 
@@ -35,15 +40,20 @@ def mot_files(work_dir, afni_data, task):
     -------
     afni_data : dict
         updated with names of motion files
-        mot-mean = motion mean file
-        mot-deriv = motion derivative file
-        mot-censor = binary censory vector
+
+        added afni_data keys:
+
+        - [mot-mean] = motion mean file
+
+        - [mot-deriv] = motion derivative file
+
+        - [mot-censor] = binary censory vector
 
     Notes
     -----
     As runs do not have an equal number of volumes, motion/censor files
-    for each run are concatenated into a single file rather than managing
-    zero padding.
+    for each run are concatenated into a single file rather than
+    managing zero padding.
 
     Writes 1D files - AFNI reads tsv as containing a header!
     """

@@ -2,10 +2,6 @@
 
 Use AFNI's 3dDeconvolve and 3dREMLfit to deconvolve
 pre-processed EPI data.
-
-Notes
------
-Requires "submit" module at same level.
 """
 
 import os
@@ -64,7 +60,7 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
 
         added afni_data keys:
 
-        - dcn-<decon_name> = name of decon reml command
+        - [dcn-<decon_name>] = name of decon reml command
 
     Notes
     -----
@@ -419,7 +415,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
 
         new key:
 
-        - reg-matrix = regression matrix
+        - [reg-matrix] = regression matrix
 
     Notes
     -----

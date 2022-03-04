@@ -1,8 +1,4 @@
 """Functions for making various masks.
-
-Notes
------
-Requires "submit" module at same level.
 """
 import os
 from . import submit

@@ -33,23 +33,34 @@ def run_ashs(
     ----------
     t1_dir : str
         absolute path to directory containing T1-weighted file
+
     t2_dir : str
         absolute path to directory containing T2-weighted file
+
     deriv_dir : str
         absolute path to desired output location
+
     work_dir : str
         absolute path to desired working directory,
         relevant files are copied to deriv_dir
+
     atlas_dir : str
         absolute path to directory containing ASHS atlas
+
     sing_img : str
         /path/to/ashs_singularity.simg
+
     subj : str
         BIDs subject (sub-1234)
+
     t1_file : str
-        file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)
+        file name of T1-weighted file
+        (sub-1234_ses-S1_T1w.nii.gz)
+
     t2_file : str
-        file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)
+        file name of T2-weighted file
+        (sub-1234_ses-S1_T2w.nii.gz)
+
     atlas_str : str
         ASHS atlas directory, found within atlas_dir
         (ashs_atlas_magdeburg)

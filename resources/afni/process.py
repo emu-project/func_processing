@@ -2,10 +2,6 @@
 
 Finish pre-processing on fMRIprep output
 using an AFNI workflow.
-
-Notes
------
-Requires "submit" module at same level.
 """
 
 import os
@@ -22,20 +18,30 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj_num : int/str
         subject identifier, for sbatch job name
+
     afni_data : dict
-        required keys
-            epi-preproc[1..N] = fmriprep pre-processed files
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-preproc<1..N>] = fmriprep pre-processed files
+
     blur-mult : int
         blur kernel multiplier (default = 1.5)
+
         e.g. vox=2, blur_mult=1.5, blur size is 3 (will round float up to nearest int)
 
     Returns
     -------
     afni_data : dict
-        updated with names of blurred data,
-        epi-blur? = blurred/smoothed EPI data of run-?
+        updated with names of blurred data
+
+        added afni_data keys:
+
+        - [epi-blur?] = blurred/smoothed EPI data of run-?
 
     Notes
     -----
@@ -91,21 +97,32 @@ def scale_epi(work_dir, subj_num, afni_data, do_blur):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj_num : int/str
         subject identifier, for sbatch job name
+
     afni_data : dict
-        required keys
-            mask-min = mask of voxels with >minimum signal
-        conditionally required keys
-            do_blur = T : epi-blur[1..N] = list of blurred EPI files
-            do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mask-min] = mask of voxels with >minimum signal conditionally required keys
+
+        - [do_blur] = T when [epi-blur<1..N>] = list of blurred EPI files
+
+        - [do_blur] = F when [epi-preproc<1..N>] = list of fmriprep preprocessed files
+
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
     afni_dict : dict
-        epi-scale? = scaled EPI for run-?
+        updated with scaled files
+
+        added afni_data keys:
+
+        - [epi-scale?] = scaled EPI for run-?
     """
 
     # determine required files
@@ -169,14 +186,18 @@ def reface(subj, sess, t1_file, proj_dir, method):
     ----------
     subj : str
         BIDS subject string (sub-1234)
+
     sess : str
         BIDS session string (ses-A)
+
     t1_file : str
         file name of T1-weighted file
         (sub-1234_ses-A_T1w.nii.gz)
+
     proj_dir : str
         path to BIDS project dir
         (/path/to/BIDS/proj)
+
     method : str
         "deface", "reface", or "reface_plus" method
 
@@ -224,11 +245,18 @@ def resting_metrics(afni_data, work_dir):
     Parameters
     ----------
     afni_data : dict
-        required keys
-            epi-scale1 = first/only scaled RS epi file
-            reg-matrix = project regression matrix
-            mot-censor = binary censor vector
-            mask-int = epi-anat intersection mask
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-scale1] = first/only scaled RS epi file
+
+        - [reg-matrix] = project regression matrix
+
+        - [mot-censor] = binary censor vector
+
+        - [mask-int] = epi-anat intersection mask
+
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
 
@@ -379,19 +407,29 @@ def resting_seed(coord_dict, afni_data, work_dir):
     coord_dict : dict
         seed name, coordinates
         {"rPCC": "5 -55 25"}
+
     afni_data : dict
-        required keys
-            reg-matrix = project regression matrix
-            mask-int = epi-anat intersection mask
-            mot-censor = binary censory vector
+        contains keys pointing to required files
+
+        required keys:
+
+        - [reg-matrix] = project regression matrix
+
+        - [mask-int] = epi-anat intersection mask
+
+        - [mot-censor] = binary censory vector
+
     work_dir : str
         location of subject's scratch directory
 
     Returns
     -------
     afni_data : dict
-        updated with the fields
-        S<seed>-ztrans = Z-transformed correlation matrix of seed
+        updated with z-transformed data
+
+        added afni_data keys:
+
+        - [S<seed>-ztrans] = Z-transformed correlation matrix of seed
     """
 
     # check for req files

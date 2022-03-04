@@ -109,15 +109,21 @@ deconvolution for each key (&lt;decon_title&gt;) in decon_json. See
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
 <li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of task to model (2)</p></li>
-<li><p><strong>decon_plan</strong> (<em>dict</em>) – mapping of behvavior to timing files for planned
-deconvolutions, see notes below [default=None]</p></li>
+<li><p><strong>decon_plan</strong> (<em>dict</em>) – <p>mapping of behvavior to timing files for planned
+deconvolutions, see notes below</p>
+<p>[default=None, yields decon_&lt;task&gt;_UniqueBehs]</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated with decon output
-dcn-&lt;decon_title&gt; = decon_&lt;task&gt;_&lt;decon_title&gt;_stats.REML_cmd
-epi-nuiss = nuissance signal file
-rml-&lt;decon_title&gt; = deconvolved file (decon_&lt;task&gt;_&lt;decon_title&gt;_stats_REML+tlrc)</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with decon output</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[dcn-&lt;decon_title&gt;] = decon_&lt;task&gt;_&lt;decon_title&gt;_stats.REML_cmd</p></li>
+<li><p>[epi-nuiss] = nuissance signal file</p></li>
+<li><p>[rml-&lt;decon_title&gt;] = deconvolved file (decon_&lt;task&gt;_&lt;decon_title&gt;_stats_REML+tlrc)</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -125,29 +131,18 @@ rml-&lt;decon_title&gt; = deconvolved file (decon_&lt;task&gt;_&lt;decon_title&g
 </dl>
 <p class="rubric">Notes</p>
 <p>Only onset timing files accepted, not married onset:duration! Timing files
-must be AFNI formatted, (one row/run for each beahvior).</p>
-<dl>
-<dt>decon_plan should have the following format:</dt><dd><dl class="simple">
-<dt>{“Decon Tile”: {</dt><dd><p>“BehA”: “/path/to/timing_behA.txt”,
-“BehB”: “/path/to/timing_behB.txt”,
-“BehC”: “/path/to/timing_behC.txt”,
-}</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<dl class="simple">
-<dt>{“NegNeuPosTargLureFoil”: {</dt><dd><p>“negTH”: “/path/to/negative_target_hit.txt”,
-“negTM”: “/path/to/negative_target_miss.txt”,
-“negLC”: “/path/to/negative_lure_cr.txt”,
-}</p>
-</dd>
-</dl>
-<p>}</p>
-<p>Also, see example in qc/no_valence.</p>
-<p>[decon_plan=None] yields decon_&lt;task&gt;_UniqueBehs*</p>
+must be AFNI formatted, (one row/run for each beahvior). See example in
+qc/no_valence.</p>
+<p>decon_plan should have the following format:</p>
+<p>{“Decon Tile”: {</p>
+<p>“BehA”: “/path/to/timing_behA.txt”,</p>
+<p>“BehB”: “/path/to/timing_behB.txt”,</p>
+<p>“BehC”: “/path/to/timing_behC.txt”}}</p>
+<p>Example:</p>
+<p>{“NegNeuPosTargLureFoil”: {</p>
+<p>“negTH”: “/path/to/negative_target_hit.txt”,</p>
+<p>“negTM”: “/path/to/negative_target_miss.txt”,</p>
+<p>“negLC”: “/path/to/negative_lure_cr.txt”}}</p>
 </dd></dl>
 
 <dl class="py function">
@@ -173,24 +168,24 @@ template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>afni_data</strong> – dictionary containing mappings for AFNI files</p>
-<p>struct-t1 = pre-processed T1w
-mask-brain = brain mask
-mask-probGM = gray matter probability label
-mask-probWM = white matter probability label
-mask-erodedGM = gray matter eroded mask
-mask-erodedWM = white matter eroded mask
-mask-int = EPI-structural intersection mask
-mask-min = mask of EPI space with &gt;minimum signal
-epi-preproc? = pre-processed EPI run-?
-epi-blur? = blurred/smoothed EPI run-?</p>
-<blockquote>
-<div><p>if do_blur = T</p>
-</div></blockquote>
-<p>epi-scale? = scaled EPI run-?
-mot-confound? = confounds timeseries for run-?
-mot-mean = mean motion for task (6dof)
-mot-deriv = derivative motion for task (6dof)
-mot-censor = binary censor vector for task</p>
+<p>afni_data keys:</p>
+<ul class="simple">
+<li><p>[struct-t1] = pre-processed T1w</p></li>
+<li><p>[mask-brain] = brain mask</p></li>
+<li><p>[mask-probGM] = gray matter probability label</p></li>
+<li><p>[mask-probWM] = white matter probability label</p></li>
+<li><p>[mask-erodedGM] = gray matter eroded mask</p></li>
+<li><p>[mask-erodedWM] = white matter eroded mask</p></li>
+<li><p>[mask-int] = EPI-structural intersection mask</p></li>
+<li><p>[mask-min] = mask of EPI space with &gt;minimum signal</p></li>
+<li><p>[epi-preproc?] = pre-processed EPI run-?</p></li>
+<li><p>[epi-blur?] = blurred/smoothed EPI run-?, if do_blur = T</p></li>
+<li><p>[epi-scale?] = scaled EPI run-?</p></li>
+<li><p>[mot-confound?] = confounds timeseries for run-?</p></li>
+<li><p>[mot-mean] = mean motion for task (6dof)</p></li>
+<li><p>[mot-deriv] = derivative motion for task (6dof)</p></li>
+<li><p>[mot-censor] = binary censor vector for task</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -218,9 +213,13 @@ metrics like SNR, GCOR, etc.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated with the fields
-reg-matrix = epi projection matrix
-S&lt;seed&gt;-ztrans = Z-transformed seed-based correlation matrix</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with generated files</p>
+<p>added keys to afni_data:</p>
+<ul class="simple">
+<li><p>[reg-matrix] = epi projection matrix</p></li>
+<li><p>[S&lt;seed&gt;-ztrans] = Z-transformed seed-based correlation matrix</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -241,20 +240,25 @@ correlation matrices.</p>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-rest)</p></li>
 <li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
 <li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
-<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>mask-gm = gray matter mask
-subj-list = list of subjects
-all-ztrans = list of Ztrans files</p>
-</dd>
-</dl>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-gm] = gray matter mask</p></li>
+<li><p>[subj-list] = list of subjects</p></li>
+<li><p>[all-ztrans] = list of Ztrans files</p></li>
+</ul>
 </p></li>
 <li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>group_data</strong> – updated with the fields
-mask-int = gray matter intersection mask
-S&lt;seed&gt;-etac = seed stat output</p>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with the fields for generated files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[mask-int] = gray matter intersection mask</p></li>
+<li><p>[S&lt;seed&gt;-etac] = seed stat output</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -270,26 +274,32 @@ S&lt;seed&gt;-etac = seed stat output</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beh_list</strong> (<em>list</em>) – list of 2 behaviors which match sub-brick name
-e.g. neg for neg#0_Coef</p></li>
+<li><p><strong>beh_list</strong> (<em>list</em>) – <p>list of 2 behaviors which match sub-brick name</p>
+<p>e.g. neg for neg#0_Coef</p>
+</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-test)</p></li>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session (ses-S2)</p></li>
 <li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
 <li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
-<li><p><strong>group_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>mask-gm = gray matter mask
-subj-list = list of subjects
-dcn-file = decon file string</p>
-</dd>
-</dl>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-gm] = gray matter mask</p></li>
+<li><p>[subj-list] = list of subjects</p></li>
+<li><p>[dcn-file] = decon file string</p></li>
+</ul>
 </p></li>
 <li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>group_data</strong> – updated with the fields
-mask-int = gray matter intersection mask
-behAB-etac = etac stat output</p>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with keys for generated files</p>
+<p>added group_data keys:</p>
+<ul class="simple">
+<li><p>[mask-int] = gray matter intersection mask</p></li>
+<li><p>[behAB-etac] = etac stat output</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>

@@ -61,16 +61,21 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     proj_dir : str
         Path to BIDS-organized project directory, for
         finding dset and derivatives
+
     code_dir : str
         Path to desired/existing location of https://github.com/emu-project/func_processing.git
+
     pat_github_emu : str
         Personal Access Token to https://github.com/emu-project
+
     new_df : bool
         Whether to generate a completely new logs/completed_preprocessing.tsv,
         "True" when expected_dict gets updated with new files.
+
     one_subj : bool/str
         Whether to check for data from single subject. If true, supply
         BIDS-formatted subject string.
+
         (e.g. one_subj="sub-4001")
 
     Notes
@@ -78,14 +83,20 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     Internet connection is required!
 
     expected_dict should have the following organization:
-        - each key corresponds to a derivatives directory
-        - the value of each key is a list of tuples
-        - one tuple per file to search for
-        - tuple[0] is a string that matches a column in col_names
-            and a column of logs/completed_preprocessing.tsv
-        - tuple[1] is a string used to find the single file via glob
-        - multiple decons are supported for each session via
-            decon_<sess>_<int>
+
+    - each key corresponds to a derivatives directory
+
+    - the value of each key is a list of tuples
+
+    - one tuple per file to search for
+
+    - tuple[0] is a string that matches a column in col_names
+        and a column of logs/completed_preprocessing.tsv
+
+    - tuple[1] is a string used to find the single file via glob
+
+    - multiple decons are supported for each session via
+        decon_<sess>_<int>
     """
 
     # # For testing

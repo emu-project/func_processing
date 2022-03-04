@@ -28,9 +28,9 @@ def int_mask(task, deriv_dir, group_data, group_dir):
 
         required keys:
 
-        - mask-gm = gray matter mask
+        - [mask-gm] = gray matter mask
 
-        - subj-list = list of subjects
+        - [subj-list] = list of subjects
 
     group_dir : str
         output location of work
@@ -42,7 +42,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
 
         added group_data key:
 
-        - mask-int = GM intersect mask
+        - [mask-int] = GM intersect mask
     """
 
     # check for req files, unpack

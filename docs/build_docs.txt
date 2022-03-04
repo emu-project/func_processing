@@ -21,7 +21,7 @@ Edit index.rst - add modules
 
 	.. toctree::
 	:maxdepth: 2
-	:caption: Contents:
+	:caption: Package Contents:
 
 	modules
 
@@ -29,4 +29,3 @@ Edit index.rst - add modules
 $ sphinx-apidoc -f -o . ..
 
 $ make html
-	and "$make html" after any updates to conf.py, index.rst

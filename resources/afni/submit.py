@@ -24,7 +24,8 @@ def submit_hpc_subprocess(bash_command):
     -------
     (job_out, job_err) : tuple of str
         job_out = subprocess stdout
-        job_out = subprocess stderr
+
+        job_err = subprocess stderr
 
     Example
     -------
@@ -53,14 +54,19 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
     ----------
     command : str
         Bash code to be scheduled
+
     wall_hours : int
         number of desired walltime hours
+
     mem_gig : int
         amount of desired RAM
+
     num_proc : int
         number of desired processors
+
     job_name : str
         job name
+
     out_dir : str
         location for <job_name>.err/out
 
@@ -68,6 +74,7 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
     -------
     (job_name, job_id) : tuple of str
         job_name = scheduled job name
+
         job_id = scheduled job ID
 
     Example

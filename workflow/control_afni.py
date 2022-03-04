@@ -27,17 +27,23 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     ----------
     prep_dir : str
         /path/to/BIDS/project/derivatives/fmriprep
+
     afni_dir : str
         /path/to/BIDS/project/derivatives/afni
+
     subj : str
         BIDS subject string (sub-1234)
+
     sess : str
         BIDS session string (ses-S1)
+
     task : str
         BIDS task string (task-test)
+
     tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)
+
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
 
@@ -46,22 +52,37 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     afni_data : dict
         dictionary containing mappings for AFNI files
 
-        struct-t1 = pre-processed T1w
-        mask-brain = brain mask
-        mask-probGM = gray matter probability label
-        mask-probWM = white matter probability label
-        mask-erodedGM = gray matter eroded mask
-        mask-erodedWM = white matter eroded mask
-        mask-int = EPI-structural intersection mask
-        mask-min = mask of EPI space with >minimum signal
-        epi-preproc? = pre-processed EPI run-?
-        epi-blur? = blurred/smoothed EPI run-?
-            if do_blur = T
-        epi-scale? = scaled EPI run-?
-        mot-confound? = confounds timeseries for run-?
-        mot-mean = mean motion for task (6dof)
-        mot-deriv = derivative motion for task (6dof)
-        mot-censor = binary censor vector for task
+        afni_data keys:
+
+        - [struct-t1] = pre-processed T1w
+
+        - [mask-brain] = brain mask
+
+        - [mask-probGM] = gray matter probability label
+
+        - [mask-probWM] = white matter probability label
+
+        - [mask-erodedGM] = gray matter eroded mask
+
+        - [mask-erodedWM] = white matter eroded mask
+
+        - [mask-int] = EPI-structural intersection mask
+
+        - [mask-min] = mask of EPI space with >minimum signal
+
+        - [epi-preproc?] = pre-processed EPI run-?
+
+        - [epi-blur?] = blurred/smoothed EPI run-?, if do_blur = T
+
+        - [epi-scale?] = scaled EPI run-?
+
+        - [mot-confound?] = confounds timeseries for run-?
+
+        - [mot-mean] = mean motion for task (6dof)
+
+        - [mot-deriv] = derivative motion for task (6dof)
+
+        - [mot-censor] = binary censor vector for task
     """
 
     # setup directories
@@ -118,54 +139,69 @@ def control_deconvolution(
     ----------
     afni_data : dict
         mapping of AFNI data, returned by control_preproc
+
     afni_dir : str
         /path/to/BIDS/project/derivatives/afni
+
     dset_dir : str
         /path/to/BIDS/project/dset
+
     subj : str
         BIDS subject string (sub-1234)
+
     sess : str
         BIDS session string (ses-S1)
+
     task : str
         BIDS task string (task-test)
+
     dur : int/float/str
         duration of task to model (2)
+
     decon_plan : dict
         mapping of behvavior to timing files for planned
-        deconvolutions, see notes below [default=None]
+        deconvolutions, see notes below
+
+        [default=None, yields decon_<task>_UniqueBehs]
 
     Returns
     -------
     afni_data : dict
         updated with decon output
-        dcn-<decon_title> = decon_<task>_<decon_title>_stats.REML_cmd
-        epi-nuiss = nuissance signal file
-        rml-<decon_title> = deconvolved file (decon_<task>_<decon_title>_stats_REML+tlrc)
+
+        added afni_data keys:
+
+        - [dcn-<decon_title>] = decon_<task>_<decon_title>_stats.REML_cmd
+
+        - [epi-nuiss] = nuissance signal file
+
+        - [rml-<decon_title>] = deconvolved file (decon_<task>_<decon_title>_stats_REML+tlrc)
 
     Notes
     -----
     Only onset timing files accepted, not married onset:duration! Timing files
-    must be AFNI formatted, (one row/run for each beahvior).
+    must be AFNI formatted, (one row/run for each beahvior). See example in
+    qc/no_valence.
 
     decon_plan should have the following format:
-        {"Decon Tile": {
-            "BehA": "/path/to/timing_behA.txt",
-            "BehB": "/path/to/timing_behB.txt",
-            "BehC": "/path/to/timing_behC.txt",
-            }
-        }
+
+    {"Decon Tile": {
+
+    "BehA": "/path/to/timing_behA.txt",
+
+    "BehB": "/path/to/timing_behB.txt",
+
+    "BehC": "/path/to/timing_behC.txt"}}
 
     Example:
-        {"NegNeuPosTargLureFoil": {
-            "negTH": "/path/to/negative_target_hit.txt",
-            "negTM": "/path/to/negative_target_miss.txt",
-            "negLC": "/path/to/negative_lure_cr.txt",
-            }
-        }
 
-    Also, see example in qc/no_valence.
+    {"NegNeuPosTargLureFoil": {
 
-    [decon_plan=None] yields decon_<task>_UniqueBehs*
+    "negTH": "/path/to/negative_target_hit.txt",
+
+    "negTM": "/path/to/negative_target_miss.txt",
+
+    "negLC": "/path/to/negative_lure_cr.txt"}}
     """
 
     # setup directories
@@ -202,12 +238,16 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     ----------
     afni_data : dict
         mapping of AFNI data, returned by control_preproc
+
     afni_dir : str
         /path/to/BIDS/project/derivatives/afni
+
     subj : str
         BIDS subject string (sub-1234)
+
     sess : str
         BIDS session string (ses-S1)
+
     coord_dict : dict
         seed name, coordinates
         {"rPCC": "5 -55 25"}
@@ -215,9 +255,13 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     Returns
     -------
     afni_data : dict
-        updated with the fields
-        reg-matrix = epi projection matrix
-        S<seed>-ztrans = Z-transformed seed-based correlation matrix
+        updated with generated files
+
+        added keys to afni_data:
+
+        - [reg-matrix] = epi projection matrix
+
+        - [S<seed>-ztrans] = Z-transformed seed-based correlation matrix
     """
 
     # setup dir
@@ -245,26 +289,40 @@ def control_resting_group(seed, task, deriv_dir, group_dir, group_data, do_blur)
     ----------
     seed : str
         seed name (rPCC)
+
     task : str
         BIDS string (task-rest)
+
     deriv_dir : str
         location of project AFNI derivatives
+
     group_dir : str
         output location of work
+
     group_data : dict
-        required keys
-            mask-gm = gray matter mask
-            subj-list = list of subjects
-            all-ztrans = list of Ztrans files
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mask-gm] = gray matter mask
+
+        - [subj-list] = list of subjects
+
+        - [all-ztrans] = list of Ztrans files
+
     do_blur : bool
         [T/F] whether blur was done in pre-processing
 
     Returns
     -------
     group_data : dict
-        updated with the fields
-        mask-int = gray matter intersection mask
-        S<seed>-etac = seed stat output
+        updated with the fields for generated files
+
+        added afni_data keys:
+
+        - [mask-int] = gray matter intersection mask
+
+        - [S<seed>-etac] = seed stat output
     """
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
     group_data = group.resting_etac(seed, group_data, group_dir, do_blur)
@@ -280,29 +338,45 @@ def control_task_group(beh_list, task, sess, deriv_dir, group_dir, group_data, d
     ----------
     beh_list : list
         list of 2 behaviors which match sub-brick name
+
         e.g. neg for neg#0_Coef
+
     task : str
         BIDS string (task-test)
+
     sess : str
         BIDS session (ses-S2)
+
     deriv_dir : str
         location of project AFNI derivatives
+
     group_dir : str
         output location of work
+
     group_data : dict
-        required keys
-            mask-gm = gray matter mask
-            subj-list = list of subjects
-            dcn-file = decon file string
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mask-gm] = gray matter mask
+
+        - [subj-list] = list of subjects
+
+        - [dcn-file] = decon file string
+
     do_blur : bool
         [T/F] whether blur was done in pre-processing
 
     Returns
     -------
     group_data : dict
-        updated with the fields
-        mask-int = gray matter intersection mask
-        behAB-etac = etac stat output
+        updated with keys for generated files
+
+        added group_data keys:
+
+        - [mask-int] = gray matter intersection mask
+
+        - [behAB-etac] = etac stat output
     """
     group_data = group.int_mask(task, deriv_dir, group_data, group_dir)
     group_data = group.task_etac(

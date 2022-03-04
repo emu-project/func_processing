@@ -109,16 +109,17 @@ finding dset and derivatives</p></li>
 <li><p><strong>pat_github_emu</strong> (<em>str</em>) – Personal Access Token to <a class="reference external" href="https://github.com/emu-project">https://github.com/emu-project</a></p></li>
 <li><p><strong>new_df</strong> (<em>bool</em>) – Whether to generate a completely new logs/completed_preprocessing.tsv,
 “True” when expected_dict gets updated with new files.</p></li>
-<li><p><strong>one_subj</strong> (<em>bool/str</em>) – Whether to check for data from single subject. If true, supply
-BIDS-formatted subject string.
-(e.g. one_subj=”sub-4001”)</p></li>
+<li><p><strong>one_subj</strong> (<em>bool/str</em>) – <p>Whether to check for data from single subject. If true, supply
+BIDS-formatted subject string.</p>
+<p>(e.g. one_subj=”sub-4001”)</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <p>Internet connection is required!</p>
-<dl class="simple">
-<dt>expected_dict should have the following organization:</dt><dd><ul class="simple">
+<p>expected_dict should have the following organization:</p>
+<ul class="simple">
 <li><p>each key corresponds to a derivatives directory</p></li>
 <li><p>the value of each key is a list of tuples</p></li>
 <li><p>one tuple per file to search for</p></li>
@@ -134,8 +135,6 @@ BIDS-formatted subject string.
 </dl>
 </li>
 </ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
