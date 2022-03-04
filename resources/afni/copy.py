@@ -19,12 +19,16 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
     ----------
     prep_dir : str
         /path/to/derivatives/fmriprep
+
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj : str
         BIDS subject string (sub-1234)
+
     task : str
         BIDS task string (task-test)
+
     tplflow_str : str
         template ID string, for finding fMRIprep output in
         template space (space-MNIPediatricAsym_cohort-5_res-2)

@@ -32,17 +32,28 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
         name of deconvolution, useful when conducting multiple
         deconvolutions on same session. Will be appended to
         BIDS task name (decon_<task-name>_<decon_name>).
+
     tf_dict : dict
         timing files dictionary, behavior string is key
+
         e.g. {"lureFA": "/path/to/tf_task-test_lureFA.txt"}
+
     afni_data : dict
-        required keys
-            epi-scale[1..N] = list of scaled files
-            mot-mean = mean motion timeseries
-            mot-deriv = derivative motion timeseries
-            mot-censor = binary censory vector
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-scale<1..N>] = list of scaled files
+
+        - [mot-mean] = mean motion timeseries
+
+        - [mot-deriv] = derivative motion timeseries
+
+        - [mot-censor] = binary censory vector
+
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
     dur : int/float/str
         duration of event to model
 
@@ -50,14 +61,20 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
     -------
     afni_data : dict
         updated with REML commands
-        dcn-<decon_name> = name of decon reml command
+
+        added afni_data keys:
+
+        - dcn-<decon_name> = name of decon reml command
 
     Notes
     -----
     Deconvolution files will be written in AFNI format, rather
-        than BIDS. This includes the X.files (cue spooky theme), script,
-        and deconvolved output. Files names will have the format:
-            decon_<bids-task>_<decon_name>
+    than BIDS. This includes the X.files (cue spooky theme), script,
+    and deconvolved output.
+
+    Files names will have the format:
+
+    - decon_<bids-task>_<decon_name>
     """
 
     # check for req files
@@ -150,17 +167,26 @@ def run_reml(work_dir, afni_data):
     ----------
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
     afni_data : dict
-        required keys
-            epi-scale[1..N] = list of scaled files
-            mask-erodedWM = eroded WM mask
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-scale<1..N>] = list of scaled files
+
+        - [mask-erodedWM] = eroded WM mask
 
     Returns
     -------
     afni_data : dict
         updated for nuissance, deconvolved files
-        epi-nuiss = nuissance signal file
-        rml-<decon_name> = deconvolved file (<decon_name>_stats_REML+tlrc)
+
+        added afni_data keys:
+
+        - [epi-nuiss] = nuissance signal file
+
+        - [rml-<decon_name>] = deconvolved file (<decon_name>_stats_REML+tlrc)
     """
     # check for files
     num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
@@ -248,14 +274,19 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     ----------
     dset_dir : str
         /path/to/BIDS/dset
+
     deriv_dir : str
         /path/to/BIDS/derivatives/afni
+
     subj : str
         BIDS subject string (sub-1234)
+
     sess : str
         BIDS session string (ses-A)
+
     task : str
         BIDS task string (task-test)
+
     decon_name : str
         name of deconvolution given all unique behaviors [default=UniqueBehs]
 
@@ -263,15 +294,17 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     -------
     decon_plan : dict
         Matches behaviors to timing file
-        {<decon_name>: {
-            beh-A: /path/to/*_desc-behA_events.1D,
-            beh-B: /path/to/*_desc-behB_events.1D,
-            }
-        }
+
+        keys description:
+
+        - [beh-A] = /path/to/*_desc-behA_events.1D
+
+        - [beh-B] = /path/to/*_desc-behB_events.1D
 
     Notes
     -----
     Currently only writes onset time, not married duration.
+
     Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.
     """
 
@@ -357,23 +390,36 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     Parameters
     ----------
     afni_data : dict
-        required keys
-            epi-scale1 = single/first scaled file
-            mask-min = mask of voxels with >min signal
-            mask-erodedCSF = eroded CSF mask
-            mot-mean = mean motion timeseries
-            mot-deriv = derivative motion timeseries
-            mot-censor = binary censor vector
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-scale1] = single/first scaled file
+
+        - [mask-min] = mask of voxels with >min signal
+
+        - [mask-erodedCSF] = eroded CSF mask
+
+        - [mot-mean] = mean motion timeseries
+
+        - [mot-deriv] = derivative motion timeseries
+
+        - [mot-censor] = binary censor vector
+
     work_dir : str
         /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
     proj_meth : str
         [anaticor | original] method of matrix progression.
 
     Returns
     -------
-    afni_data : dict
-        updated fields
-        reg-matrix = regression matrix
+      decon_plan : dict
+        Matches behaviors to timing file
+
+        new key:
+
+        - reg-matrix = regression matrix
 
     Notes
     -----

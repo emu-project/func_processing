@@ -15,25 +15,40 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+
     subj_num : int/str
         subject identifier, for sbatch job name
+
      afni_data : dict
-        required keys
-            mask-brain = anatomic brain mask
-        conditionally required keys
-            do_blur = T : epi-blur[1..N] = list of blurred EPI files
-            do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files
+        contains keys pointing to required files
+
+        required keys:
+
+        - [mask-brain] = anatomic brain mask
+
+        conditionally required keys:
+
+        - do_blur = T when [epi-blur<1..N>] = list of blurred EPI files
+
+        - do_blur = F when [epi-blur<1..N>] = list of fmriprep preprocessed files
+
     sess : str
         BIDS session string (ses-S1)
+
     task : str
         BIDS task string (task-study)
+
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
 
     Returns
     -------
     afni_data : dict
-        mask-int = subject epi-anat intersection mask
+        updated with files
+
+        added afni_data keys:
+
+        - [mask-int] = subject epi-anat intersection mask
     """
 
     # get required EPI, mask files

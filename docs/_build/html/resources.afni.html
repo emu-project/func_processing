@@ -146,23 +146,28 @@ matrices. Anaticor uses WM as a nuissance regressor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>epi-scale1 = single/first scaled file
-mask-min = mask of voxels with &gt;min signal
-mask-erodedCSF = eroded CSF mask
-mot-mean = mean motion timeseries
-mot-deriv = derivative motion timeseries
-mot-censor = binary censor vector</p>
-</dd>
-</dl>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>epi-scale1 = single/first scaled file</p></li>
+<li><p>mask-min = mask of voxels with &gt;min signal</p></li>
+<li><p>mask-erodedCSF = eroded CSF mask</p></li>
+<li><p>mot-mean = mean motion timeseries</p></li>
+<li><p>mot-deriv = derivative motion timeseries</p></li>
+<li><p>mot-censor = binary censor vector</p></li>
+</ul>
 </p></li>
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
 <li><p><strong>proj_meth</strong> (<em>str</em>) – [anaticor | original] method of matrix progression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated fields
-reg-matrix = regression matrix</p>
+<dd class="field-even"><p><p><strong>decon_plan</strong> – Matches behaviors to timing file</p>
+<p>new key:</p>
+<ul class="simple">
+<li><p>reg-matrix = regression matrix</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -182,18 +187,23 @@ include this in the generated 3dREMLfit command.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
-<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>epi-scale[1..N] = list of scaled files
-mask-erodedWM = eroded WM mask</p>
-</dd>
-</dl>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[epi-scale&lt;1..N&gt;] = list of scaled files</p></li>
+<li><p>[mask-erodedWM] = eroded WM mask</p></li>
+</ul>
 </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated for nuissance, deconvolved files
-epi-nuiss = nuissance signal file
-rml-&lt;decon_name&gt; = deconvolved file (&lt;decon_name&gt;_stats_REML+tlrc)</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated for nuissance, deconvolved files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[epi-nuiss] = nuissance signal file</p></li>
+<li><p>[rml-&lt;decon_name&gt;] = deconvolved file (&lt;decon_name&gt;_stats_REML+tlrc)</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -220,14 +230,12 @@ behavior (trial_type).</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>decon_plan</strong> – Matches behaviors to timing file
-{&lt;decon_name&gt;: {</p>
-<blockquote>
-<div><p>beh-A: /path/to/<a href="#id1"><span class="problematic" id="id2">*</span></a>_desc-behA_events.1D,
-beh-B: /path/to/<a href="#id3"><span class="problematic" id="id4">*</span></a>_desc-behB_events.1D,
-}</p>
-</div></blockquote>
-<p>}</p>
+<dd class="field-even"><p><p><strong>decon_plan</strong> – Matches behaviors to timing file</p>
+<p>keys description:</p>
+<ul class="simple">
+<li><p>[beh-A] = /path/to/<a href="#id1"><span class="problematic" id="id2">*</span></a>_desc-behA_events.1D</p></li>
+<li><p>[beh-B] = /path/to/<a href="#id3"><span class="problematic" id="id4">*</span></a>_desc-behB_events.1D</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -235,8 +243,8 @@ beh-B: /path/to/<a href="#id3"><span class="problematic" id="id4">*</span></a>_d
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Currently only writes onset time, not married duration.
-Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.</p>
+<p>Currently only writes onset time, not married duration.</p>
+<p>Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -255,37 +263,41 @@ using the asterisk for runs in which a certain behavior does not occur.</p>
 <li><p><strong>decon_name</strong> (<em>str</em>) – name of deconvolution, useful when conducting multiple
 deconvolutions on same session. Will be appended to
 BIDS task name (decon_&lt;task-name&gt;_&lt;decon_name&gt;).</p></li>
-<li><p><strong>tf_dict</strong> (<em>dict</em>) – timing files dictionary, behavior string is key
-e.g. {“lureFA”: “/path/to/tf_task-test_lureFA.txt”}</p></li>
-<li><p><strong>afni_data</strong> (<em>dict</em>) – <dl class="simple">
-<dt>required keys</dt><dd><p>epi-scale[1..N] = list of scaled files
-mot-mean = mean motion timeseries
-mot-deriv = derivative motion timeseries
-mot-censor = binary censory vector</p>
-</dd>
-</dl>
+<li><p><strong>tf_dict</strong> (<em>dict</em>) – <p>timing files dictionary, behavior string is key</p>
+<p>e.g. {“lureFA”: “/path/to/tf_task-test_lureFA.txt”}</p>
+</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[epi-scale&lt;1..N&gt;] = list of scaled files</p></li>
+<li><p>[mot-mean] = mean motion timeseries</p></li>
+<li><p>[mot-deriv] = derivative motion timeseries</p></li>
+<li><p>[mot-censor] = binary censory vector</p></li>
+</ul>
 </p></li>
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
 <li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of event to model</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – updated with REML commands
-dcn-&lt;decon_name&gt; = name of decon reml command</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with REML commands</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>dcn-&lt;decon_name&gt; = name of decon reml command</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<dl>
-<dt>Deconvolution files will be written in AFNI format, rather</dt><dd><p>than BIDS. This includes the X.files (cue spooky theme), script,
+<p>Deconvolution files will be written in AFNI format, rather
+than BIDS. This includes the X.files (cue spooky theme), script,
 and deconvolved output. Files names will have the format:</p>
-<blockquote>
-<div><p>decon_&lt;bids-task&gt;_&lt;decon_name&gt;</p>
-</div></blockquote>
-</dd>
-</dl>
+<ul class="simple">
+<li><p>decon_&lt;bids-task&gt;_&lt;decon_name&gt;</p></li>
+</ul>
 </dd></dl>
 
 </div>
@@ -394,17 +406,20 @@ behAB-etac = final output ETAC file</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
-<li><p><strong>subj_num</strong> (<em>int/str</em>) – <p>subject identifier, for sbatch job name
-afni_data : dict</p>
-<blockquote>
-<div><dl class="simple">
-<dt>required keys</dt><dd><p>mask-brain = anatomic brain mask</p>
-</dd>
-<dt>conditionally required keys</dt><dd><p>do_blur = T : epi-blur[1..N] = list of blurred EPI files
-do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files</p>
+<li><p><strong>subj_num</strong> (<em>int/str</em>) – <p>subject identifier, for sbatch job name</p>
+<dl>
+<dt>afni_data<span class="classifier">dict</span></dt><dd><p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-brain] = anatomic brain mask</p></li>
+</ul>
+<p>conditionally required keys:</p>
+<ul>
+<li><p>do_blur = T when [epi-blur&lt;1..N&gt;] = list of blurred EPI files</p></li>
+<li><p>do_blur = F when [epi-blur&lt;1..N&gt;] = list of fmriprep preprocessed files</p></li>
+</ul>
 </dd>
 </dl>
-</div></blockquote>
 </p></li>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-study)</p></li>
@@ -412,7 +427,12 @@ do_blur = F : epi-preproc[1..N] = list of fmriprep preprocessed files</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>afni_data</strong> – mask-int = subject epi-anat intersection mask</p>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[mask-int] = subject epi-anat intersection mask</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
