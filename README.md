@@ -11,6 +11,6 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 - tests: Outdated. Unit and module tests.
 - workflow: Manages resources, controlled by cli.
 
-See Wiki for details and description (under constructino).
+See Wiki for details and description (under construction).
 
 Module documentation: https://func-processing.readthedocs.io/en/latest/ (some docstrings don't show in firefox, smh).
