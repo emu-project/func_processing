@@ -13,4 +13,4 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 
 See Wiki for details and description (under construction).
 
-Module documentation: https://func-processing.readthedocs.io/en/latest/ (some docstrings don't show in firefox, smh).
+Module documentation: https://func-processing.readthedocs.io/en/latest/, assuming sphinx is cooperative.
