@@ -81,16 +81,16 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
     -------
     submit_hpc_sbatch("afni -ver")
     """
+    # -p IB_44C_512G \
+    # --account iacc_madlab --qos pq_madlab \
     sbatch_job = f"""
         sbatch \
         -J {job_name} \
         -t {wall_hours}:00:00 \
         --cpus-per-task={num_proc} \
         --mem-per-cpu={mem_gig}000 \
-        -p IB_44C_512G \
         -o {out_dir}/{job_name}.out \
         -e {out_dir}/{job_name}.err \
-        --account iacc_madlab --qos pq_madlab \
         --wait \
         --wrap="module load afni-20.2.06
             module load c3d-1.0.0-gcc-8.2.0

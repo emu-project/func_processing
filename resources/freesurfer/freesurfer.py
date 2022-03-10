@@ -14,7 +14,7 @@ from afni import submit
 
 
 # %%
-def run_freesurfer(subj, subj_t1, freesurfer_dir):
+def run_freesurfer(subj, subj_t1, freesurfer_dir, scratch_dir):
     """Title.
 
     Desc.
@@ -31,7 +31,7 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir):
             -sd {freesurfer_dir}
     """
     job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 10, 4, 4, f"fs{subj_num}", deriv_dir
+        h_cmd, 10, 4, 4, f"fs{subj_num}", scratch_dir
     )
     check_file = os.path.join(freesurfer_dir, subj, "mri/aparc+aseg.mgz")
     assert os.path.exists(

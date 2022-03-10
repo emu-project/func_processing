@@ -4,13 +4,14 @@
 
 Example
 --------
+# --partition=IB_44C_512G \\
+# --account=iacc_madlab \\
+# --qos=pq_madlab \\
+
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runAshs \\
+sbatch --job-name=runPrep \\
     --output=${code_dir}/logs/runPrep_log \\
     --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
     fmriprep.py \\
     -c $code_dir
 """
@@ -19,6 +20,7 @@ sbatch --job-name=runAshs \\
 import os
 import sys
 import glob
+import fnmatch
 import time
 import textwrap
 from datetime import datetime
@@ -28,7 +30,14 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license, slurm_dir, code_dir,
+    subj,
+    proj_dir,
+    scratch_dir,
+    sing_img,
+    tplflow_dir,
+    fs_license,
+    slurm_dir,
+    code_dir,
 ):
     """Title.
 
@@ -42,11 +51,12 @@ def submit_jobs(
 
         #SBATCH --job-name=p{subj_num}
         #SBATCH --output={slurm_dir}/out_{subj_num}.txt
-        #SBATCH --time=01:00:00
+        #SBATCH --time=20:00:00
         #SBATCH --mem=4000
-        #SBATCH --partition=IB_44C_512G
-        #SBATCH --account=iacc_madlab
-        #SBATCH --qos=pq_madlab
+
+        # #SBATCH --partition=IB_44C_512G
+        # #SBATCH --account=iacc_madlab
+        # #SBATCH --qos=pq_madlab
 
         import sys
         sys.path.append("{code_dir}")
@@ -82,7 +92,7 @@ def get_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
-        "--project-dir",
+        "--proj-dir",
         type=str,
         default="/scratch/madlab/nate_test",
         help=textwrap.dedent(
@@ -178,7 +188,9 @@ def main():
 
     # set up
     dset_dir = os.path.join(proj_dir, "dset")
-    subj_list_all = sorted(glob.glob(f"{dset_dir}/sub-*"))
+    subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
+    # subj_list_all.sorted()
+    print(f"Subject list : {subj_list_all}")
 
     # make subject dict of those who need fMRIprep output
     subj_list = []

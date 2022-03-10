@@ -34,16 +34,16 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tpflow_dir, fs_licen
 
     # setup directories - many paths set for freesurfer/fmriprep needs
     freesurfer_dir = os.path.join(deriv_dir, "freesurfer")
-    freesurfer_subj = os.path.join(freesurfer_dir, subj)
+    # freesurfer_subj = os.path.join(freesurfer_dir, subj)
     fmriprep_dir = os.path.join(deriv_dir, "fmriprep")
     fmriprep_subj = os.path.join(fmriprep_dir, subj)
 
-    for h_dir in [freesurfer_subj, fmriprep_subj, scratch_subj]:
+    for h_dir in [freesurfer_dir, fmriprep_subj, scratch_subj]:
         if not os.path.exists(h_dir):
             os.makedirs(h_dir)
 
     # do freesurfer
-    fs_status = freesurfer.run_freesurfer(subj, subj_t1, freesurfer_dir)
+    fs_status = freesurfer.run_freesurfer(subj, subj_t1, freesurfer_dir, scratch_dir)
     if not fs_status:
         print("ERROR: FreeSurfer failed, check workflow.control_fmriprep.")
 
