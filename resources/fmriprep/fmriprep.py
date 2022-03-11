@@ -15,7 +15,9 @@ from afni import submit
 
 
 # %%
-def run_fmriprep(subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_license):
+def run_fmriprep(
+    subj, deriv_dir, dset_dir, work_dir, sing_img, tplflow_dir, fs_license
+):
     """Title.
 
     Parameters
@@ -25,21 +27,37 @@ def run_fmriprep(subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_l
 
     Desc.
     """
+
+    # for testing
+    subj = "sub-4146"
+    deriv_dir = "/scratch/madlab/nate_test/derivatives"
+    dset_dir = "/scratch/madlab/nate_test/dset"
+    work_dir = "/scratch/madlab/nate_test/scratch/sub-4146"
+    bids_dir = "/scratch/madlab/nate_test/scratch/bids_layout"
+    sing_img = "/home/data/madlab/singularity-images/nipreps_fmriprep_20.2.3.sif"
+    tplflow_dir = "/home/data/madlab/singularity-images/templateflow"
+    fs_license = "/home/nmuncy/bin/licenses/fs_license.txt"
+
     subj_num = subj.split("-")[1]
     fs_dir = os.path.join(deriv_dir, "freesurfer", subj)
 
     h_cmd = f"""
         module load singularity-3.8.2
 
-        # set global vars for fmriprep
-        export SINGULARITYENV_TEMPLATEFLOW_HOME={tpflow_dir}
-        export FS_LICENSE={fs_license}
+        # set templateflow
+        export SINGULARITYENV_TEMPLATEFLOW_HOME={tplflow_dir}
 
         # HPC hack
         export TMPDIR=/scratch/madlab/temp
         cd /
 
-        singularity run --cleanenv {sing_img} \
+        # --bids-database-dir {bids_dir} \
+        # --skip-bids-validation \
+        # --fs-subjects-dir {fs_dir} \
+
+        singularity run --cleanenv \
+            --bind $HOME/templateflow:{tplflow_dir} \
+            {sing_img} \
             {dset_dir} \
             {deriv_dir} \
             participant \
@@ -47,9 +65,7 @@ def run_fmriprep(subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_l
             --participant-label {subj_num} \
             --skull-strip-template MNIPediatricAsym:cohort-5 \
             --output-spaces MNIPediatricAsym:cohort-5:res-2 \
-            --fs-license-file $FS_LICENSE \
-            --fs-subjects-dir {fs_dir} \
-            --skip-bids-validation \
+            --fs-license-file {fs_license} \
             --nthreads 4 \
             --omp-nthreads 4 \
             --clean-workdir \

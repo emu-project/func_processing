@@ -7,6 +7,7 @@ Desc.
 import os
 import sys
 import glob
+import shutil
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
@@ -16,7 +17,7 @@ from resources.fmriprep import fmriprep
 
 
 # %%
-def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tpflow_dir, fs_license):
+def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license):
     """Title.
 
     Desc.
@@ -47,7 +48,7 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tpflow_dir, fs_licen
         # clear previour attempts, execute
         fs_subj = os.path.join(freesurfer_dir, subj)
         if os.path.exists(fs_subj):
-            os.removedirs(fs_subj)
+            shutil.rmtree(fs_subj)
         print(f"\nStarting FreeSurfer for {subj}")
         fs_status = freesurfer.run_freesurfer(
             subj, subj_t1, freesurfer_dir, scratch_dir
@@ -57,8 +58,8 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tpflow_dir, fs_licen
     print(f"\nStarting fMRIprep for {subj}")
     fp_subj = os.path.join(fmriprep_dir, subj)
     if os.path.exists(fp_subj):
-        os.removedirs(fp_subj)
+        shutil.rmtree(fp_subj)
     fmriprep.run_fmriprep(
-        subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_license
+        subj, deriv_dir, dset_dir, work_dir, sing_img, tplflow_dir, fs_license
     )
     print(f"\n Finished fMRIprep for {subj}")
