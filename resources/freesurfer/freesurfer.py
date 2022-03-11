@@ -23,12 +23,17 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, scratch_dir):
     h_cmd = f"""
         module load freesurfer-7.1
 
+        # I find generating the 001.mgz to be a bit more stable
+        # than the "recon-all -i" option
+        mkdir -p {freesurfer_dir}/{subj}/mri/orig
+        mri_convert {subj_t1} {freesurfer_dir}/{subj}/mri/orig/001.mgz
+
         recon-all \
-            -all \
-            -i {subj_t1} \
-            -openmp 4 \
             -subjid {subj} \
-            -sd {freesurfer_dir}
+            -all \
+            -sd {freesurfer_dir} \
+            -parallel \
+            -openmp 4
     """
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 10, 4, 4, f"fs{subj_num}", scratch_dir
@@ -37,4 +42,3 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, scratch_dir):
     assert os.path.exists(
         check_file
     ), f"FreeSurfer failed on {subj}, check resources.freesurfer.freesurfer.run_freesurfer."
-    return True

@@ -4,14 +4,13 @@
 
 Example
 --------
-# --partition=IB_44C_512G \\
-# --account=iacc_madlab \\
-# --qos=pq_madlab \\
-
 code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runPrep \\
     --output=${code_dir}/logs/runPrep_log \\
     --mem-per-cpu=4000 \\
+    --partition=IB_44C_512G \\
+    --account=iacc_madlab \\
+    --qos=pq_madlab \\
     fmriprep.py \\
     -c $code_dir
 """
@@ -49,14 +48,13 @@ def submit_jobs(
     h_cmd = f"""\
         #!/bin/env {sys.executable}
 
-        #SBATCH --job-name=p{subj_num}
+        #SBATCH --job-name=pp{subj_num}
         #SBATCH --output={slurm_dir}/out_{subj_num}.txt
         #SBATCH --time=20:00:00
         #SBATCH --mem=4000
-
-        # #SBATCH --partition=IB_44C_512G
-        # #SBATCH --account=iacc_madlab
-        # #SBATCH --qos=pq_madlab
+        #SBATCH --partition=IB_44C_512G
+        #SBATCH --account=iacc_madlab
+        #SBATCH --qos=pq_madlab
 
         import sys
         sys.path.append("{code_dir}")

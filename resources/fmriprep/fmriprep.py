@@ -6,6 +6,7 @@ Desc.
 # %%
 import os
 import sys
+import glob
 
 resource_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(resource_dir)
@@ -35,8 +36,8 @@ def run_fmriprep(subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_l
         export FS_LICENSE={fs_license}
 
         # HPC hack
+        export TMPDIR=/scratch/madlab/temp
         cd /
-        export TMPDIR=/scratch/madlab/temp/
 
         singularity run --cleanenv {sing_img} \
             {dset_dir} \
@@ -54,7 +55,11 @@ def run_fmriprep(subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_l
             --clean-workdir \
             --stop-on-first-crash
     """
+    print(f"fMRIprep command :\n\t {h_cmd}")
     job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 10, 4, 4, f"fprep{subj_num}", deriv_dir
+        h_cmd, 10, 4, 4, f"fprep{subj_num}", work_dir
     )
-    print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
+    t1_found = glob.glob(
+        f"{deriv_dir}/fmriprep/{subj}/**/*desc-preproc_T1w.nii.gz", recursive=True
+    )
+    assert t1_found, "fMRIprep failed, check resources.fmriprep.fmriprep.run_fmriprep."

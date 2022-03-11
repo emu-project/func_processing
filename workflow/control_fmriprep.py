@@ -22,32 +22,43 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tpflow_dir, fs_licen
     Desc.
     """
 
-    # orient to data
+    # set paths
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives")
-    scratch_subj = os.path.join(scratch_dir, subj)
+    work_dir = os.path.join(scratch_dir, subj)
 
+    # orient to data
     dset_subj = os.path.join(dset_dir, subj)
     t1_list = sorted(glob.glob(f"{dset_subj}/**/*T1w.nii.gz", recursive=True))
     assert t1_list, f"No T1w files found for {subj}"
     subj_t1 = t1_list[-1]
 
-    # setup directories - many paths set for freesurfer/fmriprep needs
+    # setup directories
     freesurfer_dir = os.path.join(deriv_dir, "freesurfer")
-    # freesurfer_subj = os.path.join(freesurfer_dir, subj)
     fmriprep_dir = os.path.join(deriv_dir, "fmriprep")
-    fmriprep_subj = os.path.join(fmriprep_dir, subj)
-
-    for h_dir in [freesurfer_dir, fmriprep_subj, scratch_subj]:
+    for h_dir in [freesurfer_dir, fmriprep_dir, work_dir]:
         if not os.path.exists(h_dir):
             os.makedirs(h_dir)
 
-    # do freesurfer
-    fs_status = freesurfer.run_freesurfer(subj, subj_t1, freesurfer_dir, scratch_dir)
-    if not fs_status:
-        print("ERROR: FreeSurfer failed, check workflow.control_fmriprep.")
+    # do freesurfer if necessary
+    check_freesurfer = os.path.join(freesurfer_dir, subj, "mri/aparc+aseg.mgz")
+    if not os.path.exists(check_freesurfer):
 
-    # do fmriprep
+        # clear previour attempts, execute
+        fs_subj = os.path.join(freesurfer_dir, subj)
+        if os.path.exists(fs_subj):
+            os.removedirs(fs_subj)
+        print(f"\nStarting FreeSurfer for {subj}")
+        fs_status = freesurfer.run_freesurfer(
+            subj, subj_t1, freesurfer_dir, scratch_dir
+        )
+
+    # clear previous attempts, do fmriprep
+    print(f"\nStarting fMRIprep for {subj}")
+    fp_subj = os.path.join(fmriprep_dir, subj)
+    if os.path.exists(fp_subj):
+        os.removedirs(fp_subj)
     fmriprep.run_fmriprep(
         subj, deriv_dir, dset_dir, work_dir, sing_img, tpflow_dir, fs_license
     )
+    print(f"\n Finished fMRIprep for {subj}")
