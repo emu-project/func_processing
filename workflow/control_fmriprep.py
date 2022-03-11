@@ -1,7 +1,4 @@
-"""Title.
-
-Desc.
-"""
+"""Control module for running fMRIprep."""
 
 # %%
 import os
@@ -12,15 +9,34 @@ import shutil
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
 
-from resources.freesurfer import freesurfer
-from resources.fmriprep import fmriprep
+from resources.fmriprep import preprocess
 
 
 # %%
 def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license):
-    """Title.
+    """Control fMRIprep resources
 
-    Desc.
+    First, run subject data through FreeSurfer. Then, run fMRIprep.
+
+    Parameters
+    ----------
+    subj : str
+        BIDS subject string
+    proj_dir : str
+        Path to BIDS project directory
+    scratch_dir : str
+        Path to working/scratch directory
+    sing_img : str
+        Path to fmriprep singularity iamge
+    tplflow_dir : str
+        Path to templateflow directory
+    fs_license : str
+        Path to FreeSurfer license
+
+    Returns
+    -------
+    str
+        message
     """
 
     # set paths
@@ -50,7 +66,7 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
         if os.path.exists(fs_subj):
             shutil.rmtree(fs_subj)
         print(f"\nStarting FreeSurfer for {subj}")
-        fs_status = freesurfer.run_freesurfer(
+        fs_status = preprocess.run_freesurfer(
             subj, subj_t1, freesurfer_dir, scratch_dir
         )
 
@@ -59,7 +75,11 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
     fp_subj = os.path.join(fmriprep_dir, subj)
     if os.path.exists(fp_subj):
         shutil.rmtree(fp_subj)
-    fmriprep.run_fmriprep(
+        try:
+            os.remove(f"{fp_subj}.html")
+        except:
+            print(f"No {fp_subj}.html detected")
+    preprocess.run_fmriprep(
         subj, deriv_dir, dset_dir, work_dir, sing_img, tplflow_dir, fs_license
     )
     print(f"\n Finished fMRIprep for {subj}")

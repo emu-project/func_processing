@@ -38,9 +38,31 @@ def submit_jobs(
     slurm_dir,
     code_dir,
 ):
-    """Title.
+    """Schedule workflow jobs with slurm.
 
-    Desc.
+    Parameters
+    ----------
+    subj : str
+        BIDS subject string
+    proj_dir : str
+        Path to BIDS project directory
+    scratch_dir : str
+        Path to working/scratch directory
+    sing_img : str
+        Path to fmriprep singularity iamge
+    tplflow_dir : str
+        Path to templateflow directory
+    fs_license : str
+        Path to FreeSurfer license
+    slurm_dir : str
+        path to location for capturing sbatch stdout/err
+    code_dir : str
+        path to clone of github.com/emu-project/func_processing.git
+
+    Returns
+    -------
+    tuple
+        stdout, stderr
     """
 
     # generate workflow script
@@ -103,7 +125,7 @@ def get_args():
     parser.add_argument(
         "--sing-img",
         type=str,
-        default="/home/nmuncy/bin/singularities/nipreps_fmriprep_20.2.3.simg",
+        default="/home/data/madlab/singularity-images/nipreps_fmriprep_20.2.3.sif",
         help=textwrap.dedent(
             """\
             fMRIprep singularity image
@@ -114,7 +136,7 @@ def get_args():
     parser.add_argument(
         "--tplflow-dir",
         type=str,
-        default="/home/data/madlab/singularity-images/templateflow",
+        default="/scratch/madlab/templateflow2",
         help=textwrap.dedent(
             """\
             Location of templateflow directory
@@ -189,6 +211,12 @@ def main():
     subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
     # subj_list_all.sorted()
     print(f"Subject list : {subj_list_all}")
+
+    # update templateflow dir (combat /scratch purge)
+    print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
+    h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
+    h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+    h_job = h_cp.communicate()
 
     # make subject dict of those who need fMRIprep output
     subj_list = []
