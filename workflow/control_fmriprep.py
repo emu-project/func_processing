@@ -36,8 +36,8 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
 
     Returns
     -------
-    str
-        message
+    path_dict : dict
+        paths for ease of copying, cleaning
     """
 
     # set paths

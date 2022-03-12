@@ -56,9 +56,10 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
     ----------
     subj : str
         BIDS subject string
-
-
-
+    scratch_deriv : str
+        path to /scratch/foo/derivatives
+    scratch_dset : str
+        path to /scratch/foo/dset
     sing_img : str
         path to fmriprep singularity image
     tplflow_dir : str
