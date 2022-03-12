@@ -79,10 +79,11 @@ def submit_jobs(
         #SBATCH --qos=pq_madlab
 
         import sys
+        import shutil
         sys.path.append("{code_dir}")
         from workflow import control_fmriprep
 
-        control_fmriprep.control_fmriprep(
+        path_dict = control_fmriprep.control_fmriprep(
             "{subj}",
             "{proj_dir}",
             "{scratch_dir}",
@@ -90,6 +91,23 @@ def submit_jobs(
             "{tplflow_dir}",
             "{fs_license}",
         )
+
+        # copy freesurfer data to project directory
+        subj_fsurf = os.path.join({{path_dict['scratch-fsurf']}}, "{subj}")
+        h_cmd = f"cp -r {{subj_fsurf}} {{path_dict['proj-deriv']}}/freesurfer"
+        h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+        h_cp.communicate()
+
+        # copy fmriprep data to project directory
+        subj_fprep = os.path.join({{path_dict['scratch-fprep']}}, "{subj}")
+        h_cmd = f"cp -r {{subj_fsurf}} {{path_dict['proj-deriv']}}/fmriprep"
+        h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+        h_cp.communicate()
+
+        # # turn out the lights
+        # shutil.rmtree(subj_fsurf)
+        # shutil.rmtree(subj_fprep)
+        # shutil.rmtree(path_dict["scratch-work"])
     """
 
     # write script for review
@@ -114,7 +132,7 @@ def get_args():
     parser.add_argument(
         "--proj-dir",
         type=str,
-        default="/home/data/madlab/McMakin_EMUR01/derivatives/nate_test",
+        default="/home/data/madlab/McMakin_EMUR01",
         help=textwrap.dedent(
             """\
             Path to BIDS project directory
@@ -145,9 +163,9 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--work-dir",
+        "--scratch-dir",
         type=str,
-        default="/scratch/madlab/McMakin_EMUR01/derivatives/nate_test",
+        default="/scratch/madlab/McMakin_EMUR01/derivatives",
         help=textwrap.dedent(
             """\
             Scratch working directory, for intermediates
@@ -199,24 +217,32 @@ def main():
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
-    scratch_dir = args.work_dir
+    scratch_dir = args.scratch_dir
     sing_img = args.sing_img
     tplflow_dir = args.tplflow_dir
     fs_license = args.fs_license
     batch_num = args.batch_num
     code_dir = args.code_dir
 
+    # for testing
+    proj_dir = os.path.join(proj_dir, "derivatives/nate_test")
+    scratch_dir = os.path.join(scratch_dir, "nate_test")
+
     # set up
     dset_dir = os.path.join(proj_dir, "dset")
     subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
     # subj_list_all.sorted()
-    print(f"Subject list : {subj_list_all}")
+    scratch_deriv = os.path.join(scratch_dir, "derivatives")
+    scratch_dset = os.path.join(scratch_dir, "dset")
+    for h_dir in [scratch_deriv, scratch_dset]:
+        if not os.path.exists(h_dir):
+            os.makedirs(h_dir)
 
-    # update templateflow dir (combat /scratch purge)
+    # patch - combat /scratch purge by updating templateflow dir
     print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
     h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
     h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-    h_job = h_cp.communicate()
+    h_cp.communicate()
 
     # make subject dict of those who need fMRIprep output
     subj_list = []

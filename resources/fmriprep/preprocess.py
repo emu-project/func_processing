@@ -6,7 +6,6 @@ Run FreeSurfer and fMRIprep.
 # %%
 import os
 import sys
-import glob
 
 resource_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(resource_dir)
@@ -15,7 +14,7 @@ from afni import submit
 
 
 # %%
-def run_freesurfer(subj, subj_t1, freesurfer_dir, fs_orig, scratch_dir):
+def run_freesurfer(subj, subj_t1, freesurfer_dir, work_dir):
     """Run FreeSurfer.
 
     Parameters
@@ -26,21 +25,14 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, fs_orig, scratch_dir):
         path to subject's T1w file
     freesurfer_dir : str
         path to derivatives/freesurfer
-    fs_orig :
-
-
-    scratch_dir : str
-        path to working/scratch directory
+    work_dir : str
+        path to working/scratch/fmriprep/subj
     """
     subj_num = subj.split("-")[1]
     h_cmd = f"""
         module load freesurfer-7.1
 
-        # I find generating the 001.mgz to be a bit more stable
-        # than the "recon-all -i" option
-        # mkdir -p {freesurfer_dir}/{subj}/mri/orig
-        mri_convert {subj_t1} {fs_orig}/001.mgz
-
+        mri_convert {subj_t1} {freesurfer_dir}/{subj}/mri/orig/001.mgz
         recon-all \
             -subjid {subj} \
             -all \
@@ -50,18 +42,12 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, fs_orig, scratch_dir):
     """
     print(f"FreeSurfer command :\n\t {h_cmd}")
     job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 10, 4, 4, f"fs{subj_num}", scratch_dir
+        h_cmd, 10, 4, 4, f"fs{subj_num}", work_dir
     )
-    check_file = os.path.join(freesurfer_dir, subj, "mri/aparc+aseg.mgz")
-    assert os.path.exists(
-        check_file
-    ), f"FreeSurfer failed on {subj}, check resources.fmriprep.preprocess.run_freesurfer."
 
 
 # %%
-def run_fmriprep(
-    subj, deriv_dir, dset_dir, work_dir, sing_img, tplflow_dir, fs_license
-):
+def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_license):
     """Run fMRIprep.
 
     Utilize singularity image of nipreps/fmriprep
@@ -70,12 +56,9 @@ def run_fmriprep(
     ----------
     subj : str
         BIDS subject string
-    deriv_dir : str
-        path to project derivatives directory
-    dset_dir : str
-        path to project dset directory
-    work_dir : str
-        path to working/scratch directory
+
+
+
     sing_img : str
         path to fmriprep singularity image
     tplflow_dir : str
@@ -85,8 +68,9 @@ def run_fmriprep(
     """
     # set up paths
     subj_num = subj.split("-")[1]
-    fs_dir = os.path.join(deriv_dir, "freesurfer", subj)
-    bids_dir = os.path.join(deriv_dir, "scratch/bids_layout")
+    fs_dir = os.path.join(scratch_deriv, "freesurfer", subj)
+    work_dir = os.path.join(scratch_deriv, "work", subj)
+    bids_dir = os.path.join(work_dir, "bids_layout")
 
     # set up environment for HPC issues
     merged_env = os.environ
@@ -98,8 +82,8 @@ def run_fmriprep(
 
     h_cmd = f"""
         singularity run --cleanenv \
-            --bind {dset_dir}:/data \
-            --bind {deriv_dir}:/out \
+            --bind {scratch_dset}:/data \
+            --bind {scratch_deriv}:/out \
             {sing_img} \
             /data \
             /out \
@@ -120,7 +104,3 @@ def run_fmriprep(
     job_name, job_id = submit.submit_hpc_sbatch(
         h_cmd, 10, 4, 4, f"fprep{subj_num}", work_dir, merged_env
     )
-    t1_found = glob.glob(
-        f"{deriv_dir}/fmriprep/{subj}/**/*desc-preproc_T1w.nii.gz", recursive=True
-    )
-    assert t1_found, "fMRIprep failed, check resources.fmriprep.preprocess.run_fmriprep."

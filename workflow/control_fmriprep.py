@@ -5,6 +5,7 @@ import os
 import sys
 import glob
 import shutil
+import subprocess
 
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
@@ -42,35 +43,49 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
     # set paths
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives")
-    work_dir = os.path.join(scratch_dir, subj)
+    scratch_dset = os.path.join(scratch_dir, "dset")
+    scratch_deriv = os.path.join(scratch_dir, "derivatives")
 
-    # orient to data
-    dset_subj = os.path.join(dset_dir, subj)
-    t1_list = sorted(glob.glob(f"{dset_subj}/**/*T1w.nii.gz", recursive=True))
-    assert t1_list, f"No T1w files found for {subj}"
-    subj_t1 = t1_list[-1]
-
-    # setup directories
-    freesurfer_dir = os.path.join(deriv_dir, "freesurfer")
-    fmriprep_dir = os.path.join(deriv_dir, "fmriprep")
+    # setup scratch deriv directories
+    freesurfer_dir = os.path.join(scratch_deriv, "freesurfer")
+    fmriprep_dir = os.path.join(scratch_deriv, "fmriprep")
+    work_dir = os.path.join(scratch_deriv, "work", subj)
     for h_dir in [freesurfer_dir, fmriprep_dir, work_dir]:
         if not os.path.exists(h_dir):
             os.makedirs(h_dir)
 
-    # do freesurfer if necessary
+    # copy data to scratch for write issue in home/data/madlab, identify t1w
+    subj_scratch_dset = os.path.join(scratch_dset, subj)
+    t1_list = sorted(glob.glob(f"{subj_scratch_dset}/**/*T1w.nii.gz", recursive=True))
+    if not t1_list:
+        print(f"\nCopying {subj} dset to {scratch_dset} ...\n")
+        h_cmd = f"cp -r {dset_dir}/{subj} {scratch_dset}/"
+        h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+        h_cp.communicate()
+        t1_list = sorted(
+            glob.glob(f"{subj_scratch_dset}/**/*T1w.nii.gz", recursive=True)
+        )
+    assert t1_list, "Copying data to scratch failed, check workflow.control_fmriprep."
+    subj_t1 = t1_list[-1]
+
+    # do freesurfer if necessary, clear previous attempts
     check_freesurfer = os.path.join(freesurfer_dir, subj, "mri/aparc+aseg.mgz")
     if not os.path.exists(check_freesurfer):
+        try:
+            shutil.rmtree(os.path.join(freesurfer_dir, subj))
+        except FileNotFoundError:
+            print("No previous FreeSurfer attempt found, continuing ...")
 
-        # clear previour attempts, execute
-        fs_subj = os.path.join(freesurfer_dir, subj)
-        if os.path.exists(fs_subj):
-            shutil.rmtree(fs_subj)
+        # set up freesurfer dir, execute
         print(f"\nStarting FreeSurfer for {subj}")
-        fs_orig = os.path.join(fs_subj, "mri/orig")
-        os.makedirs(fs_orig)
-        fs_status = preprocess.run_freesurfer(
-            subj, subj_t1, freesurfer_dir, fs_orig, work_dir
-        )
+        os.makedirs(os.path.join(freesurfer_dir, subj, "mri/orig"))
+        preprocess.run_freesurfer(subj, subj_t1, freesurfer_dir, work_dir)
+
+    # check the freesurfer ran
+    assert os.path.exists(
+        check_freesurfer
+    ), f"FreeSurfer failed on {subj}, check resources.fmriprep.preprocess.run_freesurfer."
+    print(f"\nFinished FreeSurfer for {subj}")
 
     # clear previous attempts, do fmriprep
     print(f"\nStarting fMRIprep for {subj}")
@@ -79,9 +94,24 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
         shutil.rmtree(fp_subj)
         try:
             os.remove(f"{fp_subj}.html")
-        except:
-            print(f"No {fp_subj}.html detected")
+        except FileNotFoundError:
+            print(f"No {fp_subj}.html detected, continuing ...")
     preprocess.run_fmriprep(
-        subj, deriv_dir, dset_dir, work_dir, sing_img, tplflow_dir, fs_license
+        subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_license
     )
+
+    # check the fmriprep ran
+    check_fmriprep = glob.glob(
+        f"{fmriprep_dir}/{subj}/**/*desc-preproc_T1w.nii.gz", recursive=True
+    )
+    assert (
+        check_fmriprep
+    ), f"fMRIprep failed on {subj}, check resources.fmriprep.preprocess_run_fmriprep."
     print(f"\n Finished fMRIprep for {subj}")
+    path_dict = {
+        "proj-deriv": deriv_dir,
+        "scratch-fprep": fmriprep_dir,
+        "scratch-fsurf": freesurfer_dir,
+        "scratch-work": work_dir,
+    }
+    return path_dict
