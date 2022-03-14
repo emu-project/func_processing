@@ -103,5 +103,5 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
     """
     print(f"fMRIprep command :\n\t {h_cmd}")
     job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 10, 4, 4, f"fprep{subj_num}", work_dir, merged_env
+        h_cmd, 20, 4, 4, f"fprep{subj_num}", work_dir, merged_env
     )
