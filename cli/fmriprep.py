@@ -79,6 +79,8 @@ def submit_jobs(
         #SBATCH --qos=pq_madlab
 
         import sys
+        import os
+        import subprocess
         import shutil
         sys.path.append("{code_dir}")
         from workflow import control_fmriprep
@@ -93,21 +95,21 @@ def submit_jobs(
         )
 
         # copy freesurfer data to project directory
-        subj_fsurf = os.path.join({{path_dict['scratch-fsurf']}}, "{subj}")
+        subj_fsurf = os.path.join(path_dict["scratch-fsurf"], "{subj}")
         h_cmd = f"cp -r {{subj_fsurf}} {{path_dict['proj-deriv']}}/freesurfer"
         h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
         h_cp.communicate()
 
         # copy fmriprep data to project directory
-        subj_fprep = os.path.join({{path_dict['scratch-fprep']}}, "{subj}")
-        h_cmd = f"cp -r {{subj_fsurf}} {{path_dict['proj-deriv']}}/fmriprep"
+        subj_fprep = os.path.join(path_dict["scratch-fprep"], "{subj}")
+        h_cmd = f"cp -r {{subj_fprep}}* {{path_dict['proj-deriv']}}/fmriprep"
         h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
         h_cp.communicate()
 
-        # # turn out the lights
-        # shutil.rmtree(subj_fsurf)
-        # shutil.rmtree(subj_fprep)
-        # shutil.rmtree(path_dict["scratch-work"])
+        # turn out the lights
+        shutil.rmtree(subj_fsurf)
+        shutil.rmtree(subj_fprep)
+        shutil.rmtree(path_dict["scratch-work"])
     """
 
     # write script for review
@@ -239,10 +241,10 @@ def main():
             os.makedirs(h_dir)
 
     # patch - combat /scratch purge by updating templateflow dir
-    print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
-    h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
-    h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-    h_cp.communicate()
+    # print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
+    # h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
+    # h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+    # h_cp.communicate()
 
     # make subject dict of those who need fMRIprep output
     subj_list = []
