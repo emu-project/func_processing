@@ -43,7 +43,9 @@ def submit_hpc_subprocess(bash_command):
     return (job_out, job_err)
 
 
-def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir):
+def submit_hpc_sbatch(
+    command, wall_hours, mem_gig, num_proc, job_name, out_dir, env_input=None
+):
     """Submit job to slurm scheduler (sbatch).
 
     Sbatch submit a larger job with scheduled resources. Waits for
@@ -69,6 +71,9 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
 
     out_dir : str
         location for <job_name>.err/out
+
+    env_input : dict
+        user-specified environment for certain software (e.g. fMRIprep)
 
     Returns
     -------
@@ -99,6 +104,8 @@ def submit_hpc_sbatch(command, wall_hours, mem_gig, num_proc, job_name, out_dir)
     """
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    sbatch_response = subprocess.Popen(sbatch_job, shell=True, stdout=subprocess.PIPE)
+    sbatch_response = subprocess.Popen(
+        sbatch_job, shell=True, stdout=subprocess.PIPE, env=env_input
+    )
     job_id = sbatch_response.communicate()[0].decode("utf-8")
     return (job_name, job_id)
