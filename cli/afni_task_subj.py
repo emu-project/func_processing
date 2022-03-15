@@ -61,6 +61,7 @@ def submit_jobs(
     do_decon,
     decon_plan,
     do_blur,
+    kp_interm,
 ):
     """Schedule work for single participant.
 
@@ -94,6 +95,8 @@ def submit_jobs(
         planned deconvolution with behavior: timing file mappings
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
+    kp_interm : bool
+        [T/F] whether to keep (T) or remove (F) intemediates
 
     Returns
     -------
@@ -145,24 +148,26 @@ def submit_jobs(
                 "{task}",
                 "{dur}",
                 {decon_plan},
+                {kp_interm},
             )
             print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
         # clean up
-        shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
-        clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
-        clean_list = [
-            "preproc_bold",
-            "smoothed_bold",
-            "nuissance_bold",
-            "probseg",
-            "preproc_T1w",
-            "minval_mask",
-            "GMe_mask",
-        ]
-        for c_str in clean_list:
-            for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
-                os.remove(h_file)
+        if not {kp_interm}:
+            shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
+            clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
+            clean_list = [
+                "preproc_bold",
+                "smoothed_bold",
+                "nuissance_bold",
+                "probseg",
+                "preproc_T1w",
+                "minval_mask",
+                "GMe_mask",
+            ]
+            for c_str in clean_list:
+                for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
+                    os.remove(h_file)
 
         # copy important files to /home/data
         h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
@@ -270,6 +275,16 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--keep-interm",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Toggle of whether to remove intermediates.
+            Boolean (True if "--keep-interm", else False).
+            """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
@@ -328,6 +343,7 @@ def main():
     task = args.task
     code_dir = args.code_dir
     do_blur = args.blur
+    kp_interm = args.keep_interm
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
@@ -427,6 +443,7 @@ def main():
             value_dict["Decon"],
             value_dict["Decon_plan"],
             do_blur,
+            kp_interm,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

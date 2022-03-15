@@ -118,7 +118,7 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
 
 
 def control_deconvolution(
-    afni_data, afni_dir, dset_dir, subj, sess, task, dur, decon_plan,
+    afni_data, afni_dir, dset_dir, subj, sess, task, dur, decon_plan, kp_interm
 ):
     """Generate and run planned deconvolutions.
 
@@ -162,6 +162,9 @@ def control_deconvolution(
         deconvolutions, see notes below
 
         [default=None, yields decon_<task>_UniqueBehs]
+
+    kp_interm : bool
+        [T/F] whether to keep (T) or remove (F) intemediates
 
     Returns
     -------
@@ -220,13 +223,14 @@ def control_deconvolution(
     afni_data = deconvolve.run_reml(work_dir, afni_data)
 
     # clean
-    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
-        os.remove(tmp_file)
+    if not kp_interm:
+        for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+            os.remove(tmp_file)
 
     return afni_data
 
 
-def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
+def control_resting(afni_data, afni_dir, subj, sess, coord_dict, kp_interm):
     """Generate and control resting state regressions.
 
     Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
@@ -249,7 +253,11 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
 
     coord_dict : dict
         seed name, coordinates
+
         {"rPCC": "5 -55 25"}
+
+    kp_interm : bool
+        [T/F] whether to keep (T) or remove (F) intemediates
 
     Returns
     -------
@@ -272,8 +280,9 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict):
     afni_data = process.resting_seed(coord_dict, afni_data, work_dir)
 
     # clean
-    for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
-        os.remove(tmp_file)
+    if not kp_interm:
+        for tmp_file in glob.glob(f"{work_dir}/**/tmp*", recursive=True):
+            os.remove(tmp_file)
 
     return afni_data
 
