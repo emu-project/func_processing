@@ -1,4 +1,8 @@
-"""Control module for running fMRIprep."""
+"""Control module for running fMRIprep.
+
+Orients to the data, runs FreeSurfer if needed,
+and then runs fMRIprep.
+"""
 
 # %%
 import os

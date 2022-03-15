@@ -17,6 +17,13 @@ from afni import submit
 def run_freesurfer(subj, subj_t1, freesurfer_dir, work_dir):
     """Run FreeSurfer.
 
+    Convert the subject's T1w file into mgz format and place
+    in required location. Then run FreeSurfer.
+
+    While 4 cpus is default for -parallel, -openmp supplied
+    for ease of increasing resources. Make sure to update
+    submit.submit_hpc_sbatch usage as well.
+
     Parameters
     ----------
     subj : str
@@ -50,7 +57,10 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, work_dir):
 def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_license):
     """Run fMRIprep.
 
-    Utilize singularity image of nipreps/fmriprep
+    Utilize singularity image of nipreps/fmriprep. The spaces
+    is currently hardcoded for the EMU project. Also references
+    the FreeSurfer priors that should have previously been
+    generated.
 
     Parameters
     ----------
@@ -69,7 +79,7 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
     """
     # set up paths
     subj_num = subj.split("-")[1]
-    fs_dir = os.path.join(scratch_deriv, "freesurfer", subj)
+    fs_dir = os.path.join(scratch_deriv, "freesurfer")
     work_dir = os.path.join(scratch_deriv, "work", subj)
     bids_dir = os.path.join(work_dir, "bids_layout")
 
@@ -81,6 +91,7 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
     }
     merged_env.update(env)
 
+    # write, submit command
     h_cmd = f"""
         singularity run --cleanenv \
             --bind {scratch_dset}:/data \
@@ -103,5 +114,5 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
     """
     print(f"fMRIprep command :\n\t {h_cmd}")
     job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 20, 4, 4, f"fprep{subj_num}", work_dir, merged_env
+        h_cmd, 20, 4, 4, f"fp{subj_num}", work_dir, merged_env
     )

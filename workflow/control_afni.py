@@ -1,7 +1,8 @@
 """Control module for running AFNI.
 
 These functions will finish pre-processing following
-fMRIprep, and then deconvolve EPI data.
+fMRIprep, and then deconvolve EPI data. Also supports
+resting state and group-level analyses.
 """
 # %%
 import os

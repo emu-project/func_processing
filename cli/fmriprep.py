@@ -2,6 +2,16 @@
 
 """CLI for runnings project data through fMRIprep.
 
+A subject list is created for those who need fMRIprep output.
+Then, the workflow for a batch of participants are submitted
+to slurm. First FreeSurfer is run on participants, then fMRIprep.
+
+Templateflow directory is updated from one in /home/data/madlab/atlases
+to combat the purging in /scratch.
+
+Processing is conducted in /scratch, and then copied out to the main
+projects directory.
+
 Example
 --------
 code_dir="$(dirname "$(pwd)")"
@@ -167,7 +177,7 @@ def get_args():
     parser.add_argument(
         "--scratch-dir",
         type=str,
-        default="/scratch/madlab/McMakin_EMUR01/derivatives",
+        default="/scratch/madlab/McMakin_EMUR01",
         help=textwrap.dedent(
             """\
             Scratch working directory, for intermediates
@@ -226,14 +236,15 @@ def main():
     batch_num = args.batch_num
     code_dir = args.code_dir
 
-    # for testing
-    proj_dir = os.path.join(proj_dir, "derivatives/nate_test")
-    scratch_dir = os.path.join(scratch_dir, "nate_test")
+    # # for testing
+    # proj_dir = os.path.join(proj_dir, "derivatives/nate_test")
+    # scratch_dir = os.path.join(scratch_dir, "nate_test")
 
-    # set up
+    # set up - get subject lists and make scratch dirs
     dset_dir = os.path.join(proj_dir, "dset")
     subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
-    # subj_list_all.sorted()
+    subj_list_all.sorted()
+
     scratch_deriv = os.path.join(scratch_dir, "derivatives")
     scratch_dset = os.path.join(scratch_dir, "dset")
     for h_dir in [scratch_deriv, scratch_dset]:
@@ -241,10 +252,10 @@ def main():
             os.makedirs(h_dir)
 
     # patch - combat /scratch purge by updating templateflow dir
-    # print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
-    # h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
-    # h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-    # h_cp.communicate()
+    print(f"\nCombating /scratch purge of {tplflow_dir} ...\n")
+    h_cmd = f"cp -r /home/data/madlab/atlases/templateflow/* {tplflow_dir}/"
+    h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
+    h_cp.communicate()
 
     # make subject dict of those who need fMRIprep output
     subj_list = []
@@ -262,7 +273,9 @@ def main():
 
     # kill while loop if all subjects have output
     if len(subj_list) == 0:
+        print("No subjects needing fMRIprep detected, exiting.")
         return
+    print(f"Submitting jobs for:\n\t {' '.join(subj_list)}\n")
 
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
