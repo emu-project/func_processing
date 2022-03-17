@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""CLI for runnings project data through fMRIprep.
+r"""CLI for runnings project data through fMRIprep.
 
 A subject list is created for those who need fMRIprep output.
 Then, the workflow for a batch of participants are submitted
@@ -15,13 +15,13 @@ projects directory.
 Example
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runPrep \\
-    --output=${code_dir}/logs/runPrep_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    fmriprep.py \\
+sbatch --job-name=runPrep \
+    --output=${code_dir}/logs/runPrep_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    fmriprep.py \
     -c $code_dir
 """
 
@@ -39,14 +39,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    subj,
-    proj_dir,
-    scratch_dir,
-    sing_img,
-    tplflow_dir,
-    fs_license,
-    slurm_dir,
-    code_dir,
+    subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license, slurm_dir, code_dir,
 ):
     """Schedule workflow jobs with slurm.
 
@@ -74,7 +67,6 @@ def submit_jobs(
     tuple
         stdout, stderr
     """
-
     # generate workflow script
     subj_num = subj.split("-")[-1]
     h_cmd = f"""\
@@ -125,8 +117,8 @@ def submit_jobs(
     # write script for review
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"fmriprep_{subj_num}.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
 
     # execute script
     sbatch_response = subprocess.Popen(
@@ -138,7 +130,7 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -225,7 +217,7 @@ def get_args():
 
 # %%
 def main():
-
+    """Schedule fMRIprep workflow."""
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -235,10 +227,6 @@ def main():
     fs_license = args.fs_license
     batch_num = args.batch_num
     code_dir = args.code_dir
-
-    # # for testing
-    # proj_dir = os.path.join(proj_dir, "derivatives/nate_test")
-    # scratch_dir = os.path.join(scratch_dir, "nate_test")
 
     # set up - get subject lists and make scratch dirs
     dset_dir = os.path.join(proj_dir, "dset")
@@ -287,7 +275,7 @@ def main():
         os.makedirs(slurm_dir)
 
     for subj in subj_list[:batch_num]:
-        job_out, job_err = submit_jobs(
+        job_out, _ = submit_jobs(
             subj,
             proj_dir,
             scratch_dir,

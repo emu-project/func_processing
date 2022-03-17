@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-"""CLI for running de/refacing of project data.
+r"""CLI for running de/refacing of project data.
 
 Submit a batch of subjects for de/refacing.
 
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runReface \\
-    --output=${code_dir}/logs/runReface_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    reface.py \\
+sbatch --job-name=runReface \
+    --output=${code_dir}/logs/runReface_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    reface.py \
     -c $code_dir
 """
 
@@ -25,9 +25,9 @@ import glob
 import time
 import subprocess
 import textwrap
-import pandas as pd
 from datetime import datetime
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -58,7 +58,6 @@ def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
     h_out, h_err : str
         stdout, stderr of sbatch submission
     """
-
     subj_num = subj.split("-")[-1]
 
     h_cmd = f"""\
@@ -87,8 +86,8 @@ def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
     """
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"reface_{subj_num}.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
 
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
@@ -99,7 +98,7 @@ def submit_jobs(subj, sess, t1_file, proj_dir, method, code_dir, slurm_dir):
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
         "--proj-dir",
@@ -153,7 +152,7 @@ def get_args():
 
 # %%
 def main():
-
+    """Schedule reface workflow."""
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -202,14 +201,13 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/reface_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
     for subj in list(subj_dict)[:batch_num]:
-        job_out, job_err = submit_jobs(
+        job_out, _ = submit_jobs(
             subj,
             subj_dict[subj]["sess"],
             subj_dict[subj]["anat"],

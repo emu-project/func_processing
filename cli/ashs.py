@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""CLI for runnings project data through ASHS.
+r"""CLI for runnings project data through ASHS.
 
 References a singularity image of docker://nmuncy/ashs,
 this is a required argument.
@@ -14,14 +14,14 @@ written to derivatives.
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runAshs \\
-    --output=${code_dir}/logs/runAshs_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    ashs.py \\
-    -c $code_dir \\
+sbatch --job-name=runAshs \
+    --output=${code_dir}/logs/runAshs_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    ashs.py \
+    -c $code_dir \
     -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """
 # %%
@@ -30,10 +30,10 @@ import sys
 import glob
 import time
 import textwrap
-import pandas as pd
 from datetime import datetime
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -87,7 +87,6 @@ def submit_jobs(
         stdout, stderr from sbatch subprocess submission of
         subject control script
     """
-
     subj_num = subj.split("-")[-1]
 
     h_cmd = f"""\
@@ -120,8 +119,8 @@ def submit_jobs(
     """
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"ashs_{subj_num}.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
 
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
@@ -132,63 +131,103 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
         "-p",
         "--proj-dir",
-        help="/path/to/BIDS/project/dir, default=/home/data/madlab/McMakin_EMUR01",
-        type=str,
         default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+                /path/to/BIDS/project/dir,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-w",
         "--scratch-dir",
-        help="/path/to/scratch/dir, default=/scratch/madlab/emu_ashs",
-        type=str,
         default="/scratch/madlab/emu_ashs",
+        help=textwrap.dedent(
+            """\
+                /path/to/scratch/dir,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-ss",
         "--sess-str",
-        help="BIDS session str, used for organizing ASHS output, default=ses-S1",
-        type=str,
         default="ses-S1",
+        help=textwrap.dedent(
+            """\
+                BIDS session str, used for organizing ASHS output,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-n",
         "--batch-num",
-        help="number of subjects to submit at one time, default=8",
-        type=int,
         default=8,
+        help=textwrap.dedent(
+            """\
+                number of subjects to submit at one time,
+                (default : %(default)s)
+            """
+        ),
+        type=int,
     )
     parser.add_argument(
         "-t1",
         "--t1-search",
-        help="String to identify T1w files, default=T1w",
-        type=str,
         default="T1w",
+        help=textwrap.dedent(
+            """\
+                String to identify T1w files,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-t2",
         "--t2-search",
-        help="String to identify T2w files, default=PD",
-        type=str,
         default="PD",
+        help=textwrap.dedent(
+            """\
+                String to identify T2w files,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-a",
         "--atlas-dir",
-        help="Absolute path to directory containing ASHS template directory, default=/home/data/madlab/atlases",
-        type=str,
         default="/home/data/madlab/atlases",
+        help=textwrap.dedent(
+            """\
+                Absolute path to directory containing ASHS template directory,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
     parser.add_argument(
         "-as",
         "--atlas-str",
-        help="Name of ASHS template directory, default=ashs_atlas_magdeburg",
-        type=str,
         default="ashs_atlas_magdeburg",
+        help=textwrap.dedent(
+            """\
+                Name of ASHS template directory,
+                (default : %(default)s)
+            """
+        ),
+        type=str,
     )
 
     required_args = parser.add_argument_group("Required Arguments")
@@ -215,7 +254,7 @@ def get_args():
 
 # %%
 def main():
-
+    """Schedule ASHS workflow."""
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -273,7 +312,7 @@ def main():
         os.makedirs(slurm_dir)
 
     for subj in list(subj_dict)[:batch_num]:
-        job_out, job_err = submit_jobs(
+        job_out, _ = submit_jobs(
             subj,
             subj_dict,
             os.path.join(deriv_dir, subj, sess),
