@@ -11,15 +11,15 @@ import glob
 import shutil
 import subprocess
 
-proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(proj_dir)
+code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(code_dir)
 
 from resources.fmriprep import preprocess
 
 
 # %%
 def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license):
-    """Control fMRIprep resources
+    """Control fMRIprep resources.
 
     First, run subject data through FreeSurfer. Then, run fMRIprep.
 
@@ -43,7 +43,6 @@ def control_fmriprep(subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_lice
     path_dict : dict
         paths for ease of copying, cleaning
     """
-
     # set paths
     dset_dir = os.path.join(proj_dir, "dset")
     deriv_dir = os.path.join(proj_dir, "derivatives")

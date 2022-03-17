@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Pre-process and regress resting fMRIprep output.
+r"""Pre-process and regress resting fMRIprep output.
 
 Incorpoarte fMRIprep output into an AFNI workflow, finish
 pre-processing and project regression matrix. Default uses
@@ -22,13 +22,13 @@ Seed-based regression matrix is:
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runAfniRest \\
-    --output=${code_dir}/logs/runAfniRest_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    afni_resting_subj.py \\
+sbatch --job-name=runAfniRest \
+    --output=${code_dir}/logs/runAfniRest_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    afni_resting_subj.py \
     -c $code_dir
 """
 
@@ -38,11 +38,11 @@ import os
 import sys
 import glob
 import time
-import pandas as pd
 from datetime import datetime
 import textwrap
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -98,7 +98,6 @@ def submit_jobs(
     h_out, h_err : str
         stdout, stderr of sbatch submission
     """
-
     subj_num = subj.split("-")[-1]
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     afni_final = os.path.join(proj_dir, "derivatives/afni")
@@ -196,8 +195,8 @@ def submit_jobs(
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"preproc_regress_{subj_num}.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
     )
@@ -207,7 +206,7 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -319,7 +318,6 @@ def main():
     Find subjects without resting state output, schedule
     job for them.
     """
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -385,8 +383,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

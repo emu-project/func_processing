@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Check for completed data.
+r"""Check for completed data.
 
 Check <proj_dir> for a completed data, and generate/update
 logs/completed_preprocessing.tsv. Can be run locally on NAS
@@ -11,7 +11,7 @@ the HPC login node.
 
 Example
 -------
-python checks.py \\
+python checks.py \
     -t $TOKEN_GITHUB_EMU
 """
 
@@ -24,7 +24,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
         "-p",
@@ -68,7 +68,7 @@ def get_args():
 
 # %%
 def main():
-
+    """Run checks resource."""
     args = get_args().parse_args()
     proj_dir = args.proj_dir
     pat_github_emu = args.pat

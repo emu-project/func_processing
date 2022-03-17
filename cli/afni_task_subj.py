@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Pre-process and deconvolve fMRIprep output.
+r"""Pre-process and deconvolve fMRIprep output.
 
 Incorpoarte fMRIprep output into an AFNI workflow, finish
 pre-processing and deconvolve. By default, all unique behaviors
@@ -20,16 +20,16 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runAfniTask \\
-    --output=${code_dir}/logs/runAfniTask_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    afni_task_subj.py \\
-    -s ses-S2 \\
-    -t task-test \\
-    -c $code_dir \\
+sbatch --job-name=runAfniTask \
+    --output=${code_dir}/logs/runAfniTask_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    afni_task_subj.py \
+    -s ses-S2 \
+    -t task-test \
+    -c $code_dir \
     --blur
 """
 
@@ -40,11 +40,11 @@ import sys
 import json
 import glob
 import time
-import pandas as pd
 from datetime import datetime
 import textwrap
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -103,7 +103,6 @@ def submit_jobs(
     h_out, h_err : str
         stdout, stderr of sbatch submission
     """
-
     subj_num = subj.split("-")[-1]
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     dset_dir = os.path.join(proj_dir, "dset")
@@ -181,8 +180,8 @@ def submit_jobs(
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"preproc_decon_{subj_num}.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
     )
@@ -192,7 +191,7 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -288,18 +287,10 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
+        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
+        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
     )
     required_args.add_argument(
         "-c",
@@ -322,7 +313,6 @@ def main():
     Find subjects without deconvolved output, schedule
     job for them.
     """
-
     # # For testing
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # json_dir = "/home/nmuncy/compute/qc_emst/for_testing/tf_noValence"
@@ -382,8 +372,8 @@ def main():
                 # assert decon_glob, f"No JSON found for {subj} in {json_dir}."
                 print(f"\tNo JSON found for {subj}, skipping ...")
                 continue
-            with open(decon_glob[0]) as jf:
-                decon_plan = json.load(jf)
+            with open(decon_glob[0]) as h_jf:
+                decon_plan = json.load(h_jf)
 
         # Check logs for missing WM-eroded masks, session intersection mask,
         # deconvolution, or run-1 scaled files.
@@ -422,8 +412,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

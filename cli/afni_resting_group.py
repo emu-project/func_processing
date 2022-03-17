@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Conduct group-level analyses on resting state data.
+r"""Conduct group-level analyses on resting state data.
 
 Construct a group intersection gray matter mask in template space,
 and then run an A vs not-A analysis via ETAC on seed-based
@@ -14,14 +14,14 @@ Final output is:
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runRSGroup \\
-    --output=${code_dir}/logs/runAfniRestGroup_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    afni_resting_group.py \\
-    -c $code_dir \\
+sbatch --job-name=runRSGroup \
+    --output=${code_dir}/logs/runAfniRestGroup_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    afni_resting_group.py \
+    -c $code_dir \
     -s rPCC
 """
 
@@ -29,11 +29,11 @@ sbatch --job-name=runRSGroup \\
 import os
 import sys
 from datetime import datetime
-import pandas as pd
 import textwrap
 import glob
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -67,7 +67,6 @@ def submit_jobs(
     h_out, h_err : str
         stdout, stderr of sbatch submission
     """
-
     h_cmd = f"""\
         #!/bin/env {sys.executable}
 
@@ -99,8 +98,8 @@ def submit_jobs(
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, f"RS_{seed}_group.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
     )
@@ -110,7 +109,7 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -185,7 +184,6 @@ def main():
     Find subjects with required output, make a group_data
     dictionary, submit workflow.
     """
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -244,7 +242,7 @@ def main():
         os.makedirs(slurm_dir)
 
     print(f"\ngroup_data : \n {group_data}")
-    h_out, h_err = submit_jobs(
+    _, _ = submit_jobs(
         seed, task, afni_dir, group_dir, group_data, slurm_dir, code_dir, do_blur
     )
 

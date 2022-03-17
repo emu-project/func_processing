@@ -11,7 +11,7 @@ import pandas as pd
 
 
 def mot_files(work_dir, afni_data, task):
-    """Constuct motion and censor files
+    """Constuct motion and censor files.
 
     Mine <fMRIprep>_desc-confounds_timeseries.tsv for motion events, make
     motion files for mean (6df) and derivative (6df) motion events. Also,
@@ -57,7 +57,6 @@ def mot_files(work_dir, afni_data, task):
 
     Writes 1D files - AFNI reads tsv as containing a header!
     """
-
     # determine relevant col labels
     mean_labels = [
         "trans_x",

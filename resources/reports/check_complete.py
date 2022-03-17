@@ -8,11 +8,11 @@ import os
 import time
 import datetime
 import glob
-import git
-import pandas as pd
 import fnmatch
-import requests
 import io
+import git
+import requests
+import pandas as pd
 
 
 # %%
@@ -29,15 +29,14 @@ def clone_guid(pat_github_emu):
     df_guid : pandas.DataFrame
         dataframe of subject ID, GUIDs, comments
     """
-
-    r = requests.get(
+    req = requests.get(
         "https://raw.githubusercontent.com/emu-project/data_pulling/master/data_pulling/data/pseudo_guid_list.csv",
         headers={
             "accept": "application/vnd.github.v3.raw",
             "authorization": "token {}".format(pat_github_emu),
         },
     )
-    df_guid = pd.read_csv(io.StringIO(r.text), index_col=False)
+    df_guid = pd.read_csv(io.StringIO(req.text), index_col=False)
     return df_guid
 
 
@@ -98,7 +97,6 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     - multiple decons are supported for each session via
         decon_<sess>_<int>
     """
-
     # # For testing
     # proj_dir = "/home/data/madlab/McMakin_EMUR01"
     # code_dir = "/home/nmuncy/compute/func_processing"
@@ -172,7 +170,7 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
     try:
         print(f"\nCloning repo to {repo_local}")
         repo = git.Repo.clone_from(repo_origin, repo_local)
-    except:
+    except Exception:
         print(f"\nUpdating repo: {repo_local}")
         repo = git.Repo(repo_local)
         repo.remotes.origin.pull()
@@ -204,9 +202,9 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
 
     # make new completed_tsv
     if new_df:
-        df = pd.DataFrame(columns=col_names)
-        df["subjID"] = subj_list
-        df.to_csv(completed_tsv, index=False, sep="\t")
+        h_df = pd.DataFrame(columns=col_names)
+        h_df["subjID"] = subj_list
+        h_df.to_csv(completed_tsv, index=False, sep="\t")
 
     # read in completed_tsv
     df_comp = pd.read_csv(completed_tsv, sep="\t")

@@ -83,7 +83,6 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
 
         - [mot-censor] = binary censor vector for task
     """
-
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
     anat_dir = os.path.join(work_dir, "anat")
@@ -106,7 +105,7 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
         work_dir, subj_num, afni_data, sess, task, do_blur
     )
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
-    afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
+    afni_data = masks.make_minimum_masks(work_dir, subj_num, task, afni_data)
 
     # scale data
     afni_data = process.scale_epi(work_dir, subj_num, afni_data, do_blur)
@@ -205,7 +204,6 @@ def control_deconvolution(
 
     "negLC": "/path/to/negative_lure_cr.txt"}}
     """
-
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
 
@@ -270,7 +268,6 @@ def control_resting(afni_data, afni_dir, subj, sess, coord_dict, kp_interm):
 
         - [S<seed>-ztrans] = Z-transformed seed-based correlation matrix
     """
-
     # setup dir
     work_dir = os.path.join(afni_dir, subj, sess)
 

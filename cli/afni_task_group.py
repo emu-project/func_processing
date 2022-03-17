@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Conduct group-level analyses of task EPI data.
+r"""Conduct group-level analyses of task EPI data.
 
 Currently employs A-vs-B ETAC method, more complex models
 to follow.
@@ -11,18 +11,18 @@ Final output is:
 Examples
 --------
 code_dir="$(dirname "$(pwd)")"
-sbatch --job-name=runTaskGroup \\
-    --output=${code_dir}/logs/runAfniTaskGroup_log \\
-    --mem-per-cpu=4000 \\
-    --partition=IB_44C_512G \\
-    --account=iacc_madlab \\
-    --qos=pq_madlab \\
-    afni_task_group.py \\
-    --blur \\
-    -c $code_dir \\
-    -s ses-S1 \\
-    -t task-study \\
-    -d decon_task-study_UniqueBehs_stats_REML+tlrc \\
+sbatch --job-name=runTaskGroup \
+    --output=${code_dir}/logs/runAfniTaskGroup_log \
+    --mem-per-cpu=4000 \
+    --partition=IB_44C_512G \
+    --account=iacc_madlab \
+    --qos=pq_madlab \
+    afni_task_group.py \
+    --blur \
+    -c $code_dir \
+    -s ses-S1 \
+    -t task-study \
+    -d decon_task-study_UniqueBehs_stats_REML+tlrc \
     -b neg neu
 """
 
@@ -30,11 +30,11 @@ sbatch --job-name=runTaskGroup \\
 import os
 import sys
 from datetime import datetime
-import pandas as pd
 import textwrap
 import glob
 import subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
+import pandas as pd
 
 
 # %%
@@ -70,7 +70,6 @@ def submit_jobs(
     h_out, h_err : str
         stdout, stderr of sbatch submission
     """
-
     h_cmd = f"""\
         #!/bin/env {sys.executable}
 
@@ -104,8 +103,8 @@ def submit_jobs(
     # write script for review, run it
     cmd_dedent = textwrap.dedent(h_cmd)
     py_script = os.path.join(slurm_dir, "Task_behAB_group.py")
-    with open(py_script, "w") as ps:
-        ps.write(cmd_dedent)
+    with open(py_script, "w") as h_script:
+        h_script.write(cmd_dedent)
     sbatch_response = subprocess.Popen(
         f"sbatch {py_script}", shell=True, stdout=subprocess.PIPE
     )
@@ -115,7 +114,7 @@ def submit_jobs(
 
 # %%
 def get_args():
-    """Get and parse arguments"""
+    """Get and parse arguments."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -159,16 +158,10 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s",
-        "--session",
-        required=True,
-        help="BIDS session (ses-S1)",
+        "-s", "--session", required=True, help="BIDS session (ses-S1)",
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        required=True,
-        help="BIDS task (task-study)",
+        "-t", "--task", required=True, help="BIDS task (task-study)",
     )
     required_args.add_argument(
         "-d",
@@ -203,7 +196,6 @@ def main():
     Find subjects with required output, make a group_data
     dictionary, submit workflow.
     """
-
     # receive passed args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
@@ -243,9 +235,7 @@ def main():
             f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
             recursive=True,
         )
-        decon_exists = glob.glob(
-            f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",
-        )
+        decon_exists = glob.glob(f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",)
         if mask_exists and decon_exists:
             print(f"\tAdding {subj} to group_data\n")
             subj_list.append(subj)
@@ -255,14 +245,13 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
     print(f"\ngroup_data : \n {group_data}")
-    h_out, h_err = submit_jobs(
+    _, _ = submit_jobs(
         beh_list,
         task,
         sess,

@@ -5,9 +5,9 @@ pre-processed EPI data.
 """
 
 import os
-import pandas as pd
 import glob
 import math
+import pandas as pd
 from . import submit
 
 
@@ -72,7 +72,6 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
 
     - decon_<bids-task>_<decon_name>
     """
-
     # check for req files
     num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
     assert (
@@ -142,7 +141,7 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
     out_file = os.path.join(func_dir, f"{out_str}_stats.REML_cmd")
     if not os.path.exists(out_file):
         print(f"Running 3dDeconvolve for {decon_name}")
-        h_out, h_err = submit.submit_hpc_subprocess(cmd_decon)
+        _, _ = submit.submit_hpc_subprocess(cmd_decon)
 
     # update afni_data
     assert os.path.exists(
@@ -222,7 +221,7 @@ def run_reml(work_dir, afni_data):
                 -prefix {nuiss_file} \
                 {epi_eroded}
         """
-        job_name, job_id = submit.submit_hpc_sbatch(
+        _, _ = submit.submit_hpc_sbatch(
             h_cmd, 1, 4, 1, f"{subj_num}wts", f"{work_dir}/sbatch_out"
         )
     assert os.path.exists(
@@ -248,7 +247,7 @@ def run_reml(work_dir, afni_data):
                     -dsort {afni_data["epi-nuiss"]} \
                     -GOFORIT
             """
-            job_name, job_id = submit.submit_hpc_sbatch(
+            _, _ = submit.submit_hpc_sbatch(
                 h_cmd, 25, 4, 6, f"{subj_num}rml", f"{work_dir}/sbatch_out"
             )
         assert os.path.exists(
@@ -303,7 +302,6 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
 
     Behavior key (beh-A, beh-B above) become label of deconvolved sub-brick.
     """
-
     # make switch for AFNI-length names of ses-S2 behaviors, awkward
     # NR switch is for consistency with ses-S1.
     switch_names = {
@@ -352,9 +350,9 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
     decon_plan = {decon_name: {}}
     for beh in beh_list:
         beh_name = beh if sess == "ses-S1" else switch_names[beh]
-        tf = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
-        open(tf, "w").close()
-        decon_plan[decon_name][beh_name] = tf
+        h_tf = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
+        open(h_tf, "w").close()
+        decon_plan[decon_name][beh_name] = h_tf
 
     # append timing files by row for e/run * behavior
     for run in run_list:
@@ -364,12 +362,12 @@ def timing_files(dset_dir, deriv_dir, subj, sess, task, decon_name="UniqueBehs")
             timing_file = f"{work_dir}/{subj}_{sess}_{task}_desc-{beh_name}_events.1D"
             idx_beh = df_run.index[df_run["trial_type"] == beh].tolist()
             if not idx_beh:
-                with open(timing_file, "a") as tf:
-                    tf.writelines("*\n")
+                with open(timing_file, "a") as h_tf:
+                    h_tf.writelines("*\n")
             else:
                 onsets = df_run.iloc[idx_beh]["onset"].round().tolist()
-                with open(timing_file, "a") as tf:
-                    tf.writelines(f"""{" ".join(map(str, onsets))}\n""")
+                with open(timing_file, "a") as h_tf:
+                    h_tf.writelines(f"""{" ".join(map(str, onsets))}\n""")
 
     return decon_plan
 
@@ -421,12 +419,12 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     -----
     Only supports RS conducted in single run
     """
-
     # check for req files
     num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
-    assert (
-        num_epi == 1
-    ), "ERROR: afni_data['epi-scale1'] not found, or too many RS files. Check resources.afni.process.scale_epi."
+    assert num_epi == 1, (
+        "ERROR: afni_data['epi-scale1'] not found, or too many RS files."
+        "Check resources.afni.process.scale_epi."
+    )
 
     assert (
         afni_data["mask-min"] and afni_data["mask-erodedCSF"]
@@ -455,9 +453,9 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
         roi_pcomp = file_censor.replace("censor", "roiPC")
 
         # determine polynomial order
-        h_out, h_err = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
+        h_out, _ = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
         tr_count = int(h_out.decode("utf-8").strip())
-        h_out, h_err = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_file}")
+        h_out, _ = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_file}")
         tr_len = float(h_out.decode("utf-8").strip())
         num_pol = 1 + math.ceil((tr_count * tr_len) / 150)
 
@@ -497,7 +495,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
                 -pad_into_many_runs 1 1 \
                 -infile - -write {file_pcomp}
         """
-        job_name, job_id = submit.submit_hpc_sbatch(
+        _, _ = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}PC", f"{work_dir}/sbatch_out"
         )
     assert os.path.exists(
@@ -536,7 +534,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
     xmat_file = os.path.join(func_dir, f"X.{out_str}.xmat.1D")
     if not os.path.exists(xmat_file):
         print("\nRunning 3dDeconvolve for Resting data")
-        h_out, h_err = submit.submit_hpc_subprocess(cmd_decon)
+        h_out, _ = submit.submit_hpc_subprocess(cmd_decon)
     assert os.path.exists(
         xmat_file
     ), f"{xmat_file} failed to write, check resources.afni.deconvolve.regress_resting."
@@ -555,7 +553,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
                     -ort {func_dir}/X.{out_str}.nocensor.xmat.1D \
                     -prefix {epi_tproject}
             """
-            job_name, job_id = submit.submit_hpc_sbatch(
+            _, _ = submit.submit_hpc_sbatch(
                 h_cmd, 1, 8, 1, f"{subj_num}Proj", f"{work_dir}/sbatch_out"
             )
         assert os.path.exists(
@@ -596,7 +594,7 @@ def regress_resting(afni_data, work_dir, proj_meth="anaticor"):
                     -ort {func_dir}/X.{out_str}.nocensor.xmat.1D \
                     -prefix {epi_anaticor}
             """
-            job_name, job_id = submit.submit_hpc_sbatch(
+            _, _ = submit.submit_hpc_sbatch(
                 h_cmd, 1, 8, 1, f"{subj_num}Proj", f"{work_dir}/sbatch_out"
             )
         assert os.path.exists(
