@@ -47,7 +47,6 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     -----
     Determining blur multiplier based off voxel's dimension K.
     """
-
     # get list of pre-processed EPI files
     num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
     assert (
@@ -57,7 +56,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
 
     # determine voxel dim i, calc blur size
     h_cmd = f"3dinfo -dk {epi_list[0]}"
-    h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+    h_out, _ = submit.submit_hpc_subprocess(h_cmd)
     grid_size = h_out.decode("utf-8").strip()
     blur_size = math.ceil(blur_mult * float(grid_size))
 
@@ -124,7 +123,6 @@ def scale_epi(work_dir, subj_num, afni_data, do_blur):
 
         - [epi-scale?] = scaled EPI for run-?
     """
-
     # determine required files
     if do_blur:
         num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
@@ -265,12 +263,12 @@ def resting_metrics(afni_data, work_dir):
     afni_data : dict
         not currently adding any keys/values
     """
-
     # check for req files
     num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
-    assert (
-        num_epi == 1
-    ), "ERROR: afni_data['epi-scale1'] not found, or too many RS files. Check resources.afni.process.scale_epi."
+    assert num_epi == 1, (
+        "ERROR: afni_data['epi-scale1'] not found, or too many RS files."
+        "Check resources.afni.process.scale_epi."
+    )
 
     assert afni_data[
         "reg-matrix"
@@ -301,7 +299,7 @@ def resting_metrics(afni_data, work_dir):
         sd_file = epi_file.replace("scaled", "sdTS")
 
         # determine non-censored volumes
-        h_out, h_err = submit.submit_hpc_subprocess(
+        h_out, _ = submit.submit_hpc_subprocess(
             f"1d_tool.py -infile {file_censor} -show_trs_uncensored encoded"
         )
         used_vols = h_out.decode("utf-8").strip()
@@ -326,7 +324,7 @@ def resting_metrics(afni_data, work_dir):
                 -expr 'c*a/b' \
                 -prefix {snr_file}
         """
-        job_name, job_id = submit.submit_hpc_sbatch(
+        _, _ = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}SNR", f"{work_dir}/sbatch_out"
         )
 
@@ -352,7 +350,7 @@ def resting_metrics(afni_data, work_dir):
                 -prefix - \
                 {gmean_file}\\' >{gcor_file}
         """
-        job_name, job_id = submit.submit_hpc_sbatch(
+        _, _ = submit.submit_hpc_sbatch(
             h_cmd, 1, 8, 1, f"{subj_num}GCOR", f"{work_dir}/sbatch_out"
         )
 
@@ -366,7 +364,7 @@ def resting_metrics(afni_data, work_dir):
         print("\nRunning noise simulations ...")
 
         # determine used volumes in decon
-        h_out, h_err = submit.submit_hpc_subprocess(
+        h_out, _ = submit.submit_hpc_subprocess(
             f"""1d_tool.py \
                 -infile {func_dir}/X.{out_str}.xmat.1D \
                 -show_trs_uncensored encoded \
@@ -389,7 +387,7 @@ def resting_metrics(afni_data, work_dir):
                     {reg_file}'[{used_trs}]' >{avg_reg}
             fi
         """
-        job_name, job_id = submit.submit_hpc_sbatch(
+        _, _ = submit.submit_hpc_sbatch(
             h_cmd, 2, 8, 4, f"{subj_num}FWHMx", f"{work_dir}/sbatch_out"
         )
 
@@ -432,7 +430,6 @@ def resting_seed(coord_dict, afni_data, work_dir):
 
         - [S<seed>-ztrans] = Z-transformed correlation matrix of seed
     """
-
     # check for req files
     assert afni_data[
         "reg-matrix"
@@ -469,7 +466,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
                     -mask {seed_file} \
                     {reg_file} > {seed_ts}
             """
-            h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+            _, _ = submit.submit_hpc_subprocess(h_cmd)
         assert os.path.exists(
             seed_file
         ), f"Failed to write {seed_file}, check resources.afni.group.resting_seed."
@@ -493,7 +490,7 @@ def resting_seed(coord_dict, afni_data, work_dir):
                     -expr 'log((1+a)/(1-a))/2' \
                     -prefix {ztrans_file}
             """
-            job_name, job_id = submit.submit_hpc_sbatch(
+            _, _ = submit.submit_hpc_sbatch(
                 h_cmd, 1, 4, 1, f"{subj_num}Ztran", f"{work_dir}/sbatch_out"
             )
         assert os.path.exists(

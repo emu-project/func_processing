@@ -54,7 +54,6 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
 
         - [mot-confound?] = confounds (motion) file for EPI data for run-?
     """
-
     # determine anat string
     h_anat = glob.glob(
         f"{prep_dir}/{subj}/**/*{tplflow_str}_desc-preproc_T1w.nii.gz", recursive=True

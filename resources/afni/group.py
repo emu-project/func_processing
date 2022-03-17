@@ -44,7 +44,6 @@ def int_mask(task, deriv_dir, group_data, group_dir):
 
         - [mask-int] = GM intersect mask
     """
-
     # check for req files, unpack
     assert group_data[
         "mask-gm"
@@ -79,7 +78,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
                 -prefix {group_mask} \
                 -input {" ".join(mask_list)}
         """
-        h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
     assert os.path.exists(
         group_mask
     ), f"Failed to write {group_mask}, check resources.afni.group.int_mask."
@@ -104,7 +103,7 @@ def int_mask(task, deriv_dir, group_data, group_dir):
                 -o {final_mask} \
                 && rm {group_dir}/tmp_gm.nii.gz
         """
-        h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
     assert os.path.exists(
         final_mask
     ), f"Failed to write {final_mask}, check resources.afni.group.int_mask."
@@ -144,7 +143,6 @@ def resting_etac(seed, group_data, group_dir, do_blur):
 
         - [S<seed>-etac] = final ETAC output file
     """
-
     # check req args
     assert group_data[
         "all-ztrans"
@@ -154,7 +152,7 @@ def resting_etac(seed, group_data, group_dir, do_blur):
     ], "ERROR: required group_data['mask-int'] not found, check resources.afni.group.int_mask"
 
     # unpack group_data
-    int_mask = group_data["mask-int"]
+    intx_mask = group_data["mask-int"]
     group_files = group_data["all-ztrans"]
     final_file = f"FINAL_RS-{seed}"
 
@@ -164,7 +162,7 @@ def resting_etac(seed, group_data, group_dir, do_blur):
     h_cmd = f"""
         cd {group_dir}
         3dttest++ \\
-            -mask {int_mask} \\
+            -mask {intx_mask} \\
             -prefix {final_file} \\
             -prefix_clustsim {final_file}_clustsim \\
             -ETAC \\
@@ -183,9 +181,7 @@ def resting_etac(seed, group_data, group_dir, do_blur):
     )
     if not os.path.exists(etac_file):
         print(f"\nRunning ETAC script {etac_script}")
-        job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 20, 4, 10, "rsETAC", group_dir
-        )
+        _, _ = submit.submit_hpc_sbatch(h_cmd, 20, 4, 10, "rsETAC", group_dir)
 
     # check for output, return
     assert os.path.exists(
@@ -235,7 +231,6 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
 
         - [behAB-etac] = final output ETAC file
     """
-
     # check req args
     assert (
         len(beh_list) == 2
@@ -252,7 +247,7 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
 
     # unpack
     subj_list = group_data["subj-list"]
-    int_mask = group_data["mask-int"]
+    intx_mask = group_data["mask-int"]
     dcn_file = group_data["dcn-file"]
 
     # determine which subjects have both behs
@@ -262,10 +257,10 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
     for subj in subj_list:
         print(f"Checking {subj} for behaviors {beh_a}, {beh_b} ...")
         subj_dcn = os.path.join(deriv_dir, subj, sess, "func", dcn_file)
-        a_out, a_err = submit.submit_hpc_subprocess(
+        a_out, _ = submit.submit_hpc_subprocess(
             f"3dinfo -label2index '{beh_a}#0_Coef' {subj_dcn}"
         )
-        b_out, b_err = submit.submit_hpc_subprocess(
+        b_out, _ = submit.submit_hpc_subprocess(
             f"3dinfo -label2index '{beh_b}#0_Coef' {subj_dcn}"
         )
         a_decode = a_out.decode("utf-8").strip()
@@ -290,7 +285,7 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
         cd {group_dir}
         3dttest++ \\
             -paired \\
-            -mask {int_mask} \\
+            -mask {intx_mask} \\
             -prefix {final_file} \\
             -prefix_clustsim {final_file}_clustsim \\
             -ETAC \\
@@ -311,9 +306,7 @@ def task_etac(beh_list, deriv_dir, sess, group_data, group_dir, do_blur):
     )
     if not os.path.exists(etac_file):
         print(f"\nRunning ETAC script {etac_script}")
-        job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 20, 4, 10, "taskETAC", group_dir
-        )
+        _, _ = submit.submit_hpc_sbatch(h_cmd, 20, 4, 10, "taskETAC", group_dir)
 
     # check for output, return
     assert os.path.exists(

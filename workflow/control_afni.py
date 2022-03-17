@@ -105,7 +105,7 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
         work_dir, subj_num, afni_data, sess, task, do_blur
     )
     afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
-    afni_data = masks.make_minimum_masks(work_dir, subj_num, sess, task, afni_data)
+    afni_data = masks.make_minimum_masks(work_dir, subj_num, task, afni_data)
 
     # scale data
     afni_data = process.scale_epi(work_dir, subj_num, afni_data, do_blur)

@@ -48,9 +48,7 @@ def run_freesurfer(subj, subj_t1, freesurfer_dir, work_dir):
             -openmp 4
     """
     print(f"FreeSurfer command :\n\t {h_cmd}")
-    job_name, job_id = submit.submit_hpc_sbatch(
-        h_cmd, 10, 4, 4, f"fs{subj_num}", work_dir
-    )
+    _, _ = submit.submit_hpc_sbatch(h_cmd, 10, 4, 4, f"fs{subj_num}", work_dir)
 
 
 # %%
@@ -113,6 +111,6 @@ def run_fmriprep(subj, scratch_deriv, scratch_dset, sing_img, tplflow_dir, fs_li
             --stop-on-first-crash
     """
     print(f"fMRIprep command :\n\t {h_cmd}")
-    job_name, job_id = submit.submit_hpc_sbatch(
+    _, _ = submit.submit_hpc_sbatch(
         h_cmd, 20, 4, 4, f"fp{subj_num}", work_dir, merged_env
     )

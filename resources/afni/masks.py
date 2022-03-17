@@ -1,5 +1,4 @@
-"""Functions for making various masks.
-"""
+"""Functions for making various masks."""
 import os
 from . import submit
 
@@ -46,7 +45,6 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
 
         - [mask-int] = subject epi-anat intersection mask
     """
-
     # get required EPI, mask files
     if do_blur:
         num_epi = len([y for x, y in afni_data.items() if "epi-blur" in x])
@@ -85,7 +83,7 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
                 h_cmd = f"""
                     3dAutomask -prefix {out_file} {run_file}
                 """
-                h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+                _, _ = submit.submit_hpc_subprocess(h_cmd)
 
         # combine run masks, make inter mask
         print("Making intersection mask ...")
@@ -148,7 +146,6 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
 
         - [mask-eroded<GM|WM|CSF>] = eroded gray, white matter, CSF masks
     """
-
     # determine GM, WM tissue list, mask string, set up switch
     # for mask naming
     num_prob = len([y for x, y in afni_data.items() if "mask-prob" in x])
@@ -204,7 +201,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     return afni_data
 
 
-def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
+def make_minimum_masks(work_dir, subj_num, task, afni_data):
     """Make a mask of where minimum signal exists in EPI space.
 
     Used to help with the scaling step, so low values do not
@@ -217,9 +214,6 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
 
     subj_num : int/str
         subject identifier, for sbatch job name
-
-    sess : str
-        BIDS session string (ses-A)
 
     task : str
         BIDS task string (task-test)
@@ -242,7 +236,6 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
 
         - [mask-min] = mask of minimum value for task
     """
-
     # make masks of voxels where some data exists (mask_min)
     num_epi = len([y for x, y in afni_data.items() if "epi-preproc" in x])
     assert (
@@ -279,7 +272,7 @@ def make_minimum_masks(work_dir, subj_num, sess, task, afni_data):
                         -prefix {tmp_min_file} \
                         {tmp_bin_file}
                 """
-                h_out, h_err = submit.submit_hpc_subprocess(h_cmd)
+                _, _ = submit.submit_hpc_subprocess(h_cmd)
 
         print("Making minimum value mask ...")
         h_cmd = f"""
