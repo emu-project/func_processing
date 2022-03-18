@@ -3,7 +3,17 @@ import os
 from . import submit
 
 
-def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
+def make_intersect_mask(
+    work_dir,
+    subj_num,
+    afni_data,
+    sess,
+    task,
+    do_blur,
+    c_frac="0.5",
+    nbr_type="NN2",
+    n_nbr=17,
+):
     """Make EPI-struct intersection mask.
 
     Parameters
@@ -35,6 +45,15 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
 
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
+
+    c_frac : str, float
+        input for 3dAutomask -clfrac option
+
+    nbr_type : str
+        3dAutomask nearest neighbors argument
+
+    n_nbr : int
+        input for 3dAutomask -nbhrs option
 
     Returns
     -------
@@ -81,7 +100,12 @@ def make_intersect_mask(work_dir, subj_num, afni_data, sess, task, do_blur):
             if not os.path.exists(out_file):
                 print(f"Making {out_file} ...")
                 h_cmd = f"""
-                    3dAutomask -prefix {out_file} {run_file}
+                    3dAutomask \
+                        -clfrac {c_frac} \
+                        -{nbr_type} \
+                        -nbhrs {n_nbr} \
+                        -prefix {out_file} \
+                        {run_file}
                 """
                 _, _ = submit.submit_hpc_subprocess(h_cmd)
 
