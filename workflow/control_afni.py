@@ -213,9 +213,14 @@ def control_deconvolution(
 
     # generate decon matrices, scripts
     for decon_name, tf_dict in decon_plan.items():
-        afni_data = deconvolve.write_decon(
+        # afni_data = deconvolve.write_decon(
+        #     decon_name, tf_dict, afni_data, work_dir, dur
+        # )
+        afni_data = deconvolve.write_new_decon(
             decon_name, tf_dict, afni_data, work_dir, dur
         )
+
+    return
 
     # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)

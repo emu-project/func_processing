@@ -46,6 +46,7 @@ proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(proj_dir)
 
 from resources.afni import deconvolve
+from resources.afni import submit
 
 
 # %%
@@ -99,12 +100,47 @@ def get_args():
 # %%
 def main():
     """Move data through AFNI pre-processing."""
+    # For testing
+    func_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/afni/sub-4001/ses-S1/func/"
+    afni_data = {}
+    afni_data["epi-scale1"] = os.path.join(
+        func_dir,
+        "sub-4001_ses-S1_task-study_run-1_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
+    )
+    afni_data["epi-scale2"] = os.path.join(
+        func_dir,
+        "sub-4001_ses-S1_task-study_run-2_space-MNIPediatricAsym_cohort-5_res-2_desc-scaled_bold.nii.gz",
+    )
+    afni_data["mot-mean"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-mean_timeseries.1D"
+    )
+    afni_data["mot-deriv"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-deriv_timeseries.1D"
+    )
+    afni_data["mot-censor"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-censor_timeseries.1D"
+    )
+    len_tr = 1.76
+    run_len = ["322.08", "533.28"]
+    deriv_dir = "/home/data/madlab/McMakin_EMUR01/derivatives"
+    dset_dir = "/home/data/madlab/McMakin_EMUR01/dset"
+    subj = "sub-4001"
+    sess = "ses-S1"
+    task = "task-study"
 
-    # # For testing
-    deriv_dir = "/scratch/madlab/emu_test/derivatives"
-    subj = "sub-4002"
-    sess = "ses-S2"
-    timing_dir = os.path.join(deriv_dir, "timing_files", subj, sess)
+    decon_plan = {}
+    decon_plan["neg"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-neg_events.1D"
+    )
+    decon_plan["neu"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-neu_events.1D"
+    )
+    decon_plan["pos"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-pos_events.1D"
+    )
+    decon_plan["NR"] = os.path.join(
+        func_dir, "sub-4001_ses-S1_task-study_desc-NR_events.1D"
+    )
 
     # # get passed arguments
     # args = get_args().parse_args()
@@ -147,3 +183,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%
