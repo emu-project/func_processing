@@ -164,7 +164,10 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
         num_epi > 0
     ), "ERROR: afni_data['epi-scale?'] not found. Check resources.afni.process.scale_epi."
     assert (
-        afni_data["mot-mean"] and afni_data["mot-deriv"] and afni_data["mot-censor"]
+        afni_data["mot-mean"]
+        and afni_data["mot-deriv"]
+        and afni_data["mot-censor"]
+        and afni_data["mot-censorInv"]
     ), "ERROR: missing afni_data[mot-*] files, check resources.afni.motion.mot_files."
 
     # use censor file to censor behaviors, not volumes
@@ -205,7 +208,7 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
 
     # create adjusted behavior waveform
     tf_adjust = {}
-    mot_report = {}
+    # mot_report = {}
     for h_beh, h_tf in tf_dict.items():
 
         # make binary vector for behavior
@@ -220,9 +223,10 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
                 -min_frac 0.3 \
                 -timing_to_1D {beh_vec}
         """
+        print(f"\n Bin vect cmd:\n\t {h_cmd}")
         _, _ = submit.submit_hpc_subprocess(h_cmd)
         assert os.path.exists(beh_vec), (
-            f"Failed to write binary behavior vector for {h_beh},"
+            f"Failed to write binary behavior vector for {h_beh}, "
             "check resources.afni.deconvolve.write_new_decon."
         )
 
@@ -237,14 +241,14 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
         """
         _, _ = submit.submit_hpc_subprocess(h_cmd)
 
-        # determine number of behaviors excluded
-        df_orig = pd.read_csv(beh_vec)
-        df_adj = pd.read_csv(beh_cens)
-        num_orig = df_orig.sum()
-        num_adj = df_adj.sum()
-        num_diff = num_orig - num_adj
-        mot_report[h_beh] = {"Orig": num_orig, "Adj": num_adj, "Diff": num_diff}
-        print(f"\nMotion report:\n\t {mot_report}\n")
+        # # determine number of behaviors excluded
+        # df_orig = pd.read_csv(beh_vec)
+        # df_adj = pd.read_csv(beh_cens)
+        # num_orig = df_orig.sum()
+        # num_adj = df_adj.sum()
+        # num_diff = num_orig - num_adj
+        # mot_report[h_beh] = {"Orig": num_orig, "Adj": num_adj, "Diff": num_diff}
+        # print(f"\nMotion report:\n\t {mot_report}\n")
 
         # convolve adjusted behavior vector with HRF
         beh_adj = h_tf.replace(f"desc-{h_beh}", f"desc-{h_beh}Cens")
@@ -261,15 +265,15 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
 
         # check output, update dict with adjusted file
         assert os.stat(beh_adj).st_size > 0, (
-            f"Adjusting timing file failed for {h_beh},"
+            f"Adjusting timing file failed for {h_beh}, "
             "check resources.afni.deconvolve.write_new_decon."
         )
         tf_adjust[h_beh] = beh_adj
 
-    # write motion adjust report
-    mot_json = os.path.join(os.path.dirname(epi_list[0]), "info_behavior_censored.json")
-    with open(mot_json, "w") as j_file:
-        json.dump(mot_report, j_file)
+    # # write motion adjust report
+    # mot_json = os.path.join(os.path.dirname(epi_list[0]), "info_behavior_censored.json")
+    # with open(mot_json, "w") as j_file:
+    #     json.dump(mot_report, j_file)
 
     # set baseline regressors
     reg_base = [
@@ -277,9 +281,9 @@ def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
         f"""-ortvec {afni_data["mot-deriv"]} mot_deriv""",
     ]
 
-    # set censor as baseline regressor
+    # invert censor, set as baseline regressor
     c_beh = 1
-    reg_cens = [f"-stim_times {c_beh} {afni_data['mot-censor']}"]
+    reg_cens = [f"-stim_file {c_beh} {afni_data['mot-censorInv']}"]
     reg_cens.append(f"-stim_base {c_beh}")
     reg_cens.append(f"-stim_label {c_beh} mot_cens")
 
