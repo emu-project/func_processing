@@ -7,6 +7,7 @@ pre-processed EPI data.
 import os
 import glob
 import math
+import json
 import pandas as pd
 from . import submit
 
@@ -122,6 +123,256 @@ def write_decon(decon_name, tf_dict, afni_data, work_dir, dur):
             -float \\
             -local_times \\
             -num_stimts {len(tf_dict.keys())} \\
+            {" ".join(reg_beh)} \\
+            -jobs 1 \\
+            -x1D {func_dir}/X.{out_str}.xmat.1D \\
+            -xjpeg {func_dir}/X.{out_str}.jpg \\
+            -x1D_uncensored {func_dir}/X.{out_str}.nocensor.xmat.1D \\
+            -bucket {func_dir}/{out_str}_stats \\
+            -cbucket {func_dir}/{out_str}_cbucket \\
+            -errts {func_dir}/{out_str}_errts
+    """
+
+    # write for review
+    decon_script = os.path.join(func_dir, f"{out_str}.sh")
+    with open(decon_script, "w") as script:
+        script.write(cmd_decon)
+
+    # generate x-matrices, reml command
+    out_file = os.path.join(func_dir, f"{out_str}_stats.REML_cmd")
+    if not os.path.exists(out_file):
+        print(f"Running 3dDeconvolve for {decon_name}")
+        _, _ = submit.submit_hpc_subprocess(cmd_decon)
+
+    # update afni_data
+    assert os.path.exists(
+        out_file
+    ), f"{out_file} failed to write, check resources.afni.deconvolve.write_decon."
+    afni_data[f"dcn-{decon_name}"] = out_file
+
+    return afni_data
+
+
+def write_new_decon(decon_name, tf_dict, afni_data, work_dir, dur):
+    """Write a deconvolution script using new censor approach.
+
+    Rather than using desc-censor_events.tsv to remove volumes at the
+    deconvolution, as is the default in AFNI\'s workflow, instead use
+    the censor file to remove behaviors that co-occur during the
+    same volume. Then, add a baseline censor regressor after polynomials
+    but before the behavior regressors.
+
+    Additionally, convolution of the timing file with the HRF basis
+    function is supplied as the regressor via "-stim_file" rather
+    using the "-stim_times" option. This is because I don't remember
+    how to go from a binary vector in volume time to AFNI-styled
+    timing files =).
+
+    Parameters
+    ----------
+    decon_name: str
+        name of deconvolution, useful when conducting multiple
+        deconvolutions on same session. Will be appended to
+        BIDS task name (decon_<task-name>_<decon_name>).
+
+    tf_dict : dict
+        timing files dictionary, behavior string is key
+
+        e.g. {"lureFA": "/path/to/tf_task-test_lureFA.txt"}
+
+    afni_data : dict
+        contains keys pointing to required files
+
+        required keys:
+
+        - [epi-scale<1..N>] = list of scaled files
+
+        - [mot-mean] = mean motion timeseries
+
+        - [mot-deriv] = derivative motion timeseries
+
+        - [mot-censor] = binary censory vector (0 = censor)
+
+        - [mot-censorInv] = inverted binary censory vector (1 = censor)
+
+    work_dir : str
+        /path/to/project_dir/derivatives/afni/sub-1234/ses-A
+
+    dur : int/float/str
+        duration of event to model
+
+    Returns
+    -------
+    afni_data : dict
+        updated with REML commands
+
+        added afni_data keys:
+
+        - [dcn-<decon_name>] = name of decon reml command
+
+    Notes
+    -----
+    Deconvolution files will be written in AFNI format, rather
+    than BIDS. This includes the X.files (cue spooky theme), script,
+    and deconvolved output.
+
+    Files names will have the format:
+
+    - decon_<bids-task>_<decon_name>
+
+    Also, writes info_behavior_censored.json to subject directory.
+    """
+    # check for req files
+    num_epi = len([y for x, y in afni_data.items() if "epi-scale" in x])
+    assert (
+        num_epi > 0
+    ), "ERROR: afni_data['epi-scale?'] not found. Check resources.afni.process.scale_epi."
+    assert (
+        afni_data["mot-mean"]
+        and afni_data["mot-deriv"]
+        and afni_data["mot-censor"]
+        and afni_data["mot-censorInv"]
+    ), "ERROR: missing afni_data[mot-*] files, check resources.afni.motion.mot_files."
+
+    # make list
+    epi_list = [x for k, x in afni_data.items() if "epi-scale" in k]
+
+    # get TR
+    h_out, _ = submit.submit_hpc_subprocess(f"3dinfo -tr {epi_list[0]}")
+    len_tr = float(h_out.decode("utf-8").strip())
+
+    # list of run lengths in seconds, and total run length
+    run_len = []
+    num_vol = []
+    for epi_file in epi_list:
+        h_out, _ = submit.submit_hpc_subprocess(f"3dinfo -ntimes {epi_file}")
+        h_vol = int(h_out.decode("utf-8").strip())
+        run_len.append(str(h_vol * len_tr))
+        num_vol.append(h_vol)
+    sum_vol = sum(num_vol)
+
+    # make ideal HRF with two gamma function
+    hrf_file = os.path.join(os.path.dirname(epi_list[0]), "HRF_model.1D")
+    if not os.path.exists(hrf_file):
+        print("\nMaking ideal HRF")
+        h_cmd = f"""
+            3dDeconvolve\
+                -polort -1 \
+                -nodata {round((1 / len_tr) * 19)} {len_tr} \
+                -num_stimts 1 \
+                -stim_times 1 1D:0 'TWOGAMpw(4,5,0.2,12,7,{dur})' \
+                -x1D {hrf_file} \
+                -x1D_stop
+        """
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
+    assert os.path.exists(
+        hrf_file
+    ), "HRF model failed, check resources.afni.deconvolve.write_new_decon."
+
+    # create adjusted behavior waveform
+    tf_adjust = {}
+    mot_report = {}
+    for h_beh, h_tf in tf_dict.items():
+
+        # make binary vector for behavior
+        print(f"\nMaking behavior vectors for {h_beh}")
+        beh_vec = h_tf.replace("_events.", "_events_vec.")
+        h_cmd = f"""
+            timing_tool.py \
+                -timing {h_tf} \
+                -tr {len_tr} \
+                -stim_dur {dur} \
+                -run_len {" ".join(run_len)} \
+                -min_frac 0.3 \
+                -timing_to_1D {beh_vec}
+        """
+        print(f"\n Bin vect cmd:\n\t {h_cmd}")
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
+        assert os.path.exists(beh_vec), (
+            f"Failed to write binary behavior vector for {h_beh}, "
+            "check resources.afni.deconvolve.write_new_decon."
+        )
+
+        # remove behavior volumes when they co-occur with motion
+        beh_cens = h_tf.replace("_events.", "_events_cens.")
+        h_cmd = f"""
+            1deval \
+                -a {beh_vec} \
+                -b {afni_data["mot-censor"]} \
+                -expr 'a*b' \
+                > {beh_cens}
+        """
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
+
+        # determine number of behaviors excluded
+        df_orig = pd.read_csv(beh_vec)
+        df_adj = pd.read_csv(beh_cens)
+        num_orig = df_orig.sum().tolist()[0]
+        num_adj = df_adj.sum().tolist()[0]
+        num_diff = num_orig - num_adj
+        mot_report[h_beh] = {"Orig": num_orig, "Adj": num_adj, "Diff": num_diff}
+
+        # convolve adjusted behavior vector with HRF
+        beh_adj = h_tf.replace(f"desc-{h_beh}", f"desc-{h_beh}Cens")
+        h_cmd = f"""
+            waver \
+                -FILE {len_tr} {hrf_file} \
+                -peak 1 \
+                -TR {len_tr} \
+                -input {beh_cens} \
+                -numout {sum_vol} \
+                > {beh_adj}
+        """
+        _, _ = submit.submit_hpc_subprocess(h_cmd)
+
+        # check output, update dict with adjusted file
+        assert os.stat(beh_adj).st_size > 0, (
+            f"Adjusting timing file failed for {h_beh}, "
+            "check resources.afni.deconvolve.write_new_decon."
+        )
+        tf_adjust[h_beh] = beh_adj
+
+    # write motion adjust report
+    mot_json = os.path.join(os.path.dirname(epi_list[0]), "info_behavior_censored.json")
+    with open(mot_json, "w") as j_file:
+        json.dump(mot_report, j_file)
+
+    # set baseline regressors
+    reg_base = [
+        f"""-ortvec {afni_data["mot-mean"]} mot_mean""",
+        f"""-ortvec {afni_data["mot-deriv"]} mot_deriv""",
+    ]
+
+    # set inverted censor as baseline regressor, start regressor count
+    c_beh = 1
+    reg_cens = [f"-stim_file {c_beh} {afni_data['mot-censorInv']}"]
+    reg_cens.append(f"-stim_base {c_beh}")
+    reg_cens.append(f"-stim_label {c_beh} mot_cens")
+
+    # set behavior regressors
+    reg_beh = []
+    for h_beh, h_tf in tf_adjust.items():
+        c_beh += 1
+        reg_beh.append(f"-stim_file {c_beh} {h_tf}")
+        reg_beh.append(f"-stim_label {c_beh} {h_beh}")
+
+    # set output str
+    task_str = "task-" + epi_list[0].split("task-")[1].split("_")[0]
+    out_str = f"decon_{task_str}_{decon_name}"
+
+    # build full decon command, put censor as baseline regressor
+    func_dir = os.path.join(work_dir, "func")
+    cmd_decon = f"""
+        3dDeconvolve \\
+            -x1D_stop \\
+            -GOFORIT \\
+            -input {" ".join(epi_list)} \\
+            {" ".join(reg_base)} \\
+            -polort A \\
+            -float \\
+            -local_times \\
+            -num_stimts {c_beh} \\
+            {" ".join(reg_cens)} \\
             {" ".join(reg_beh)} \\
             -jobs 1 \\
             -x1D {func_dir}/X.{out_str}.xmat.1D \\

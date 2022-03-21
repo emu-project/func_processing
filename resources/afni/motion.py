@@ -80,6 +80,7 @@ def mot_files(work_dir, afni_data, task):
     mean_cat = []
     deriv_cat = []
     censor_cat = []
+    censor_inv = []
 
     num_mot = len([y for x, y in afni_data.items() if "mot-confound" in x])
     assert (
@@ -123,10 +124,15 @@ def mot_files(work_dir, afni_data, task):
             df_cen.loc[zero_fill, "sum"] = 0
             censor_cat.append(df_cen)
 
+            # reinvert for use with resources.afni.deconvolve.write_new_decon
+            df_inv = df_cen.replace({0: 1, 1: 0})
+            censor_inv.append(df_inv)
+
         # cat files into singule file rather than pad zeros for e/run
         df_mean_cat = pd.concat(mean_cat, ignore_index=True)
         df_deriv_cat = pd.concat(deriv_cat, ignore_index=True)
         df_censor_cat = pd.concat(censor_cat, ignore_index=True)
+        df_censor_inv = pd.concat(censor_inv, ignore_index=True)
 
         # determine BIDS string, write tsvs, make sure
         # output value is float (not scientific notation)
@@ -160,6 +166,16 @@ def mot_files(work_dir, afni_data, task):
             header=False,
             columns=["sum"],
         )
+        df_censor_inv.to_csv(
+            os.path.join(
+                work_dir,
+                f"""{mot_str.replace("confounds", "censorInv").replace(".tsv", ".1D")}""",
+            ),
+            sep="\t",
+            index=False,
+            header=False,
+            columns=["sum"],
+        )
 
         # determine number censored volumes
         num_vol = df_censor_cat["sum"].sum()
@@ -184,5 +200,8 @@ def mot_files(work_dir, afni_data, task):
     afni_data[
         "mot-censor"
     ] = f"""{mot_str.replace("confounds", "censor").replace(".tsv", ".1D")}"""
+    afni_data[
+        "mot-censorInv"
+    ] = f"""{mot_str.replace("confounds", "censorInv").replace(".tsv", ".1D")}"""
 
     return afni_data

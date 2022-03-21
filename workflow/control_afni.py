@@ -117,7 +117,16 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
 
 
 def control_deconvolution(
-    afni_data, afni_dir, dset_dir, subj, sess, task, dur, decon_plan, kp_interm
+    afni_data,
+    afni_dir,
+    dset_dir,
+    subj,
+    sess,
+    task,
+    dur,
+    decon_plan,
+    kp_interm,
+    decon_method="new",
 ):
     """Generate and run planned deconvolutions.
 
@@ -213,9 +222,14 @@ def control_deconvolution(
 
     # generate decon matrices, scripts
     for decon_name, tf_dict in decon_plan.items():
-        afni_data = deconvolve.write_decon(
-            decon_name, tf_dict, afni_data, work_dir, dur
-        )
+        if decon_method == "new":
+            afni_data = deconvolve.write_new_decon(
+                decon_name, tf_dict, afni_data, work_dir, dur
+            )
+        else:
+            afni_data = deconvolve.write_decon(
+                decon_name, tf_dict, afni_data, work_dir, dur
+            )
 
     # run various reml scripts
     afni_data = deconvolve.run_reml(work_dir, afni_data)

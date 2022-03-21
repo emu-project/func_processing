@@ -287,10 +287,18 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
+        "-s",
+        "--session",
+        help="BIDS session str (ses-S2)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
+        "-t",
+        "--task",
+        help="BIDS EPI task str (task-test)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
         "-c",
@@ -412,7 +420,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
