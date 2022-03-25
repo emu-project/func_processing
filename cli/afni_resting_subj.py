@@ -38,6 +38,7 @@ import os
 import sys
 import glob
 import time
+import json
 from datetime import datetime
 import textwrap
 import subprocess
@@ -48,17 +49,18 @@ import pandas as pd
 # %%
 def submit_jobs(
     afni_dir,
-    proj_dir,
-    subj,
-    sess,
-    task,
+    afni_final,
     code_dir,
-    slurm_dir,
-    tplflow_str,
-    do_regress,
     coord_dict,
     do_blur,
+    do_regress,
     kp_interm,
+    proj_dir,
+    sess,
+    slurm_dir,
+    subj,
+    task,
+    tplflow_str,
 ):
     """Schedule work for single participant.
 
@@ -70,28 +72,30 @@ def submit_jobs(
     ----------
     afni_dir : str
         path to /scratch directory, for intermediates
-    proj_dir : str
-        path to BIDS-formatted project directory
-    subj : str
-        BIDS subject string
-    sess : str
-        BIDS session string
-    task : str
-        BIDS task string
+    afni_final : str
+        path to desired output location of final files
     code_dir : str
         path to clone of github.com/emu-project/func_processing.git
-    slurm_dir : str
-        path to location for capturing sbatch stdout/err
-    tplflow_str : str
-        template_flow identifier string
-    do_regress : bool
-        whether to conduct deconvolution/regression
     coord_dict : dict
         seed name and coordinates
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
+    do_regress : bool
+        whether to conduct deconvolution/regression
     kp_interm : bool
         [T/F] whether to keep (T) or remove (F) intemediates
+    proj_dir : str
+        path to BIDS-formatted project directory
+    sess : str
+        BIDS session string
+    slurm_dir : str
+        path to location for capturing sbatch stdout/err
+    subj : str
+        BIDS subject string
+    task : str
+        BIDS task string
+    tplflow_str : str
+        template_flow identifier string
 
     Returns
     -------
@@ -100,7 +104,6 @@ def submit_jobs(
     """
     subj_num = subj.split("-")[-1]
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
-    afni_final = os.path.join(proj_dir, "derivatives/afni")
 
     h_cmd = f"""\
         #!/bin/env {sys.executable}
@@ -210,39 +213,6 @@ def get_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
-        "--proj-dir",
-        type=str,
-        default="/home/data/madlab/McMakin_EMUR01",
-        help=textwrap.dedent(
-            """\
-            path to BIDS-formatted project directory
-            (default : %(default)s)
-            """
-        ),
-    )
-    parser.add_argument(
-        "--batch-num",
-        type=int,
-        default=8,
-        help=textwrap.dedent(
-            """\
-            number of subjects to submit at one time
-            (default : %(default)s)
-            """
-        ),
-    )
-    parser.add_argument(
-        "--tplflow-str",
-        type=str,
-        default="space-MNIPediatricAsym_cohort-5_res-2",
-        help=textwrap.dedent(
-            """\
-            template ID string, for finding fMRIprep output in template space,
-            (default : %(default)s)
-        """
-        ),
-    )
-    parser.add_argument(
         "--afni-dir",
         type=str,
         default="/scratch/madlab/McMakin_EMUR01/derivatives/afni",
@@ -254,23 +224,12 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--task",
-        type=str,
-        default="task-rest",
+        "--batch-num",
+        type=int,
+        default=8,
         help=textwrap.dedent(
             """\
-            BIDS EPI task str
-            (default : %(default)s)
-            """
-        ),
-    )
-    parser.add_argument(
-        "--session",
-        type=str,
-        default="ses-S2",
-        help=textwrap.dedent(
-            """\
-            BIDS session str
+            number of subjects to submit at one time
             (default : %(default)s)
             """
         ),
@@ -295,13 +254,82 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--out-dir",
+        type=str,
+        default=None,
+        help=textwrap.dedent(
+            """\
+            Path to desired output directory for final AFNI files. If
+            [None], output location will be <proj_dir>/derivatives/afni.
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--proj-dir",
+        type=str,
+        default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+            path to BIDS-formatted project directory
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--session",
+        type=str,
+        default="ses-S2",
+        help=textwrap.dedent(
+            """\
+            BIDS session str
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--task",
+        type=str,
+        default="task-rest",
+        help=textwrap.dedent(
+            """\
+            BIDS EPI task str
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--tplflow-str",
+        type=str,
+        default="space-MNIPediatricAsym_cohort-5_res-2",
+        help=textwrap.dedent(
+            """\
+            template ID string, for finding fMRIprep output in template space,
+            (default : %(default)s)
+        """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
         "-c",
         "--code-dir",
         required=True,
+        type=str,
         help="Path to clone of github.com/emu-project/func_processing.git",
+    )
+    required_args.add_argument(
+        "-j",
+        "--coord-json",
+        required=True,
+        type=str,
+        help=textwrap.dedent(
+            """\
+            Path to json file containing name, MNI coordinates of desired seeds.
+            JSON format example: {"rPCC": "5 -55 25"}
+        """
+        ),
     )
 
     if len(sys.argv) == 1:
@@ -320,24 +348,26 @@ def main():
     """
     # receive passed args
     args = get_args().parse_args()
-    proj_dir = args.proj_dir
-    batch_num = args.batch_num
-    tplflow_str = args.tplflow_str
     afni_dir = args.afni_dir
+    batch_num = args.batch_num
+    do_blur = args.blur
+    code_dir = args.code_dir
+    coord_json = args.coord_json
+    kp_interm = args.keep_interm
+    out_dir = args.out_dir
+    proj_dir = args.proj_dir
     sess = args.session
     task = args.task
-    code_dir = args.code_dir
-    do_blur = args.blur
-    kp_interm = args.keep_interm
+    tplflow_str = args.tplflow_str
 
     # set up
-    # TODO get coord_dict from user-specified JSON
-    coord_dict = {"rPCC": "5 -55 25"}
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
-    afni_final = os.path.join(proj_dir, "derivatives/afni")
+    afni_final = out_dir if out_dir else os.path.join(proj_dir, "derivatives/afni")
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
+    with open(coord_json) as json_file:
+        coord_dict = json.load(json_file)
 
     # get completed logs
     df_log = pd.read_csv(os.path.join(log_dir, "completed_preprocessing.tsv"), sep="\t")
@@ -361,15 +391,32 @@ def main():
         if not anat_check or not func_check:
             continue
 
-        # Check logs for missing WM-eroded masks, session intersection mask,
-        # deconvolution, or run-1 scaled files.
-        ind_subj = df_log.index[df_log["subjID"] == subj]
-        wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
-        intersect_missing = pd.isnull(
-            df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
-        ).bool()
-        regress_missing = pd.isnull(df_log.loc[ind_subj, "decon_resting"]).bool()
-        scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
+        # Check for missing certain pre-processing files, account for
+        # user specified output location
+        if out_dir:
+            subj_dir = os.path.join(afni_final, subj, sess)
+            wme_found = glob.glob(f"{subj_dir}/anat/*desc-WMe_mask.nii.gz")
+            intx_found = glob.glob(
+                f"{subj_dir}/anat/*{sess}_{task}*desc-intersect_mask.nii.gz"
+            )
+            scaled_found = glob.glob(
+                f"{subj_dir}/func/*{sess}_{task}_run-1*desc-scaled_bold.nii.gz"
+            )
+            regress_found = glob.glob(f"{subj_dir}/func/X.decon_{task}.xmat.1D")
+
+            # invert bool to match with existing structure
+            wme_missing = False if wme_found else True
+            intersect_missing = False if intx_found else True
+            scaled_missing = False if scaled_found else True
+            regress_missing = False if regress_found else True
+        else:
+            ind_subj = df_log.index[df_log["subjID"] == subj]
+            wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
+            intersect_missing = pd.isnull(
+                df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
+            ).bool()
+            regress_missing = pd.isnull(df_log.loc[ind_subj, "decon_resting"]).bool()
+            scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
 
         # Append subj_list if fmriprep data exists and afni data is missing.
         if intersect_missing or wme_missing or regress_missing or scaled_missing:
@@ -383,26 +430,29 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
 
     for subj, value_dict in list(subj_dict.items())[:batch_num]:
         print(f"Submitting job for {subj} {sess} {task}")
+        do_regress = value_dict["Regress"]
         h_out, h_err = submit_jobs(
             afni_dir,
-            proj_dir,
-            subj,
-            sess,
-            task,
+            afni_final,
             code_dir,
-            slurm_dir,
-            tplflow_str,
-            value_dict["Regress"],
             coord_dict,
             do_blur,
+            do_regress,
             kp_interm,
+            proj_dir,
+            sess,
+            slurm_dir,
+            subj,
+            task,
+            tplflow_str,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")

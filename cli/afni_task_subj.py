@@ -50,18 +50,19 @@ import pandas as pd
 # %%
 def submit_jobs(
     afni_dir,
-    proj_dir,
-    subj,
-    sess,
-    task,
+    afni_final,
     code_dir,
-    slurm_dir,
-    tplflow_str,
-    dur,
-    do_decon,
     decon_plan,
     do_blur,
+    do_decon,
+    dur,
     kp_interm,
+    proj_dir,
+    sess,
+    slurm_dir,
+    subj,
+    task,
+    tplflow_str,
 ):
     """Schedule work for single participant.
 
@@ -73,30 +74,32 @@ def submit_jobs(
     ----------
     afni_dir : str
         path to /scratch directory, for intermediates
-    proj_dir : str
-        path to BIDS-formatted project directory
-    subj : str
-        BIDS subject string
-    sess : str
-        BIDS session string
-    task : str
-        BIDS task string
+    afni_final : str
+        path to desired output location of final files
     code_dir : str
         path to clone of github.com/emu-project/func_processing.git
-    slurm_dir : str
-        path to location for capturing sbatch stdout/err
-    tplflow_str : str
-        template_flow identifier string
-    dur : int/float/str
-        duration of event to be modeled
-    do_decon : bool
-        whether to conduct deconvolution
     decon_plan : dict/None
         planned deconvolution with behavior: timing file mappings
     do_blur : bool
         [T/F] whether to blur as part of pre-processing
+    do_decon : bool
+        whether to conduct deconvolution
+    dur : int/float/str
+        duration of event to be modeled
     kp_interm : bool
         [T/F] whether to keep (T) or remove (F) intemediates
+    proj_dir : str
+        path to BIDS-formatted project directory
+    sess : str
+        BIDS session string
+    slurm_dir : str
+        path to location for capturing sbatch stdout/err
+    subj : str
+        BIDS subject string
+    task : str
+        BIDS task string
+    tplflow_str : str
+        template_flow identifier string
 
     Returns
     -------
@@ -106,7 +109,6 @@ def submit_jobs(
     subj_num = subj.split("-")[-1]
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
     dset_dir = os.path.join(proj_dir, "dset")
-    afni_final = os.path.join(proj_dir, "derivatives/afni")
 
     h_cmd = f"""\
         #!/bin/env {sys.executable}
@@ -195,12 +197,12 @@ def get_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
-        "--proj-dir",
+        "--afni-dir",
         type=str,
-        default="/home/data/madlab/McMakin_EMUR01",
+        default="/scratch/madlab/McMakin_EMUR01/derivatives/afni",
         help=textwrap.dedent(
             """\
-            path to BIDS-formatted project directory
+            Path to location for making AFNI intermediates
             (default : %(default)s)
             """
         ),
@@ -217,14 +219,13 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--tplflow-str",
-        type=str,
-        default="space-MNIPediatricAsym_cohort-5_res-2",
+        "--blur",
+        action="store_true",
         help=textwrap.dedent(
             """\
-            template ID string, for finding fMRIprep output in template space,
-            (default : %(default)s)
-        """
+            Toggle of whether to use blurring option in pre-processing.
+            Boolean (True if "--blur", else False).
+            """
         ),
     )
     parser.add_argument(
@@ -234,17 +235,6 @@ def get_args():
         help=textwrap.dedent(
             """\
             event duration, for deconvolution modulation
-            (default : %(default)s)
-            """
-        ),
-    )
-    parser.add_argument(
-        "--afni-dir",
-        type=str,
-        default="/scratch/madlab/McMakin_EMUR01/derivatives/afni",
-        help=textwrap.dedent(
-            """\
-            Path to location for making AFNI intermediates
             (default : %(default)s)
             """
         ),
@@ -265,16 +255,6 @@ def get_args():
         ),
     )
     parser.add_argument(
-        "--blur",
-        action="store_true",
-        help=textwrap.dedent(
-            """\
-            Toggle of whether to use blurring option in pre-processing.
-            Boolean (True if "--blur", else False).
-            """
-        ),
-    )
-    parser.add_argument(
         "--keep-interm",
         action="store_true",
         help=textwrap.dedent(
@@ -284,8 +264,48 @@ def get_args():
             """
         ),
     )
+    parser.add_argument(
+        "--out-dir",
+        type=str,
+        default=None,
+        help=textwrap.dedent(
+            """\
+            Path to desired output directory for final AFNI files. If
+            [None], output location will be <proj_dir>/derivatives/afni.
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--proj-dir",
+        type=str,
+        default="/home/data/madlab/McMakin_EMUR01",
+        help=textwrap.dedent(
+            """\
+            path to BIDS-formatted project directory
+            (default : %(default)s)
+            """
+        ),
+    )
+    parser.add_argument(
+        "--tplflow-str",
+        type=str,
+        default="space-MNIPediatricAsym_cohort-5_res-2",
+        help=textwrap.dedent(
+            """\
+            template ID string, for finding fMRIprep output in template space,
+            (default : %(default)s)
+        """
+        ),
+    )
 
     required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
+        "-c",
+        "--code-dir",
+        required=True,
+        help="Path to clone of github.com/emu-project/func_processing.git",
+    )
     required_args.add_argument(
         "-s",
         "--session",
@@ -299,12 +319,6 @@ def get_args():
         help="BIDS EPI task str (task-test)",
         type=str,
         required=True,
-    )
-    required_args.add_argument(
-        "-c",
-        "--code-dir",
-        required=True,
-        help="Path to clone of github.com/emu-project/func_processing.git",
     )
 
     if len(sys.argv) == 1:
@@ -322,31 +336,38 @@ def main():
     job for them.
     """
     # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # json_dir = "/home/nmuncy/compute/qc_emst/for_testing/tf_noValence"
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # sess = "ses-S2"
-    # task = "task-test"
+    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
+    # batch_num = 1
+    # do_blur = False
     # code_dir = "/home/nmuncy/compute/func_processing"
+    # dur = 2
+    # json_dir = "/home/nmuncy/compute/emu_unc/data/timing_files"
+    # kp_interm = False
+    # out_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/emu_unc"
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # sess = "ses-S1"
+    # task = "task-study"
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
     # receive passed args
     args = get_args().parse_args()
-    proj_dir = args.proj_dir
-    batch_num = args.batch_num
-    tplflow_str = args.tplflow_str
-    dur = args.dur
     afni_dir = args.afni_dir
+    batch_num = args.batch_num
+    do_blur = args.blur
+    code_dir = args.code_dir
+    dur = args.dur
     json_dir = args.json_dir
+    kp_interm = args.keep_interm
+    out_dir = args.out_dir
+    proj_dir = args.proj_dir
     sess = args.session
     task = args.task
-    code_dir = args.code_dir
-    do_blur = args.blur
-    kp_interm = args.keep_interm
+    tplflow_str = args.tplflow_str
 
     # set up
     log_dir = os.path.join(code_dir, "logs")
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
-    afni_final = os.path.join(proj_dir, "derivatives/afni")
+    afni_final = out_dir if out_dir else os.path.join(proj_dir, "derivatives/afni")
     if not os.path.exists(afni_final):
         os.makedirs(afni_final)
 
@@ -383,14 +404,29 @@ def main():
             with open(decon_glob[0]) as h_jf:
                 decon_plan = json.load(h_jf)
 
-        # Check logs for missing WM-eroded masks, session intersection mask,
-        # deconvolution, or run-1 scaled files.
-        ind_subj = df_log.index[df_log["subjID"] == subj]
-        wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
-        intersect_missing = pd.isnull(
-            df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
-        ).bool()
-        scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
+        # Check for missing certain pre-processing files, account for
+        # user specified output location
+        if out_dir:
+            subj_dir = os.path.join(afni_final, subj, sess)
+            wme_found = glob.glob(f"{subj_dir}/anat/*desc-WMe_mask.nii.gz")
+            intx_found = glob.glob(
+                f"{subj_dir}/anat/*{sess}_{task}*desc-intersect_mask.nii.gz"
+            )
+            scaled_found = glob.glob(
+                f"{subj_dir}/func/*{sess}_{task}_run-1*desc-scaled_bold.nii.gz"
+            )
+
+            # invert bool to match with existing structure
+            wme_missing = False if wme_found else True
+            intersect_missing = False if intx_found else True
+            scaled_missing = False if scaled_found else True
+        else:
+            ind_subj = df_log.index[df_log["subjID"] == subj]
+            wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
+            intersect_missing = pd.isnull(
+                df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
+            ).bool()
+            scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
 
         # determine if deconvolution is needed, account for user-specified jsons
         if json_dir:
@@ -428,20 +464,23 @@ def main():
 
     for subj, value_dict in list(subj_dict.items())[:batch_num]:
         print(f"Submitting job for {subj} {sess} {task}")
+        h_decon_plan = value_dict["Decon_plan"]
+        do_decon = value_dict["Decon"]
         h_out, h_err = submit_jobs(
             afni_dir,
-            proj_dir,
-            subj,
-            sess,
-            task,
+            afni_final,
             code_dir,
-            slurm_dir,
-            tplflow_str,
-            dur,
-            value_dict["Decon"],
-            value_dict["Decon_plan"],
+            h_decon_plan,
             do_blur,
+            do_decon,
+            dur,
             kp_interm,
+            proj_dir,
+            sess,
+            slurm_dir,
+            subj,
+            task,
+            tplflow_str,
         )
         time.sleep(3)
         print(f"submit_jobs out: {h_out} \nsubmit_jobs err: {h_err}")
