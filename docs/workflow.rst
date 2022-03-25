@@ -20,6 +20,14 @@ workflow.control\_ashs module
    :undoc-members:
    :show-inheritance:
 
+workflow.control\_fmriprep module
+---------------------------------
+
+.. automodule:: workflow.control_fmriprep
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 workflow.control\_reface module
 -------------------------------
 

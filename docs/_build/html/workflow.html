@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>workflow package &mdash; func_processing  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>workflow package &mdash; emu-func-processing 2022 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -15,8 +15,7 @@
         <script src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="resources.reports package" href="resources.reports.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,7 +23,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> func_processing
+            <a href="index.html" class="icon icon-home"> emu-func-processing
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -34,29 +33,26 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Package Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="resources.html">resources package</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">workflow package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_afni">workflow.control_afni module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_ashs">workflow.control_ashs module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_reface">workflow.control_reface module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow">Module contents</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">workflow package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-workflow.control_afni">workflow.control_afni module</a></li>
+<li><a class="reference internal" href="#module-workflow.control_ashs">workflow.control_ashs module</a></li>
+<li><a class="reference internal" href="#module-workflow.control_fmriprep">workflow.control_fmriprep module</a></li>
+<li><a class="reference internal" href="#module-workflow.control_reface">workflow.control_reface module</a></li>
+<li><a class="reference internal" href="#module-workflow">Module contents</a></li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-
+</div>
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">func_processing</a>
+          <a href="index.html">emu-func-processing</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -64,7 +60,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">func_processing</a> &raquo;</li>
       <li>workflow package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/workflow.rst.txt" rel="nofollow"> View page source</a>
@@ -84,10 +79,11 @@
 <span id="workflow-control-afni-module"></span><h2>workflow.control_afni module<a class="headerlink" href="#module-workflow.control_afni" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running AFNI.</p>
 <p>These functions will finish pre-processing following
-fMRIprep, and then deconvolve EPI data.</p>
+fMRIprep, and then deconvolve EPI data. Also supports
+resting state and group-level analyses.</p>
 <dl class="py function">
 <dt id="workflow.control_afni.control_deconvolution">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">dset_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">dur</span></em>, <em class="sig-param"><span class="n">decon_plan</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_deconvolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">dset_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">dur</span></em>, <em class="sig-param"><span class="n">decon_plan</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em>, <em class="sig-param"><span class="n">decon_method</span><span class="o">=</span><span class="default_value">'new'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_deconvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and run planned deconvolutions.</p>
 <p>Use AFNI’s 3dDeconvolve and 3dREMLfit to deconvolve EPI
 timeseries. This is oriented from the &lt;decon_json&gt; input.
@@ -113,6 +109,7 @@ deconvolution for each key (&lt;decon_title&gt;) in decon_json. See
 deconvolutions, see notes below</p>
 <p>[default=None, yields decon_&lt;task&gt;_UniqueBehs]</p>
 </p></li>
+<li><p><strong>kp_interm</strong> (<em>bool</em>) – [T/F] whether to keep (T) or remove (F) intemediates</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -196,7 +193,7 @@ template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
 
 <dl class="py function">
 <dt id="workflow.control_afni.control_resting">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_resting</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">coord_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_resting" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_resting</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">coord_dict</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_resting" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and control resting state regressions.</p>
 <p>Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
 of afni_data6. Projects regression matrix, and generates various
@@ -208,8 +205,10 @@ metrics like SNR, GCOR, etc.</p>
 <li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
 <li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
-<li><p><strong>coord_dict</strong> (<em>dict</em>) – seed name, coordinates
-{“rPCC”: “5 -55 25”}</p></li>
+<li><p><strong>coord_dict</strong> (<em>dict</em>) – <p>seed name, coordinates</p>
+<p>{“rPCC”: “5 -55 25”}</p>
+</p></li>
+<li><p><strong>kp_interm</strong> (<em>bool</em>) – [T/F] whether to keep (T) or remove (F) intemediates</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -351,6 +350,37 @@ relevant files are copied to deriv_dir</p></li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-workflow.control_fmriprep">
+<span id="workflow-control-fmriprep-module"></span><h2>workflow.control_fmriprep module<a class="headerlink" href="#module-workflow.control_fmriprep" title="Permalink to this headline">¶</a></h2>
+<p>Control module for running fMRIprep.</p>
+<p>Orients to the data, runs FreeSurfer if needed,
+and then runs fMRIprep.</p>
+<dl class="py function">
+<dt id="workflow.control_fmriprep.control_fmriprep">
+<code class="sig-prename descclassname">workflow.control_fmriprep.</code><code class="sig-name descname">control_fmriprep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">scratch_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">tplflow_dir</span></em>, <em class="sig-param"><span class="n">fs_license</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_fmriprep.control_fmriprep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control fMRIprep resources.</p>
+<p>First, run subject data through FreeSurfer. Then, run fMRIprep.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string</p></li>
+<li><p><strong>proj_dir</strong> (<em>str</em>) – Path to BIDS project directory</p></li>
+<li><p><strong>scratch_dir</strong> (<em>str</em>) – Path to working/scratch directory</p></li>
+<li><p><strong>sing_img</strong> (<em>str</em>) – Path to fmriprep singularity iamge</p></li>
+<li><p><strong>tplflow_dir</strong> (<em>str</em>) – Path to templateflow directory</p></li>
+<li><p><strong>fs_license</strong> (<em>str</em>) – Path to FreeSurfer license</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>path_dict</strong> – paths for ease of copying, cleaning</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-workflow.control_reface">
 <span id="workflow-control-reface-module"></span><h2>workflow.control_reface module<a class="headerlink" href="#module-workflow.control_reface" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running AFNI’s reface.</p>
@@ -389,9 +419,7 @@ relevant files are copied to deriv_dir</p></li>
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="resources.reports.html" class="btn btn-neutral float-left" title="resources.reports package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-    </div>
+          <footer>
 
   <hr/>
 

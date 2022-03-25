@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; func_processing  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Index &mdash; emu-func-processing 2022 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -23,7 +23,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> func_processing
+            <a href="index.html" class="icon icon-home"> emu-func-processing
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -33,18 +33,15 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Package Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">func_processing</a></li>
-</ul>
-
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">func_processing</a>
+          <a href="index.html">emu-func-processing</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -92,12 +89,14 @@
 </li>
       <li><a href="workflow.html#workflow.control_afni.control_deconvolution">control_deconvolution() (in module workflow.control_afni)</a>
 </li>
-      <li><a href="workflow.html#workflow.control_ashs.control_hipseg">control_hipseg() (in module workflow.control_ashs)</a>
+      <li><a href="workflow.html#workflow.control_fmriprep.control_fmriprep">control_fmriprep() (in module workflow.control_fmriprep)</a>
 </li>
-      <li><a href="workflow.html#workflow.control_afni.control_preproc">control_preproc() (in module workflow.control_afni)</a>
+      <li><a href="workflow.html#workflow.control_ashs.control_hipseg">control_hipseg() (in module workflow.control_ashs)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow.html#workflow.control_afni.control_preproc">control_preproc() (in module workflow.control_afni)</a>
+</li>
       <li><a href="workflow.html#workflow.control_reface.control_reface">control_reface() (in module workflow.control_reface)</a>
 </li>
       <li><a href="workflow.html#workflow.control_afni.control_resting">control_resting() (in module workflow.control_afni)</a>
@@ -154,6 +153,10 @@
 </li>
         <li><a href="resources.ashs.html#module-resources.ashs.hipseg">resources.ashs.hipseg</a>
 </li>
+        <li><a href="resources.fmriprep.html#module-resources.fmriprep">resources.fmriprep</a>
+</li>
+        <li><a href="resources.fmriprep.html#module-resources.fmriprep.preprocess">resources.fmriprep.preprocess</a>
+</li>
         <li><a href="resources.reports.html#module-resources.reports">resources.reports</a>
 </li>
         <li><a href="resources.reports.html#module-resources.reports.check_complete">resources.reports.check_complete</a>
@@ -163,6 +166,8 @@
         <li><a href="workflow.html#module-workflow.control_afni">workflow.control_afni</a>
 </li>
         <li><a href="workflow.html#module-workflow.control_ashs">workflow.control_ashs</a>
+</li>
+        <li><a href="workflow.html#module-workflow.control_fmriprep">workflow.control_fmriprep</a>
 </li>
         <li><a href="workflow.html#module-workflow.control_reface">workflow.control_reface</a>
 </li>
@@ -230,8 +235,6 @@
         <li><a href="resources.afni.html#module-resources.afni.motion">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     resources.afni.process
 
@@ -246,6 +249,8 @@
         <li><a href="resources.afni.html#module-resources.afni.submit">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     resources.ashs
 
@@ -258,6 +263,20 @@
 
       <ul>
         <li><a href="resources.ashs.html#module-resources.ashs.hipseg">module</a>
+</li>
+      </ul></li>
+      <li>
+    resources.fmriprep
+
+      <ul>
+        <li><a href="resources.fmriprep.html#module-resources.fmriprep">module</a>
+</li>
+      </ul></li>
+      <li>
+    resources.fmriprep.preprocess
+
+      <ul>
+        <li><a href="resources.fmriprep.html#module-resources.fmriprep.preprocess">module</a>
 </li>
       </ul></li>
       <li>
@@ -281,6 +300,10 @@
       <li><a href="resources.afni.html#resources.afni.process.resting_seed">resting_seed() (in module resources.afni.process)</a>
 </li>
       <li><a href="resources.ashs.html#resources.ashs.hipseg.run_ashs">run_ashs() (in module resources.ashs.hipseg)</a>
+</li>
+      <li><a href="resources.fmriprep.html#resources.fmriprep.preprocess.run_fmriprep">run_fmriprep() (in module resources.fmriprep.preprocess)</a>
+</li>
+      <li><a href="resources.fmriprep.html#resources.fmriprep.preprocess.run_freesurfer">run_freesurfer() (in module resources.fmriprep.preprocess)</a>
 </li>
       <li><a href="resources.afni.html#resources.afni.deconvolve.run_reml">run_reml() (in module resources.afni.deconvolve)</a>
 </li>
@@ -330,13 +353,20 @@
         <li><a href="workflow.html#module-workflow.control_afni">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     workflow.control_ashs
 
       <ul>
         <li><a href="workflow.html#module-workflow.control_ashs">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    workflow.control_fmriprep
+
+      <ul>
+        <li><a href="workflow.html#module-workflow.control_fmriprep">module</a>
 </li>
       </ul></li>
       <li>
@@ -347,6 +377,8 @@
 </li>
       </ul></li>
       <li><a href="resources.afni.html#resources.afni.deconvolve.write_decon">write_decon() (in module resources.afni.deconvolve)</a>
+</li>
+      <li><a href="resources.afni.html#resources.afni.deconvolve.write_new_decon">write_new_decon() (in module resources.afni.deconvolve)</a>
 </li>
   </ul></td>
 </tr></table>

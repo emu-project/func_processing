@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>resources.afni package &mdash; func_processing  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>resources.afni package &mdash; emu-func-processing 2022 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -15,9 +15,7 @@
         <script src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="resources.ashs package" href="resources.ashs.html" />
-    <link rel="prev" title="resources package" href="resources.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -25,7 +23,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> func_processing
+            <a href="index.html" class="icon icon-home"> emu-func-processing
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -35,31 +33,29 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Package Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="resources.html">resources package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="resources.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">resources.afni package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="resources.ashs.html">resources.ashs package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="resources.reports.html">resources.reports package</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">resources.afni package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-resources.afni.copy">resources.afni.copy module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.deconvolve">resources.afni.deconvolve module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.group">resources.afni.group module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.masks">resources.afni.masks module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.motion">resources.afni.motion module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.process">resources.afni.process module</a></li>
+<li><a class="reference internal" href="#module-resources.afni.submit">resources.afni.submit module</a></li>
+<li><a class="reference internal" href="#module-resources.afni">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="resources.html#module-resources">Module contents</a></li>
 </ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="workflow.html">workflow package</a></li>
-</ul>
-</li>
-</ul>
-
+</div>
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">func_processing</a>
+          <a href="index.html">emu-func-processing</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -67,8 +63,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">func_processing</a> &raquo;</li>
-          <li><a href="resources.html">resources package</a> &raquo;</li>
       <li>resources.afni package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/resources.afni.rst.txt" rel="nofollow"> View page source</a>
@@ -299,6 +293,66 @@ and deconvolved output.</p>
 </ul>
 </dd></dl>
 
+<dl class="py function">
+<dt id="resources.afni.deconvolve.write_new_decon">
+<code class="sig-prename descclassname">resources.afni.deconvolve.</code><code class="sig-name descname">write_new_decon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">decon_name</span></em>, <em class="sig-param"><span class="n">tf_dict</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">dur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.deconvolve.write_new_decon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a deconvolution script using new censor approach.</p>
+<p>Rather than using desc-censor_events.tsv to remove volumes at the
+deconvolution, as is the default in AFNI’s workflow, instead use
+the censor file to remove behaviors that co-occur during the
+same volume. Then, add a baseline censor regressor after polynomials
+but before the behavior regressors.</p>
+<p>Additionally, convolution of the timing file with the HRF basis
+function is supplied as the regressor via “-stim_file” rather
+using the “-stim_times” option. This is because I don’t remember
+how to go from a binary vector in volume time to AFNI-styled
+timing files =).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decon_name</strong> (<em>str</em>) – name of deconvolution, useful when conducting multiple
+deconvolutions on same session. Will be appended to
+BIDS task name (decon_&lt;task-name&gt;_&lt;decon_name&gt;).</p></li>
+<li><p><strong>tf_dict</strong> (<em>dict</em>) – <p>timing files dictionary, behavior string is key</p>
+<p>e.g. {“lureFA”: “/path/to/tf_task-test_lureFA.txt”}</p>
+</p></li>
+<li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[epi-scale&lt;1..N&gt;] = list of scaled files</p></li>
+<li><p>[mot-mean] = mean motion timeseries</p></li>
+<li><p>[mot-deriv] = derivative motion timeseries</p></li>
+<li><p>[mot-censor] = binary censory vector (0 = censor)</p></li>
+<li><p>[mot-censorInv] = inverted binary censory vector (1 = censor)</p></li>
+</ul>
+</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/project_dir/derivatives/afni/sub-1234/ses-A</p></li>
+<li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of event to model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with REML commands</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[dcn-&lt;decon_name&gt;] = name of decon reml command</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Deconvolution files will be written in AFNI format, rather
+than BIDS. This includes the X.files (cue spooky theme), script,
+and deconvolved output.</p>
+<p>Files names will have the format:</p>
+<ul class="simple">
+<li><p>decon_&lt;bids-task&gt;_&lt;decon_name&gt;</p></li>
+</ul>
+<p>Also, writes info_behavior_censored.json to subject directory.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-resources.afni.group">
 <span id="resources-afni-group-module"></span><h2>resources.afni.group module<a class="headerlink" href="#module-resources.afni.group" title="Permalink to this headline">¶</a></h2>
@@ -414,7 +468,7 @@ behavior A to behavior B.</p>
 <p>Functions for making various masks.</p>
 <dl class="py function">
 <dt id="resources.afni.masks.make_intersect_mask">
-<code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_intersect_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_intersect_mask" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_intersect_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">do_blur</span></em>, <em class="sig-param"><span class="n">c_frac</span><span class="o">=</span><span class="default_value">'0.5'</span></em>, <em class="sig-param"><span class="n">nbr_type</span><span class="o">=</span><span class="default_value">'NN2'</span></em>, <em class="sig-param"><span class="n">n_nbr</span><span class="o">=</span><span class="default_value">17</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_intersect_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make EPI-struct intersection mask.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -438,6 +492,9 @@ behavior A to behavior B.</p>
 <li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-study)</p></li>
 <li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether to blur as part of pre-processing</p></li>
+<li><p><strong>c_frac</strong> (<em>str</em><em>, </em><em>float</em>) – input for 3dAutomask -clfrac option</p></li>
+<li><p><strong>nbr_type</strong> (<em>str</em>) – 3dAutomask nearest neighbors argument</p></li>
+<li><p><strong>n_nbr</strong> (<em>int</em>) – input for 3dAutomask -nbhrs option</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -456,7 +513,7 @@ behavior A to behavior B.</p>
 
 <dl class="py function">
 <dt id="resources.afni.masks.make_minimum_masks">
-<code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_minimum_masks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">afni_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_minimum_masks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">resources.afni.masks.</code><code class="sig-name descname">make_minimum_masks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">subj_num</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">afni_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.masks.make_minimum_masks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a mask of where minimum signal exists in EPI space.</p>
 <p>Used to help with the scaling step, so low values do not
 bias the scale. Based off “3dTstat -min”.</p>
@@ -465,7 +522,6 @@ bias the scale. Based off “3dTstat -min”.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>work_dir</strong> (<em>str</em>) – /path/to/derivatives/afni/sub-1234/ses-A</p></li>
 <li><p><strong>subj_num</strong> (<em>int/str</em>) – subject identifier, for sbatch job name</p></li>
-<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
 <li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
 <li><p><strong>afni_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
 <p>required keys:</p>
@@ -533,7 +589,7 @@ Censor includes volume preceding motion event.</p>
 <dl class="py function">
 <dt id="resources.afni.motion.mot_files">
 <code class="sig-prename descclassname">resources.afni.motion.</code><code class="sig-name descname">mot_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">task</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.motion.mot_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constuct motion and censor files</p>
+<dd><p>Constuct motion and censor files.</p>
 <p>Mine &lt;fMRIprep&gt;_desc-confounds_timeseries.tsv for motion events, make
 motion files for mean (6df) and derivative (6df) motion events. Also,
 create motion censor file. Volume preceding a motion event is also
@@ -755,7 +811,7 @@ node (submit_hpc_subprocess) or on a scheduled node
 commands.</p>
 <dl class="py function">
 <dt id="resources.afni.submit.submit_hpc_sbatch">
-<code class="sig-prename descclassname">resources.afni.submit.</code><code class="sig-name descname">submit_hpc_sbatch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span></em>, <em class="sig-param"><span class="n">wall_hours</span></em>, <em class="sig-param"><span class="n">mem_gig</span></em>, <em class="sig-param"><span class="n">num_proc</span></em>, <em class="sig-param"><span class="n">job_name</span></em>, <em class="sig-param"><span class="n">out_dir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.submit.submit_hpc_sbatch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">resources.afni.submit.</code><code class="sig-name descname">submit_hpc_sbatch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span></em>, <em class="sig-param"><span class="n">wall_hours</span></em>, <em class="sig-param"><span class="n">mem_gig</span></em>, <em class="sig-param"><span class="n">num_proc</span></em>, <em class="sig-param"><span class="n">job_name</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">env_input</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#resources.afni.submit.submit_hpc_sbatch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit job to slurm scheduler (sbatch).</p>
 <p>Sbatch submit a larger job with scheduled resources. Waits for
 job_name to no longer be found in squeue. Stderr/out written to
@@ -769,6 +825,7 @@ out_dir/sbatch_&lt;job_name&gt;.err/out. Supports AFNI and c3d commands.</p>
 <li><p><strong>num_proc</strong> (<em>int</em>) – number of desired processors</p></li>
 <li><p><strong>job_name</strong> (<em>str</em>) – job name</p></li>
 <li><p><strong>out_dir</strong> (<em>str</em>) – location for &lt;job_name&gt;.err/out</p></li>
+<li><p><strong>env_input</strong> (<em>dict</em>) – user-specified environment for certain software (e.g. fMRIprep)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -816,10 +873,7 @@ for AFNI and c3d commands.</p>
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="resources.html" class="btn btn-neutral float-left" title="resources package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="resources.ashs.html" class="btn btn-neutral float-right" title="resources.ashs package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

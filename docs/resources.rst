@@ -9,6 +9,7 @@ Subpackages
 
    resources.afni
    resources.ashs
+   resources.fmriprep
    resources.reports
 
 Module contents
