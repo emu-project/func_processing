@@ -5,4 +5,5 @@ func_processing
    :maxdepth: 4
 
    resources
+   setup
    workflow
