@@ -307,10 +307,18 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
+        "-s",
+        "--session",
+        help="BIDS session str (ses-S2)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
+        "-t",
+        "--task",
+        help="BIDS EPI task str (task-test)",
+        type=str,
+        required=True,
     )
 
     if len(sys.argv) == 1:
@@ -328,12 +336,18 @@ def main():
     job for them.
     """
     # # For testing
-    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
-    # json_dir = "/home/nmuncy/compute/qc_emst/for_testing/tf_noValence"
-    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
-    # sess = "ses-S2"
-    # task = "task-test"
+    # afni_dir = "/scratch/madlab/McMakin_EMUR01/derivatives/afni"
+    # batch_num = 1
+    # do_blur = False
     # code_dir = "/home/nmuncy/compute/func_processing"
+    # dur = 2
+    # json_dir = "/home/nmuncy/compute/emu_unc/data/timing_files"
+    # kp_interm = False
+    # out_dir = "/home/data/madlab/McMakin_EMUR01/derivatives/emu_unc"
+    # proj_dir = "/home/data/madlab/McMakin_EMUR01"
+    # sess = "ses-S1"
+    # task = "task-study"
+    # tplflow_str = "space-MNIPediatricAsym_cohort-5_res-2"
 
     # receive passed args
     args = get_args().parse_args()
@@ -390,14 +404,29 @@ def main():
             with open(decon_glob[0]) as h_jf:
                 decon_plan = json.load(h_jf)
 
-        # Check logs for missing WM-eroded masks, session intersection mask,
-        # deconvolution, or run-1 scaled files.
-        ind_subj = df_log.index[df_log["subjID"] == subj]
-        wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
-        intersect_missing = pd.isnull(
-            df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
-        ).bool()
-        scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
+        # Check for missing certain pre-processing files, account for
+        # user specified output location
+        if out_dir:
+            subj_dir = os.path.join(afni_final, subj, sess)
+            wme_found = glob.glob(f"{subj_dir}/anat/*desc-WMe_mask.nii.gz")
+            intx_found = glob.glob(
+                f"{subj_dir}/anat/*{sess}_{task}*desc-intersect_mask.nii.gz"
+            )
+            scaled_found = glob.glob(
+                f"{subj_dir}/func/*{sess}_{task}_run-1*desc-scaled_bold.nii.gz"
+            )
+
+            # invert bool to match with existing structure
+            wme_missing = False if wme_found else True
+            intersect_missing = False if intx_found else True
+            scaled_missing = False if scaled_found else True
+        else:
+            ind_subj = df_log.index[df_log["subjID"] == subj]
+            wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
+            intersect_missing = pd.isnull(
+                df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
+            ).bool()
+            scaled_missing = pd.isnull(df_log.loc[ind_subj, f"scaled_{sess}_1"]).bool()
 
         # determine if deconvolution is needed, account for user-specified jsons
         if json_dir:
@@ -427,7 +456,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

@@ -391,15 +391,32 @@ def main():
         if not anat_check or not func_check:
             continue
 
-        # Check logs for missing WM-eroded masks, session intersection mask,
-        # deconvolution, or run-1 scaled files.
-        ind_subj = df_log.index[df_log["subjID"] == subj]
-        wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
-        intersect_missing = pd.isnull(
-            df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
-        ).bool()
-        regress_missing = pd.isnull(df_log.loc[ind_subj, "decon_resting"]).bool()
-        scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
+        # Check for missing certain pre-processing files, account for
+        # user specified output location
+        if out_dir:
+            subj_dir = os.path.join(afni_final, subj, sess)
+            wme_found = glob.glob(f"{subj_dir}/anat/*desc-WMe_mask.nii.gz")
+            intx_found = glob.glob(
+                f"{subj_dir}/anat/*{sess}_{task}*desc-intersect_mask.nii.gz"
+            )
+            scaled_found = glob.glob(
+                f"{subj_dir}/func/*{sess}_{task}_run-1*desc-scaled_bold.nii.gz"
+            )
+            regress_found = glob.glob(f"{subj_dir}/func/X.decon_{task}.xmat.1D")
+
+            # invert bool to match with existing structure
+            wme_missing = False if wme_found else True
+            intersect_missing = False if intx_found else True
+            scaled_missing = False if scaled_found else True
+            regress_missing = False if regress_found else True
+        else:
+            ind_subj = df_log.index[df_log["subjID"] == subj]
+            wme_missing = pd.isnull(df_log.loc[ind_subj, "wme_mask"]).bool()
+            intersect_missing = pd.isnull(
+                df_log.loc[ind_subj, f"intersect_{sess}_{task}"]
+            ).bool()
+            regress_missing = pd.isnull(df_log.loc[ind_subj, "decon_resting"]).bool()
+            scaled_missing = pd.isnull(df_log.loc[ind_subj, "scaled_resting"]).bool()
 
         # Append subj_list if fmriprep data exists and afni data is missing.
         if intersect_missing or wme_missing or regress_missing or scaled_missing:
@@ -413,7 +430,8 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
