@@ -10,6 +10,6 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 - resources: Location of modules for AFNI, ASHS, FreeSurfer, fMRIprep, and reports.
 - workflow: Manages resources, controlled by cli.
 
-See [Wiki](https://github.com/emu-project/func_processing/wiki) for details and description (under construction).
+See [Wiki](https://github.com/emu-project/func_processing/wiki) for details and description.
 
 Module documentation [here](https://func-processing.readthedocs.io/en/latest), assuming sphinx is cooperative.
