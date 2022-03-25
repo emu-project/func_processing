@@ -5,6 +5,7 @@
 
 Welcome to emu-func-processing's documentation!
 ===============================================
+:orphan:
 
 .. toctree::
    :maxdepth: 2
