@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 r"""Title.
 
@@ -13,7 +13,7 @@ sbatch --job-name=runAfniTest \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    test_afni_resources \
+    test_afni_resources.py \
     -p sub-4146 \
     -s ses-S2 \
     -t task-test
@@ -25,7 +25,7 @@ import sys
 import textwrap
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+code_dir = os.path.dirname(sys.path[1])
 sys.path.append(code_dir)
 from resources.afni import copy, deconvolve, masks, motion, process
 
@@ -244,13 +244,25 @@ def get_args():
 
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
-        "-p", "--subj", help="BIDS subject string (sub-1234)", type=str, required=True,
+        "-p",
+        "--subj",
+        help="BIDS subject string (sub-1234)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
+        "-s",
+        "--session",
+        help="BIDS session str (ses-S2)",
+        type=str,
+        required=True,
     )
     required_args.add_argument(
-        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
+        "-t",
+        "--task",
+        help="BIDS EPI task str (task-test)",
+        type=str,
+        required=True,
     )
 
     if len(sys.argv) == 1:
@@ -270,7 +282,7 @@ def main():
     proj_dir = args.proj_dir
     scratch_dir = args.scratch_dir
     subj = args.subj
-    sess = args.sess
+    sess = args.session
     task = args.task
     tplflow_str = args.tplflow_str
     test_preproc = args.test_preproc
