@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
-r"""Title.
+r"""Test resources of AFNI pipeline.
 
-Desc.
+Use to test pre-processing, task deconvolution,
+and resting state correlation projection.
+
+Using non-default [test-preproc] allows to test portions
+of pre-processing. Using optional [--test-task-decon]
+and [--test-rest-decon] allows for testing of portion or
+full deconvoution/regression.
 
 Examples
 --------
+# test pre-procesing
 code_dir="$(dirname "$(pwd)")"
 sbatch --job-name=runAfniTest \
     --output=${code_dir}/tests/runAfniTest_log \
@@ -17,6 +24,23 @@ sbatch --job-name=runAfniTest \
     -p sub-4146 \
     -s ses-S2 \
     -t task-test
+
+# test portion of pre-processing
+<sbatch syntax> \
+    test_afni_resources.py \
+    -p sub-4146 \
+    -s ses-S2 \
+    -t task-test \
+    --test-preproc 3
+
+# test pre-processing + task deconvolution
+<sbatch syntax> \
+    test_afni_resources.py \
+    -p sub-4146 \
+    -s ses-S2 \
+    -t task-test \
+    --do_blur \
+    --test-task-decon 2
 """
 
 # %%
@@ -33,9 +57,33 @@ from resources.afni import copy, deconvolve, masks, motion, process
 def test_preproc_steps(
     prep_dir, work_dir, subj, sess, task, tplflow_str, test_preproc, do_blur
 ):
-    """Title.
+    """Test pre-processing steps.
 
-    Desc.
+    Number of steps tested is controlled by int test_preproc.
+
+    Parameters
+    ----------
+    prep_dir : str
+        location of derivatives/fmriprep directory
+    work_dir : str
+        path to subject's working derivative dir
+    subj : str
+        BIDS subject string
+    sess : str
+        BIDS session string
+    task : str
+        BIDS task string
+    tplflow_str : str
+        templateflow atlas identifier
+    test_preproc : int
+        steps to test
+    do_blur : bool
+        whether to blur as part of pre-processing
+
+    Returns
+    -------
+    afni_data : dict
+        updated with fields containing paths to generated files
     """
     # get fMRIprep data
     afni_data = copy.copy_data(prep_dir, work_dir, subj, task, tplflow_str)
@@ -88,9 +136,35 @@ def test_decon(
     test_task_decon,
     afni_data,
 ):
-    """Title.
+    """Test task deconvolution.
 
-    Desc.
+    Number of steps tested is controlled by int test_task_decon.
+
+    Parameters
+    ----------
+    proj_dir : str
+        location of BIDS project directory
+    work_dir : str
+        path to subject's working derivative dir
+    scratch_dir : str
+        path to parent scratch derivatives dir
+    decon_plan : None/dict
+        dictionary pointing to timing files. See qc/no_valence
+    subj : str
+        BIDS subject string
+    sess : str
+        BIDS session string
+    task : str
+        BIDS task string
+    test_task_decon : int
+        steps to test
+    afni_data : dict
+        contains references to req files
+
+    Returns
+    -------
+    afni_data : dict
+        updated with fields containing paths to generated files
     """
     # get default timing files if none supplied
     if not decon_plan:
@@ -113,9 +187,25 @@ def test_decon(
 
 
 def test_rest(work_dir, afni_data, test_rest_decon, subj):
-    """Title.
+    """Test task deconvolution.
 
-    Desc.
+    Number of steps tested is controlled by int test_rest_decon.
+
+    Parameters
+    ----------
+    work_dir : str
+        path to subject's working derivative dir
+    afni_data : dict
+        contains references to req files
+    test_rest_decon : int
+        steps to test
+    subj : str
+        BIDS subject string
+
+    Returns
+    -------
+    afni_data : dict
+        updated with fields containing paths to generated files
     """
     afni_data = deconvolve.regress_resting(afni_data, work_dir)
     if test_rest_decon == 1:
@@ -273,10 +363,7 @@ def get_args():
 
 
 def main():
-    """Title.
-
-    Desc.
-    """
+    """Receive and check args, submit test functions."""
     # get args
     args = get_args().parse_args()
     proj_dir = args.proj_dir
