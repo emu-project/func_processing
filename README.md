@@ -8,6 +8,7 @@ Pipeline used to take functional data from DICOMs through group-level analyses. 
 - logs: Mainly for completed_preprocessing.tsv, other output logs written here.
 - qc: Files/scripts for conducting qc on pipeline workflows for non-default options. Also serves as example of user-specified timing files.
 - resources: Location of modules for AFNI, ASHS, FreeSurfer, fMRIprep, and reports.
+- tests: Scripts for testing resources and workflows.
 - workflow: Manages resources, controlled by cli.
 
 See [Wiki](https://github.com/emu-project/func_processing/wiki) for details and description.
