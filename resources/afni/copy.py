@@ -6,7 +6,7 @@ finishing pre-processing, deconvolution, and group-level analyses.
 
 import os
 import glob
-import subprocess
+from . import submit
 
 
 def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
@@ -93,17 +93,12 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         afni_data[file_name_switch[anat_name]] = out_file
         if not os.path.exists(out_file):
             print(f"Copying {anat_name} ...")
-            h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
-            h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-            h_job = h_cp.communicate()
+            h_cmd = f"cp {anat} {out_file}"
+            _, _ = submit.submit_hpc_subprocess(h_cmd)
         assert os.path.exists(
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
 
-        # copy important files to /home/data/madlab...
-        h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
-        h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-        h_job = h_cp.communicate()
  
     # find EPI, motion files
     epi_files = sorted(
@@ -135,10 +130,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         afni_data[f"epi-preproc{count + 1}"] = out_file
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
-            # copy important files to /home/data/madlab...
-            h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
-            h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-            h_job = h_cp.communicate()
+            h_cmd = f"cp {epi} {out_file}"
+            _, _ = submit.submit_hpc_subprocess(h_cmd)
         assert os.path.exists(
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
@@ -151,9 +144,8 @@ def copy_data(prep_dir, work_dir, subj, task, tplflow_str):
         if not os.path.exists(out_file):
             print(f"Copying {out_file}")
             # copy important files to /home/data/madlab...
-            h_cmd = f"cp -r {afni_dir}/{subj} {afni_final}"
-            h_cp = subprocess.Popen(h_cmd, shell=True, stdout=subprocess.PIPE)
-            h_job = h_cp.communicate()
+            h_cmd = f"cp {mot} {out_file}"
+            _, _ = submit.submit_hpc_subprocess(h_cmd)
         assert os.path.exists(
             out_file
         ), f"{out_file} failed to copy, check resources.afni.copy."
