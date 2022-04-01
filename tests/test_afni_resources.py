@@ -5,10 +5,12 @@ r"""Test resources of AFNI pipeline.
 Use to test pre-processing, task deconvolution,
 and resting state correlation projection.
 
-Using non-default [test-preproc] allows to test portions
+Using non-default [--test-preproc] allows to test portions
 of pre-processing. Using optional [--test-task-decon]
 and [--test-rest-decon] allows for testing of portion or
 full deconvoution/regression.
+
+Output files are written to <scratch_dir>/afni/<subj>/<sess>.
 
 Examples
 --------
@@ -41,6 +43,14 @@ sbatch --job-name=runAfniTest \
     -t task-test \
     --do_blur \
     --test-task-decon 2
+
+# test pre-processing + part resting deconvolution
+<sbatch syntax> \
+    test_afni_resources.py \
+    -p sub-4146 \
+    -s ses-S2 \
+    -t task-rest \
+    --test-rest-decon 1
 """
 
 # %%
@@ -135,6 +145,7 @@ def test_decon(
     task,
     test_task_decon,
     afni_data,
+    dur=2,
 ):
     """Test task deconvolution.
 
@@ -160,6 +171,8 @@ def test_decon(
         steps to test
     afni_data : dict
         contains references to req files
+    dur : int/float
+        behavior length (seconds)
 
     Returns
     -------
@@ -174,7 +187,7 @@ def test_decon(
     # generate decon matrices, scripts
     for decon_name, tf_dict in decon_plan.items():
         afni_data = deconvolve.write_new_decon(
-            decon_name, tf_dict, afni_data, work_dir, 2
+            decon_name, tf_dict, afni_data, work_dir, dur
         )
     if test_task_decon == 1:
         print(f"\ndeconvolve.write_new_decon for {subj} complete.")
@@ -380,7 +393,7 @@ def main():
 
     # check dependent args
     if test_task_decon or test_rest_decon:
-        assert test_preproc == 5, "--preproc-step 5 required to test deconvolutions."
+        assert test_preproc == 5, "--test-preproc 5 required to test deconvolutions."
 
     # setup
     prep_dir = os.path.join(proj_dir, "derivatives/fmriprep")
