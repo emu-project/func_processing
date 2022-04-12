@@ -108,10 +108,21 @@ def run_ashs(
         if len(ashs_out) == 0:
             raise FileNotFoundError(f"No files found in {work_dir}/final.")
         for ashs_file in ashs_out:
-            shutil.copyfile(
-                os.path.join(work_dir, "final", ashs_file),
-                os.path.join(deriv_dir, ashs_file),
-            )
+
+            # do we need to split the name??? no, right??
+            out_file = os.path.join(deriv_dir, ashs_file)
+            if not os.path.exists(out_file):
+                print(f"Copying {ashs_file} ...")
+                h_cmd = f"cp {ashs_file} {out_file}"
+                _, _ = submit.submit_hpc_subprocess(h_cmd)
+            assert os.path.exists(
+                out_file
+            ), f"{out_file} failed to copy, check resources.ashs.hipseg."
+
+            # shutil.copyfile(
+            #     os.path.join(work_dir, "final", ashs_file),
+            #     os.path.join(deriv_dir, ashs_file),
+            # )
 
     # clean up
     if os.path.exists(
