@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 r"""Conduct group-level analyses on resting state data.
 
@@ -236,7 +236,8 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

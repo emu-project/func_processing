@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 r"""Pre-process and regress resting fMRIprep output.
 
