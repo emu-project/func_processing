@@ -30,7 +30,7 @@ def clone_guid(pat_github_emu):
         dataframe of subject ID, GUIDs, comments
     """
     req = requests.get(
-        "https://raw.githubusercontent.com/emu-project/data_pulling/master/data_pulling/data/pseudo_guid_list.csv",
+        "https://raw.githubusercontent.com/emu-project/guid_list/master/guid_list.csv",
         headers={
             "accept": "application/vnd.github.v3.raw",
             "authorization": "token {}".format(pat_github_emu),
