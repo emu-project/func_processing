@@ -1,7 +1,5 @@
 """Functions for making various masks."""
 import os
-
-from hamcrest import starts_with
 from . import submit
 
 
@@ -194,10 +192,8 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     # make eroded, binary tissue masks
     for tiss in tiss_list:
 
-        # determine tissue type, mask name
+        # determine tissue type, mask name, skip GM masks
         tiss_type = tiss.split("label-")[1].split("_")[0]
-        
-        # made cool change HEREEEE
         if tiss_type == "GM":
             continue
 
