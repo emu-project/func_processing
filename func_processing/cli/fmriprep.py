@@ -238,7 +238,7 @@ def main():
     # set up - get subject lists and make scratch dirs
     dset_dir = os.path.join(proj_dir, "dset")
     subj_list_all = [x for x in os.listdir(dset_dir) if fnmatch.fnmatch(x, "sub-*")]
-    subj_list_all.sorted()
+    subj_list_all.sort()
 
     scratch_deriv = os.path.join(scratch_dir, "derivatives")
     scratch_dset = os.path.join(scratch_dir, "dset")
