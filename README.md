@@ -4,14 +4,14 @@ Pipeline used to take functional data from DICOMs through group-level analyses.
 ## Entry Points
 Following `python setup.py install` or `python setup.py develop`, use the following entry points to trigger cli.
 
-- `check` : print help, run `cli.checks`
-- `ashs` : trigger help of `cli.ashs`
-- `reface` : trigger help of `cli.reface`
-- `fmriprep` : trigger help of `cli.fmriprep`
-- `task_subj` : trigger help of `cli.afni_task_subj`
-- `rs_subj` : trigger help of `cli.afni_resting_subj`
-- `task_group` : trigger help of `cli.afni_task_group`
-- `rs_group` : trigger help of `cli.afni_resting_group`
+- `check` : print help, run `cli.checks`, used to determine which participants have which preprocessed files.
+- `ashs` : trigger help of `cli.ashs`, for running Automated Hippocampal Subfield Segmentation.
+- `reface` : trigger help of `cli.reface`, for de/refacing participant T1w files.
+- `fmriprep` : trigger help of `cli.fmriprep`, for moving data found in `dset` through FreeSurfer and fMRIPrep.
+- `task_subj` : trigger help of `cli.afni_task_subj`, move task EPI output of `fmriprep` through extra preprocessing, deconvolution.
+- `rs_subj` : trigger help of `cli.afni_resting_subj`, move resting EPI output of `fmriprep` through extra preprocessing, deconvolution.
+- `task_group` : trigger help of `cli.afni_task_group`, conduct group-level task EPI analyses.
+- `rs_group` : trigger help of `cli.afni_resting_group`, conduct group-level resting EPI analyses.
 
 ## Project organization
 
