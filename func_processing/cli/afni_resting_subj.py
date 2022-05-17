@@ -19,9 +19,9 @@ SNR, GCor, noise estimations (3dFWHMx) and other metrics also generated.
 Seed-based regression matrix is:
     decon_task-rest_<anaticor>_<seed>_ztrans+tlrc.
 
-Examples
+Example
 --------
-code_dir="$(pwd)"/func_processing
+code_dir=/home/nmuncy/compute/func_processing/func_processing
 sbatch --job-name=runAfniRest \
     --output=${code_dir}/logs/runAfniRest_log \
     --mem-per-cpu=4000 \
@@ -29,7 +29,8 @@ sbatch --job-name=runAfniRest \
     --account=iacc_madlab \
     --qos=pq_madlab \
     ${code_dir}/cli/afni_resting_subj.py \
-    -c $code_dir
+    -c $code_dir \
+    -j ${code_dir}/examples/rs_seed.json
 """
 
 

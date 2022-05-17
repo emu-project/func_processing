@@ -19,7 +19,7 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Example
 --------
-code_dir="$(pwd)"/func_processing
+code_dir=/home/nmuncy/compute/func_processing/func_processing
 sbatch --job-name=runAfniTask \
     --output=${code_dir}/logs/runAfniTask_log \
     --mem-per-cpu=4000 \

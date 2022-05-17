@@ -14,7 +14,7 @@ projects directory.
 
 Example
 --------
-code_dir="$(pwd)"/func_processing
+code_dir=/home/nmuncy/compute/func_processing/func_processing
 sbatch --job-name=runPrep \
     --output=${code_dir}/logs/runPrep_log \
     --mem-per-cpu=4000 \

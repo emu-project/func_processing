@@ -11,9 +11,9 @@ More advanced group testing to be added in the future.
 Final output is:
     <proj_dir>/derivatives/afni/analyses/FINAL_RS-<seed>*
 
-Examples
+Example
 --------
-code_dir="$(pwd)"/func_processing
+code_dir=/home/nmuncy/compute/func_processing/func_processing
 sbatch --job-name=runRSGroup \
     --output=${code_dir}/logs/runAfniRestGroup_log \
     --mem-per-cpu=4000 \

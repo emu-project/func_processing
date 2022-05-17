@@ -6,7 +6,7 @@ Submit a batch of subjects for de/refacing.
 
 Examples
 --------
-code_dir="$(pwd)"/func_processing
+code_dir=/home/nmuncy/compute/func_processing/func_processing
 sbatch --job-name=runReface \
     --output=${code_dir}/logs/runReface_log \
     --mem-per-cpu=4000 \
