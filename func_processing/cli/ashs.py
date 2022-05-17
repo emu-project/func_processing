@@ -148,7 +148,7 @@ def get_args():
     parser.add_argument(
         "-w",
         "--scratch-dir",
-        default="/scratch/madlab/emu_ashs",
+        default="/scratch/madlab/McMakin_EMUR01/derivatives/ashs",
         help=textwrap.dedent(
             """\
                 /path/to/scratch/dir,
@@ -242,7 +242,7 @@ def get_args():
         "-c",
         "--code-dir",
         required=True,
-        help="Path to clone of github.com/emu-project/func_processing.git",
+        help="Path to func_procesing package of github.com/emu-project/func_processing.git",
     )
 
     if len(sys.argv) == 1:
@@ -306,7 +306,8 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir, f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir,
+        f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

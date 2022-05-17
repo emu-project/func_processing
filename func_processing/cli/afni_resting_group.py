@@ -161,7 +161,7 @@ def get_args():
         "-c",
         "--code-dir",
         required=True,
-        help="Path to clone of github.com/emu-project/func_processing.git",
+        help="Path to func_procesing package of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
         "-s",
@@ -236,7 +236,8 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir,
+        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
