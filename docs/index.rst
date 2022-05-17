@@ -1,18 +1,17 @@
-.. emu-func-processing documentation master file, created by
-   sphinx-quickstart on Fri Mar 25 15:40:39 2022.
+.. func_processing documentation master file, created by
+   sphinx-quickstart on Tue May 17 16:53:05 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to emu-func-processing's documentation!
-===============================================
+Welcome to func_processing's documentation!
+===========================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Package Contents:
 
    modules
-   workflow
-   resources
+   func_processing
 
 
 Indices and tables

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>func_processing.workflow package &mdash; func_processing 1.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="setup module" href="setup.html" />
+    <link rel="prev" title="func_processing.resources.reports package" href="func_processing.resources.reports.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> func_processing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Package Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">func_processing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="func_processing.html">func_processing package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="func_processing.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="func_processing.resources.html">func_processing.resources package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">func_processing.workflow package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_afni">func_processing.workflow.control_afni module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_ashs">func_processing.workflow.control_ashs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_fmriprep">func_processing.workflow.control_fmriprep module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_reface">func_processing.workflow.control_reface module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="func_processing.html#module-func_processing">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">func_processing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">func_processing</a> &raquo;</li>
+          <li><a href="func_processing.html">func_processing package</a> &raquo;</li>
+      <li>func_processing.workflow package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/func_processing.workflow.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="func-processing-workflow-package">
+<h1>func_processing.workflow package<a class="headerlink" href="#func-processing-workflow-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-func_processing.workflow.control_afni">
+<span id="func-processing-workflow-control-afni-module"></span><h2>func_processing.workflow.control_afni module<a class="headerlink" href="#module-func_processing.workflow.control_afni" title="Permalink to this headline">¶</a></h2>
+<p>Control module for running AFNI.</p>
+<p>These functions will finish pre-processing following
+fMRIprep, and then deconvolve EPI data. Also supports
+resting state and group-level analyses.</p>
+<dl class="py function">
+<dt id="func_processing.workflow.control_afni.control_deconvolution">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">dset_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">dur</span></em>, <em class="sig-param"><span class="n">decon_plan</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em>, <em class="sig-param"><span class="n">decon_method</span><span class="o">=</span><span class="default_value">'new'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_deconvolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate and run planned deconvolutions.</p>
+<p>Use AFNI’s 3dDeconvolve and 3dREMLfit to deconvolve EPI
+timeseries. This is oriented from the &lt;decon_json&gt; input.
+First, a deconvolution script is generated, saved
+(decon_&lt;task&gt;_&lt;decon_title&gt;.sh), and ran to generate
+AFNI’s X.files and REML script (decon_&lt;task&gt;_&lt;decon_title&gt;_stats.REML_cmd).
+Then a nuissance file is generated, and finally 3dREMlfit
+deconvolves the EPI data.</p>
+<p>Will make a nuissance file for each &lt;task&gt;, and condcut a
+deconvolution for each key (&lt;decon_title&gt;) in decon_json. See
+<cite>Notes</cite> below.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – mapping of AFNI data, returned by control_preproc</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>dset_dir</strong> (<em>str</em>) – /path/to/BIDS/project/dset</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>dur</strong> (<em>int/float/str</em>) – duration of task to model (2)</p></li>
+<li><p><strong>decon_plan</strong> (<em>dict</em>) – <p>mapping of behvavior to timing files for planned
+deconvolutions, see notes below</p>
+<p>[default=None, yields decon_&lt;task&gt;_UniqueBehs]</p>
+</p></li>
+<li><p><strong>kp_interm</strong> (<em>bool</em>) – [T/F] whether to keep (T) or remove (F) intemediates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with decon output</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[dcn-&lt;decon_title&gt;] = decon_&lt;task&gt;_&lt;decon_title&gt;_stats.REML_cmd</p></li>
+<li><p>[epi-nuiss] = nuissance signal file</p></li>
+<li><p>[rml-&lt;decon_title&gt;] = deconvolved file (decon_&lt;task&gt;_&lt;decon_title&gt;_stats_REML+tlrc)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Only onset timing files accepted, not married onset:duration! Timing files
+must be AFNI formatted, (one row/run for each beahvior). See example in
+qc/no_valence.</p>
+<p>decon_plan should have the following format:</p>
+<p>{“Decon Tile”: {</p>
+<p>“BehA”: “/path/to/timing_behA.txt”,</p>
+<p>“BehB”: “/path/to/timing_behB.txt”,</p>
+<p>“BehC”: “/path/to/timing_behC.txt”}}</p>
+<p>Example:</p>
+<p>{“NegNeuPosTargLureFoil”: {</p>
+<p>“negTH”: “/path/to/negative_target_hit.txt”,</p>
+<p>“negTM”: “/path/to/negative_target_miss.txt”,</p>
+<p>“negLC”: “/path/to/negative_lure_cr.txt”}}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="func_processing.workflow.control_afni.control_preproc">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_preproc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prep_dir</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">tplflow_str</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_preproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move data through AFNI pre-processing.</p>
+<p>Copy relevant files from derivatives/fmriprep to derivatives/afni,
+then blur and scale EPI data. Also creates EPI-T1 intersection
+and tissue class masks. Finally, generate motion mean, derivative,
+and censor files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prep_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/fmriprep</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS task string (task-test)</p></li>
+<li><p><strong>tplflow_str</strong> (<em>str</em>) – template ID string, for finding fMRIprep output in
+template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether to blur as part of pre-processing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – dictionary containing mappings for AFNI files</p>
+<p>afni_data keys:</p>
+<ul class="simple">
+<li><p>[struct-t1] = pre-processed T1w</p></li>
+<li><p>[mask-brain] = brain mask</p></li>
+<li><p>[mask-probGM] = gray matter probability label</p></li>
+<li><p>[mask-probWM] = white matter probability label</p></li>
+<li><p>[mask-erodedGM] = gray matter eroded mask</p></li>
+<li><p>[mask-erodedWM] = white matter eroded mask</p></li>
+<li><p>[mask-int] = EPI-structural intersection mask</p></li>
+<li><p>[mask-min] = mask of EPI space with &gt;minimum signal</p></li>
+<li><p>[epi-preproc?] = pre-processed EPI run-?</p></li>
+<li><p>[epi-blur?] = blurred/smoothed EPI run-?, if do_blur = T</p></li>
+<li><p>[epi-scale?] = scaled EPI run-?</p></li>
+<li><p>[mot-confound?] = confounds timeseries for run-?</p></li>
+<li><p>[mot-mean] = mean motion for task (6dof)</p></li>
+<li><p>[mot-deriv] = derivative motion for task (6dof)</p></li>
+<li><p>[mot-censor] = binary censor vector for task</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="func_processing.workflow.control_afni.control_resting">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_resting</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">coord_dict</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_resting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate and control resting state regressions.</p>
+<p>Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
+of afni_data6. Projects regression matrix, and generates various
+metrics like SNR, GCOR, etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>afni_data</strong> (<em>dict</em>) – mapping of AFNI data, returned by control_preproc</p></li>
+<li><p><strong>afni_dir</strong> (<em>str</em>) – /path/to/BIDS/project/derivatives/afni</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-S1)</p></li>
+<li><p><strong>coord_dict</strong> (<em>dict</em>) – <p>seed name, coordinates</p>
+<p>{“rPCC”: “5 -55 25”}</p>
+</p></li>
+<li><p><strong>kp_interm</strong> (<em>bool</em>) – [T/F] whether to keep (T) or remove (F) intemediates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>afni_data</strong> – updated with generated files</p>
+<p>added keys to afni_data:</p>
+<ul class="simple">
+<li><p>[reg-matrix] = epi projection matrix</p></li>
+<li><p>[S&lt;seed&gt;-ztrans] = Z-transformed seed-based correlation matrix</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="func_processing.workflow.control_afni.control_resting_group">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_resting_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_resting_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conduct group-level analyses.</p>
+<p>Construct group GM intersection mask, then run on subject
+correlation matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>str</em>) – seed name (rPCC)</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-rest)</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-gm] = gray matter mask</p></li>
+<li><p>[subj-list] = list of subjects</p></li>
+<li><p>[all-ztrans] = list of Ztrans files</p></li>
+</ul>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with the fields for generated files</p>
+<p>added afni_data keys:</p>
+<ul class="simple">
+<li><p>[mask-int] = gray matter intersection mask</p></li>
+<li><p>[S&lt;seed&gt;-etac] = seed stat output</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="func_processing.workflow.control_afni.control_task_group">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_task_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_task_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conduct group-level analyses.</p>
+<p>Construct group GM intersection mask, then run A-vs-B ETAC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beh_list</strong> (<em>list</em>) – <p>list of 2 behaviors which match sub-brick name</p>
+<p>e.g. neg for neg#0_Coef</p>
+</p></li>
+<li><p><strong>task</strong> (<em>str</em>) – BIDS string (task-test)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session (ses-S2)</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – location of project AFNI derivatives</p></li>
+<li><p><strong>group_dir</strong> (<em>str</em>) – output location of work</p></li>
+<li><p><strong>group_data</strong> (<em>dict</em>) – <p>contains keys pointing to required files</p>
+<p>required keys:</p>
+<ul>
+<li><p>[mask-gm] = gray matter mask</p></li>
+<li><p>[subj-list] = list of subjects</p></li>
+<li><p>[dcn-file] = decon file string</p></li>
+</ul>
+</p></li>
+<li><p><strong>do_blur</strong> (<em>bool</em>) – [T/F] whether blur was done in pre-processing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>group_data</strong> – updated with keys for generated files</p>
+<p>added group_data keys:</p>
+<ul class="simple">
+<li><p>[mask-int] = gray matter intersection mask</p></li>
+<li><p>[behAB-etac] = etac stat output</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-func_processing.workflow.control_ashs">
+<span id="func-processing-workflow-control-ashs-module"></span><h2>func_processing.workflow.control_ashs module<a class="headerlink" href="#module-func_processing.workflow.control_ashs" title="Permalink to this headline">¶</a></h2>
+<p>Control module for running ASHS.</p>
+<p>These functions will use T1- and T2-weighted files
+to produce hippocampal subfield labels.</p>
+<dl class="py function">
+<dt id="func_processing.workflow.control_ashs.control_hipseg">
+<code class="sig-prename descclassname">func_processing.workflow.control_ashs.</code><code class="sig-name descname">control_hipseg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t1_dir</span></em>, <em class="sig-param"><span class="n">t2_dir</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">atlas_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">t2_file</span></em>, <em class="sig-param"><span class="n">atlas_str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_ashs.control_hipseg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment hippocampal subfields via ASHS.</p>
+<p>Use the singularity of docker://nmuncy/ashs to produce hippocampal
+subfield labels in &lt;deriv_dir&gt;. Requires native T1- and T2-weighted
+NIfTI files (ref &lt;anat_dir&gt;). Segmentation intermediates are written
+to &lt;work_dir&gt;, and then removed after copyfing &lt;work_dir&gt;/final
+contents to &lt;deriv_dir&gt;.</p>
+<p>This work is equal to merely calling the resources.ashs.hipseg module, but
+written as a workflow for the sake of consistency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t1_dir</strong> (<em>str</em>) – absolute path to directory containing T1-weighted file</p></li>
+<li><p><strong>t2_dir</strong> (<em>str</em>) – absolute path to directory containing T2-weighted file</p></li>
+<li><p><strong>deriv_dir</strong> (<em>str</em>) – absolute path to desired output location</p></li>
+<li><p><strong>work_dir</strong> (<em>str</em>) – absolute path to desired working directory,
+relevant files are copied to deriv_dir</p></li>
+<li><p><strong>atlas_dir</strong> (<em>str</em>) – absolute path to directory containing ASHS atlas</p></li>
+<li><p><strong>sing_img</strong> (<em>str</em>) – /path/to/ashs_singularity.simg</p></li>
+<li><p><strong>subj</strong> (<em>str</em>) – BIDs subject (sub-1234)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file (sub-1234_ses-S1_T1w.nii.gz)</p></li>
+<li><p><strong>t2_file</strong> (<em>str</em>) – file name of T2-weighted file (sub-1234_ses-S1_T2w.nii.gz)</p></li>
+<li><p><strong>atlas_str</strong> (<em>str</em>) – ASHS atlas directory, found within atlas_dir
+(ashs_atlas_magdeburg)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ashs_out</strong> – final ASHS labels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-func_processing.workflow.control_fmriprep">
+<span id="func-processing-workflow-control-fmriprep-module"></span><h2>func_processing.workflow.control_fmriprep module<a class="headerlink" href="#module-func_processing.workflow.control_fmriprep" title="Permalink to this headline">¶</a></h2>
+<p>Control module for running fMRIprep.</p>
+<p>Orients to the data, runs FreeSurfer if needed,
+and then runs fMRIprep.</p>
+<dl class="py function">
+<dt id="func_processing.workflow.control_fmriprep.control_fmriprep">
+<code class="sig-prename descclassname">func_processing.workflow.control_fmriprep.</code><code class="sig-name descname">control_fmriprep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">scratch_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">tplflow_dir</span></em>, <em class="sig-param"><span class="n">fs_license</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_fmriprep.control_fmriprep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control fMRIprep resources.</p>
+<p>First, run subject data through FreeSurfer. Then, run fMRIprep.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string</p></li>
+<li><p><strong>proj_dir</strong> (<em>str</em>) – Path to BIDS project directory</p></li>
+<li><p><strong>scratch_dir</strong> (<em>str</em>) – Path to working/scratch directory</p></li>
+<li><p><strong>sing_img</strong> (<em>str</em>) – Path to fmriprep singularity iamge</p></li>
+<li><p><strong>tplflow_dir</strong> (<em>str</em>) – Path to templateflow directory</p></li>
+<li><p><strong>fs_license</strong> (<em>str</em>) – Path to FreeSurfer license</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>path_dict</strong> – paths for ease of copying, cleaning</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-func_processing.workflow.control_reface">
+<span id="func-processing-workflow-control-reface-module"></span><h2>func_processing.workflow.control_reface module<a class="headerlink" href="#module-func_processing.workflow.control_reface" title="Permalink to this headline">¶</a></h2>
+<p>Control module for running AFNI’s reface.</p>
+<p>Replaces subject T1w face with composite.</p>
+<dl class="py function">
+<dt id="func_processing.workflow.control_reface.control_reface">
+<code class="sig-prename descclassname">func_processing.workflow.control_reface.</code><code class="sig-name descname">control_reface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_reface.control_reface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control de/refacing of T1-weighted files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subj</strong> (<em>str</em>) – BIDS subject string (sub-1234)</p></li>
+<li><p><strong>sess</strong> (<em>str</em>) – BIDS session string (ses-A)</p></li>
+<li><p><strong>t1_file</strong> (<em>str</em>) – file name of T1-weighted file
+(sub-1234_ses-A_T1w.nii.gz)</p></li>
+<li><p><strong>proj_dir</strong> (<em>str</em>) – path to BIDS project dir
+(/path/to/BIDS/proj)</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – “deface”, “reface”, or “reface_plus” method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>msg_out</strong> – Success message</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-func_processing.workflow">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-func_processing.workflow" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="func_processing.resources.reports.html" class="btn btn-neutral float-left" title="func_processing.resources.reports package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="setup module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nathan Muncy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
