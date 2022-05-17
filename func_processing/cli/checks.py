@@ -23,6 +23,7 @@ import os
 import sys
 import textwrap
 from argparse import ArgumentParser, RawTextHelpFormatter
+from ..resources.reports.check_complete import check_preproc
 
 
 # %%
@@ -78,9 +79,10 @@ def main():
     new_df = args.new_df
 
     # orient self, update logs
-    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    sys.path.append(code_dir)
-    from resources.reports.check_complete import check_preproc
+    code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    print(code_dir)
+    # sys.path.append(code_dir)
+    # from resources.reports.check_complete import check_preproc
 
     check_preproc(proj_dir, code_dir, pat_github_emu, new_df)
 

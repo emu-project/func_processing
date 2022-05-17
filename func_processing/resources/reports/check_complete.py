@@ -166,17 +166,16 @@ def check_preproc(proj_dir, code_dir, pat_github_emu, new_df, one_subj=False):
 
     # get, update repo
     repo_origin = f"https://{pat_github_emu}:x-oauth-basic@github.com/emu-project/func_processing.git"
-    repo_local = code_dir
     try:
-        print(f"\nCloning repo to {repo_local}")
-        repo = git.Repo.clone_from(repo_origin, repo_local)
+        print(f"\nCloning repo to {code_dir}")
+        repo = git.Repo.clone_from(repo_origin, code_dir)
     except Exception:
-        print(f"\nUpdating repo: {repo_local}")
-        repo = git.Repo(repo_local)
+        print(f"\nUpdating repo: {code_dir}")
+        repo = git.Repo(code_dir)
         repo.remotes.origin.pull()
 
     # set up
-    log_dir = os.path.join(code_dir, "logs")
+    log_dir = os.path.join(code_dir, "func_processing", "logs")
     completed_tsv = os.path.join(log_dir, "completed_preprocessing.tsv")
     deriv_dir = os.path.join(proj_dir, "derivatives")
     dset_dir = os.path.join(proj_dir, "dset")
