@@ -10,11 +10,7 @@ import sys
 import glob
 import shutil
 import subprocess
-
-# code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# sys.path.append(code_dir)
-
-from ..resources.fmriprep import preprocess
+from resources.fmriprep import preprocess
 
 
 # %%

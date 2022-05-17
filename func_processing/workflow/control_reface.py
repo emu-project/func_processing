@@ -5,11 +5,7 @@ Replaces subject T1w face with composite.
 # %%
 import os
 import sys
-
-# code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# sys.path.append(code_dir)
-
-from ..resources.afni import process
+from resources.afni import process
 
 
 # %%

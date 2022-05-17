@@ -8,11 +8,12 @@ resting state and group-level analyses.
 import os
 import sys
 import glob
-
-# proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# sys.path.append(proj_dir)
-
-from ..resources.afni import copy, process, masks, motion, deconvolve, group
+from resources.afni import copy
+from resources.afni import process
+from resources.afni import masks
+from resources.afni import motion
+from resources.afni import deconvolve
+from resources.afni import group
 
 
 # %%

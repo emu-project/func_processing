@@ -10,6 +10,7 @@ setup(
         "console_scripts": [
             "check=func_processing.cli.checks:main",
             "ashs=func_processing.cli.ashs:main",
+            "reface=func_processing.cli.reface:main",
             "fmriprep=func_processing.cli.fmriprep:main",
             "task_subj=func_processing.cli.afni_task_subj:main",
             "task_group=func_processing.cli.afni_task_group:main",
