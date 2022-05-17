@@ -8,16 +8,16 @@ to follow.
 Final output is:
     <proj_dir>/derivatives/afni/analyses/FINAL_<behA>-<behB>_*
 
-Examples
+Example
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runTaskGroup \
     --output=${code_dir}/logs/runAfniTaskGroup_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    afni_task_group.py \
+    ${code_dir}/cli/afni_task_group.py \
     --blur \
     -c $code_dir \
     -s ses-S1 \
@@ -158,16 +158,10 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s",
-        "--session",
-        required=True,
-        help="BIDS session (ses-S1)",
+        "-s", "--session", required=True, help="BIDS session (ses-S1)",
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        required=True,
-        help="BIDS task (task-study)",
+        "-t", "--task", required=True, help="BIDS task (task-study)",
     )
     required_args.add_argument(
         "-d",
@@ -241,9 +235,7 @@ def main():
             f"{afni_dir}/{subj}/**/anat/{subj}_*_{task}_*intersect_mask.nii.gz",
             recursive=True,
         )
-        decon_exists = glob.glob(
-            f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",
-        )
+        decon_exists = glob.glob(f"{afni_dir}/{subj}/{sess}/func/{decon_str}.HEAD",)
         if mask_exists and decon_exists:
             print(f"\tAdding {subj} to group_data\n")
             subj_list.append(subj)
@@ -253,8 +245,7 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

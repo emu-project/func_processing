@@ -14,14 +14,14 @@ projects directory.
 
 Example
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runPrep \
     --output=${code_dir}/logs/runPrep_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    fmriprep.py \
+    ${code_dir}/cli/fmriprep.py \
     -c $code_dir
 """
 
@@ -39,14 +39,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 # %%
 def submit_jobs(
-    subj,
-    proj_dir,
-    scratch_dir,
-    sing_img,
-    tplflow_dir,
-    fs_license,
-    slurm_dir,
-    code_dir,
+    subj, proj_dir, scratch_dir, sing_img, tplflow_dir, fs_license, slurm_dir, code_dir,
 ):
     """Schedule workflow jobs with slurm.
 

@@ -7,10 +7,10 @@ to produce hippocampal subfield labels.
 import os
 import sys
 
-proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(proj_dir)
+# proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# sys.path.append(proj_dir)
 
-from resources.ashs import hipseg
+from ..resources.ashs import hipseg
 
 
 # %%

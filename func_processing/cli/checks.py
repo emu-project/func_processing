@@ -9,10 +9,13 @@ or on the HPC via [-p].
 Requires internet connection for git pulling/pushing, so run
 the HPC login node.
 
-Example
--------
-python checks.py \
-    -t $TOKEN_GITHUB_EMU
+Examples
+--------
+check -t $TOKEN_GITHUB_EMU
+
+check \
+    -p /Volumes/homes/MaDLab/projects/McMakin_EMUR01 \
+    -t TOKEN_GITHUB_EMU
 """
 
 # %%

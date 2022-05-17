@@ -21,14 +21,14 @@ Seed-based regression matrix is:
 
 Examples
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runAfniRest \
     --output=${code_dir}/logs/runAfniRest_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    afni_resting_subj.py \
+    ${code_dir}/cli/afni_resting_subj.py \
     -c $code_dir
 """
 
@@ -430,8 +430,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

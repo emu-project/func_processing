@@ -11,16 +11,16 @@ then submit batchs of subjects. Data files are located in
 dset, /scratch is used as a working space, and output are
 written to derivatives.
 
-Examples
+Example
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runAshs \
     --output=${code_dir}/logs/runAshs_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    ashs.py \
+    ${code_dir}/cli/ashs.py \
     -c $code_dir \
     -s /home/nmuncy/bin/singularities/ashs_latest.simg
 """
@@ -306,8 +306,7 @@ def main():
     # submit jobs for N subjects that don't have output in deriv_dir
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        scratch_dir,
-        f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        scratch_dir, f"""slurm_out/ashs_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

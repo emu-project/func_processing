@@ -13,14 +13,14 @@ Final output is:
 
 Examples
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runRSGroup \
     --output=${code_dir}/logs/runAfniRestGroup_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    afni_resting_group.py \
+    ${code_dir}/cli/afni_resting_group.py \
     -c $code_dir \
     -s rPCC
 """
@@ -236,8 +236,7 @@ def main():
     # submit work
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

@@ -17,16 +17,16 @@ Submits batches of size N for processing, according to
 user input and based on which subejcts do not have output in
 logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
-Examples
+Example
 --------
-code_dir="$(dirname "$(pwd)")"
+code_dir="$(pwd)"/func_processing
 sbatch --job-name=runAfniTask \
     --output=${code_dir}/logs/runAfniTask_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
     --qos=pq_madlab \
-    afni_task_subj.py \
+    ${code_dir}/cli/afni_task_subj.py \
     -s ses-S2 \
     -t task-test \
     -c $code_dir \
@@ -307,18 +307,10 @@ def get_args():
         help="Path to clone of github.com/emu-project/func_processing.git",
     )
     required_args.add_argument(
-        "-s",
-        "--session",
-        help="BIDS session str (ses-S2)",
-        type=str,
-        required=True,
+        "-s", "--session", help="BIDS session str (ses-S2)", type=str, required=True,
     )
     required_args.add_argument(
-        "-t",
-        "--task",
-        help="BIDS EPI task str (task-test)",
-        type=str,
-        required=True,
+        "-t", "--task", help="BIDS EPI task str (task-test)", type=str, required=True,
     )
 
     if len(sys.argv) == 1:
@@ -456,8 +448,7 @@ def main():
     # submit workflow.control_afni for each subject
     current_time = datetime.now()
     slurm_dir = os.path.join(
-        afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        afni_dir, f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
