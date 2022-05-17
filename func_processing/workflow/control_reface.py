@@ -5,7 +5,7 @@ Replaces subject T1w face with composite.
 # %%
 import os
 import sys
-from resources.afni import process
+from func_processing.resources.afni import process
 
 
 # %%

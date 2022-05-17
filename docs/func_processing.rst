@@ -1,5 +1,5 @@
-resources package
-=================
+func\_processing package
+========================
 
 Subpackages
 -----------
@@ -7,15 +7,13 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   resources.afni
-   resources.ashs
-   resources.fmriprep
-   resources.reports
+   func_processing.resources
+   func_processing.workflow
 
 Module contents
 ---------------
 
-.. automodule:: resources
+.. automodule:: func_processing
    :members:
    :undoc-members:
    :show-inheritance:

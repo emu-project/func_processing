@@ -4,6 +4,5 @@ func_processing
 .. toctree::
    :maxdepth: 4
 
-   resources
+   func_processing
    setup
-   workflow

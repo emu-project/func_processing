@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>workflow package &mdash; emu-func-processing  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>func_processing.workflow package &mdash; func_processing 1.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -16,7 +16,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="setup module" href="setup.html" /> 
+    <link rel="next" title="setup module" href="setup.html" />
+    <link rel="prev" title="func_processing.resources.reports package" href="func_processing.resources.reports.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -24,7 +25,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> emu-func-processing
+            <a href="index.html" class="icon icon-home"> func_processing
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -36,30 +37,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Package Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">func_processing</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="resources.html">resources package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">workflow package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_afni">workflow.control_afni module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_ashs">workflow.control_ashs module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_fmriprep">workflow.control_fmriprep module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow.control_reface">workflow.control_reface module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-workflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">func_processing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="func_processing.html">func_processing package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="func_processing.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="func_processing.resources.html">func_processing.resources package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">func_processing.workflow package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_afni">func_processing.workflow.control_afni module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_ashs">func_processing.workflow.control_ashs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_fmriprep">func_processing.workflow.control_fmriprep module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow.control_reface">func_processing.workflow.control_reface module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-func_processing.workflow">Module contents</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">workflow package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-workflow.control_afni">workflow.control_afni module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-workflow.control_ashs">workflow.control_ashs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-workflow.control_fmriprep">workflow.control_fmriprep module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-workflow.control_reface">workflow.control_reface module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-workflow">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="func_processing.html#module-func_processing">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="resources.html">resources package</a></li>
 </ul>
 
         </div>
@@ -68,7 +63,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">emu-func-processing</a>
+          <a href="index.html">func_processing</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -77,9 +72,10 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="modules.html">func_processing</a> &raquo;</li>
-      <li>workflow package</li>
+          <li><a href="func_processing.html">func_processing package</a> &raquo;</li>
+      <li>func_processing.workflow package</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/workflow.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/func_processing.workflow.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -87,20 +83,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="workflow-package">
-<h1>workflow package<a class="headerlink" href="#workflow-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="func-processing-workflow-package">
+<h1>func_processing.workflow package<a class="headerlink" href="#func-processing-workflow-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-workflow.control_afni">
-<span id="workflow-control-afni-module"></span><h2>workflow.control_afni module<a class="headerlink" href="#module-workflow.control_afni" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-func_processing.workflow.control_afni">
+<span id="func-processing-workflow-control-afni-module"></span><h2>func_processing.workflow.control_afni module<a class="headerlink" href="#module-func_processing.workflow.control_afni" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running AFNI.</p>
 <p>These functions will finish pre-processing following
 fMRIprep, and then deconvolve EPI data. Also supports
 resting state and group-level analyses.</p>
 <dl class="py function">
-<dt id="workflow.control_afni.control_deconvolution">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">dset_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">dur</span></em>, <em class="sig-param"><span class="n">decon_plan</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em>, <em class="sig-param"><span class="n">decon_method</span><span class="o">=</span><span class="default_value">'new'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_deconvolution" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_afni.control_deconvolution">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">dset_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">dur</span></em>, <em class="sig-param"><span class="n">decon_plan</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em>, <em class="sig-param"><span class="n">decon_method</span><span class="o">=</span><span class="default_value">'new'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_deconvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and run planned deconvolutions.</p>
 <p>Use AFNI’s 3dDeconvolve and 3dREMLfit to deconvolve EPI
 timeseries. This is oriented from the &lt;decon_json&gt; input.
@@ -160,8 +156,8 @@ qc/no_valence.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="workflow.control_afni.control_preproc">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_preproc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prep_dir</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">tplflow_str</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_preproc" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_afni.control_preproc">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_preproc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prep_dir</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">tplflow_str</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_preproc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move data through AFNI pre-processing.</p>
 <p>Copy relevant files from derivatives/fmriprep to derivatives/afni,
 then blur and scale EPI data. Also creates EPI-T1 intersection
@@ -209,8 +205,8 @@ template space (space-MNIPediatricAsym_cohort-5_res-2)</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="workflow.control_afni.control_resting">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_resting</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">coord_dict</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_resting" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_afni.control_resting">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_resting</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">afni_data</span></em>, <em class="sig-param"><span class="n">afni_dir</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">coord_dict</span></em>, <em class="sig-param"><span class="n">kp_interm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_resting" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and control resting state regressions.</p>
 <p>Based on example 11 of afni_proc.py and s17.proc.FT.rest.11
 of afni_data6. Projects regression matrix, and generates various
@@ -244,8 +240,8 @@ metrics like SNR, GCOR, etc.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="workflow.control_afni.control_resting_group">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_resting_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_resting_group" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_afni.control_resting_group">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_resting_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_resting_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct group-level analyses.</p>
 <p>Construct group GM intersection mask, then run on subject
 correlation matrices.</p>
@@ -283,8 +279,8 @@ correlation matrices.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="workflow.control_afni.control_task_group">
-<code class="sig-prename descclassname">workflow.control_afni.</code><code class="sig-name descname">control_task_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_afni.control_task_group" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_afni.control_task_group">
+<code class="sig-prename descclassname">func_processing.workflow.control_afni.</code><code class="sig-name descname">control_task_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beh_list</span></em>, <em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">group_dir</span></em>, <em class="sig-param"><span class="n">group_data</span></em>, <em class="sig-param"><span class="n">do_blur</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_afni.control_task_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct group-level analyses.</p>
 <p>Construct group GM intersection mask, then run A-vs-B ETAC.</p>
 <dl class="field-list simple">
@@ -324,14 +320,14 @@ correlation matrices.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-workflow.control_ashs">
-<span id="workflow-control-ashs-module"></span><h2>workflow.control_ashs module<a class="headerlink" href="#module-workflow.control_ashs" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-func_processing.workflow.control_ashs">
+<span id="func-processing-workflow-control-ashs-module"></span><h2>func_processing.workflow.control_ashs module<a class="headerlink" href="#module-func_processing.workflow.control_ashs" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running ASHS.</p>
 <p>These functions will use T1- and T2-weighted files
 to produce hippocampal subfield labels.</p>
 <dl class="py function">
-<dt id="workflow.control_ashs.control_hipseg">
-<code class="sig-prename descclassname">workflow.control_ashs.</code><code class="sig-name descname">control_hipseg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t1_dir</span></em>, <em class="sig-param"><span class="n">t2_dir</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">atlas_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">t2_file</span></em>, <em class="sig-param"><span class="n">atlas_str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_ashs.control_hipseg" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_ashs.control_hipseg">
+<code class="sig-prename descclassname">func_processing.workflow.control_ashs.</code><code class="sig-name descname">control_hipseg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t1_dir</span></em>, <em class="sig-param"><span class="n">t2_dir</span></em>, <em class="sig-param"><span class="n">deriv_dir</span></em>, <em class="sig-param"><span class="n">work_dir</span></em>, <em class="sig-param"><span class="n">atlas_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">t2_file</span></em>, <em class="sig-param"><span class="n">atlas_str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_ashs.control_hipseg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Segment hippocampal subfields via ASHS.</p>
 <p>Use the singularity of docker://nmuncy/ashs to produce hippocampal
 subfield labels in &lt;deriv_dir&gt;. Requires native T1- and T2-weighted
@@ -367,14 +363,14 @@ relevant files are copied to deriv_dir</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-workflow.control_fmriprep">
-<span id="workflow-control-fmriprep-module"></span><h2>workflow.control_fmriprep module<a class="headerlink" href="#module-workflow.control_fmriprep" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-func_processing.workflow.control_fmriprep">
+<span id="func-processing-workflow-control-fmriprep-module"></span><h2>func_processing.workflow.control_fmriprep module<a class="headerlink" href="#module-func_processing.workflow.control_fmriprep" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running fMRIprep.</p>
 <p>Orients to the data, runs FreeSurfer if needed,
 and then runs fMRIprep.</p>
 <dl class="py function">
-<dt id="workflow.control_fmriprep.control_fmriprep">
-<code class="sig-prename descclassname">workflow.control_fmriprep.</code><code class="sig-name descname">control_fmriprep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">scratch_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">tplflow_dir</span></em>, <em class="sig-param"><span class="n">fs_license</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_fmriprep.control_fmriprep" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_fmriprep.control_fmriprep">
+<code class="sig-prename descclassname">func_processing.workflow.control_fmriprep.</code><code class="sig-name descname">control_fmriprep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">scratch_dir</span></em>, <em class="sig-param"><span class="n">sing_img</span></em>, <em class="sig-param"><span class="n">tplflow_dir</span></em>, <em class="sig-param"><span class="n">fs_license</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_fmriprep.control_fmriprep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Control fMRIprep resources.</p>
 <p>First, run subject data through FreeSurfer. Then, run fMRIprep.</p>
 <dl class="field-list simple">
@@ -398,13 +394,13 @@ and then runs fMRIprep.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-workflow.control_reface">
-<span id="workflow-control-reface-module"></span><h2>workflow.control_reface module<a class="headerlink" href="#module-workflow.control_reface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-func_processing.workflow.control_reface">
+<span id="func-processing-workflow-control-reface-module"></span><h2>func_processing.workflow.control_reface module<a class="headerlink" href="#module-func_processing.workflow.control_reface" title="Permalink to this headline">¶</a></h2>
 <p>Control module for running AFNI’s reface.</p>
 <p>Replaces subject T1w face with composite.</p>
 <dl class="py function">
-<dt id="workflow.control_reface.control_reface">
-<code class="sig-prename descclassname">workflow.control_reface.</code><code class="sig-name descname">control_reface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#workflow.control_reface.control_reface" title="Permalink to this definition">¶</a></dt>
+<dt id="func_processing.workflow.control_reface.control_reface">
+<code class="sig-prename descclassname">func_processing.workflow.control_reface.</code><code class="sig-name descname">control_reface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subj</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="n">t1_file</span></em>, <em class="sig-param"><span class="n">proj_dir</span></em>, <em class="sig-param"><span class="n">method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#func_processing.workflow.control_reface.control_reface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Control de/refacing of T1-weighted files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -428,8 +424,8 @@ and then runs fMRIprep.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-workflow">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-workflow" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-func_processing.workflow">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-func_processing.workflow" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -437,7 +433,8 @@ and then runs fMRIprep.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="setup.html" class="btn btn-neutral float-left" title="setup module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="func_processing.resources.reports.html" class="btn btn-neutral float-left" title="func_processing.resources.reports package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="setup module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

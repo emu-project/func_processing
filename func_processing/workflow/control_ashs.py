@@ -6,7 +6,7 @@ to produce hippocampal subfield labels.
 # %%
 import os
 import sys
-from resources.ashs import hipseg
+from func_processing.resources.ashs import hipseg
 
 
 # %%

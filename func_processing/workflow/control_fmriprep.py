@@ -10,7 +10,7 @@ import sys
 import glob
 import shutil
 import subprocess
-from resources.fmriprep import preprocess
+from func_processing.resources.fmriprep import preprocess
 
 
 # %%
