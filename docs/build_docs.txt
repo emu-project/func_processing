@@ -44,10 +44,7 @@ Edit index.rst - add modules
 		:caption: Package Contents:
 
 		modules
-		workflow
-		resources
+		func_processing
 
-# $ sphinx-apidoc -o . .. --ext-autodoc
-$ sphinx-apidoc -f -o . ..
-
+$ sphinx-apidoc -f -o . ../func_processing
 $ make html
