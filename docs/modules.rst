@@ -5,4 +5,3 @@ func_processing
    :maxdepth: 4
 
    func_processing
-   setup
