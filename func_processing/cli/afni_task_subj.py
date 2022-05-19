@@ -155,8 +155,8 @@ def submit_jobs(
 
         # clean up
         if not {kp_interm}:
-            shutil.rmtree(os.path.join("{afni_dir}", "{subj}", "{sess}", "sbatch_out"))
-            clean_dir = os.path.join("{afni_dir}", "{subj}", "{sess}")
+            shutil.rmtree(os.path.join("{afni_dir}", "child_out", "{subj}", "{sess}"))
+            clean_dir = os.path.join("{afni_dir}", "child_out", "{subj}", "{sess}")
             clean_list = [
                 "preproc_bold",
                 "smoothed_bold",
@@ -457,7 +457,7 @@ def main():
     current_time = datetime.now()
     slurm_dir = os.path.join(
         afni_dir,
-        f"""slurm_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        f"""parent_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)
