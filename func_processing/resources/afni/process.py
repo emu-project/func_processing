@@ -9,15 +9,15 @@ import math
 from . import submit
 
 
-def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
+def blur_epi(child_outdir, subj_num, afni_data, blur_mult=1.5):
     """Blur EPI data.
 
     Blur pre-processed EPI runs with AFNI's 3dmerge.
 
     Parameters
     ----------
-    work_dir : str
-        /path/to/derivatives/afni/sub-1234/ses-A
+    child_outdir : str
+        /path/to/scratch/afni/output_logs/child_output/subj/sess
 
     subj_num : int/str
         subject identifier, for sbatch job name
@@ -74,7 +74,7 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
                     {epi_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", f"{work_dir}/sbatch_out"
+                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", f"{child_outdir}"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -87,15 +87,15 @@ def blur_epi(work_dir, subj_num, afni_data, blur_mult=1.5):
     return afni_data
 
 
-def scale_epi(work_dir, subj_num, afni_data, do_blur):
+def scale_epi(child_outdir, subj_num, afni_data, do_blur):
     """Scale EPI runs.
 
     Scale timeseries to center = 100 using AFNI's 3dcalc.
 
     Parameters
     ----------
-    work_dir : str
-        /path/to/derivatives/afni/sub-1234/ses-A
+    child_outdir : str
+        /path/to/scratch/afni/output_logs/child_output/subj/sess
 
     subj_num : int/str
         subject identifier, for sbatch job name
@@ -161,7 +161,7 @@ def scale_epi(work_dir, subj_num, afni_data, do_blur):
                     -prefix {epi_scale}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{work_dir}/sbatch_out"
+                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{child_outdir}"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 

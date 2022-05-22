@@ -5,6 +5,7 @@ from . import submit
 
 def make_intersect_mask(
     work_dir,
+    child_outdir,
     subj_num,
     afni_data,
     sess,
@@ -18,8 +19,8 @@ def make_intersect_mask(
 
     Parameters
     ----------
-    work_dir : str
-        /path/to/derivatives/afni/sub-1234/ses-A
+    child_outdir : str
+        /path/to/scratch/afni/output_logs/child_output/subj/sess
 
     subj_num : int/str
         subject identifier, for sbatch job name
@@ -125,7 +126,7 @@ def make_intersect_mask(
                 -prefix {intersect_mask}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}uni", f"{work_dir}/sbatch_out"
+            h_cmd, 1, 1, 1, f"{subj_num}uni", f"{child_outdir}"
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -138,13 +139,13 @@ def make_intersect_mask(
     return afni_data
 
 
-def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
+def make_tissue_masks(child_outdir, subj_num, afni_data, thresh=0.5):
     """Make tissue class masks.
 
     Parameters
     ----------
-    work_dir : str
-        /path/to/derivatives/afni/sub-1234/ses-A
+    child_outdir : str
+        /path/to/scratch/afni/output_logs/child_output/subj/sess
 
     subj_num : int/str
         subject identifier, for sbatch job name
@@ -215,7 +216,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
                     -prefix {mask_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}tiss", f"{work_dir}/sbatch_out"
+                h_cmd, 1, 1, 1, f"{subj_num}tiss", f"{child_outdir}"
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -228,7 +229,7 @@ def make_tissue_masks(work_dir, subj_num, afni_data, thresh=0.5):
     return afni_data
 
 
-def make_minimum_masks(work_dir, subj_num, task, afni_data):
+def make_minimum_masks(work_dir, child_outdir, subj_num, task, afni_data):
     """Make a mask of where minimum signal exists in EPI space.
 
     Used to help with the scaling step, so low values do not
@@ -238,6 +239,9 @@ def make_minimum_masks(work_dir, subj_num, task, afni_data):
     ----------
     work_dir : str
         /path/to/derivatives/afni/sub-1234/ses-A
+    
+    child_outdir : str
+        /path/to/scratch/afni/output_logs/child_output/subj/sess
 
     subj_num : int/str
         subject identifier, for sbatch job name
@@ -316,7 +320,7 @@ def make_minimum_masks(work_dir, subj_num, task, afni_data):
                 -prefix {mask_min}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}min", f"{work_dir}/sbatch_out"
+            h_cmd, 1, 1, 1, f"{subj_num}min", f"{child_outdir}"
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 

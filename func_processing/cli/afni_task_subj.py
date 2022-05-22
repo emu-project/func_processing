@@ -20,8 +20,9 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 Example
 --------
 code_dir=/home/nmuncy/compute/func_processing/func_processing
+main_outdir=/scratch/madlab/McMakin_EMUR01/derivatives/afni
 sbatch --job-name=runAfniTask \
-    --output=${code_dir}/logs/runAfniTask_log \
+    --output=${main_outdir}/output_logs/runAfniTask_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
@@ -153,10 +154,13 @@ def submit_jobs(
             )
             print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
+        child_output={afni_dir}/output_logs/child_out
+        if not os.path.exists(child_output):
+            os.makedirs(child_output)
+
         # clean up
         if not {kp_interm}:
-            shutil.rmtree(os.path.join("{afni_dir}", "child_out", "{subj}", "{sess}"))
-            clean_dir = os.path.join("{afni_dir}", "child_out", "{subj}", "{sess}")
+            shutil.rmtree(os.path.join(child_output, "{subj}", "{sess}"))
             clean_list = [
                 "preproc_bold",
                 "smoothed_bold",
@@ -166,6 +170,7 @@ def submit_jobs(
                 "minval_mask",
                 "GMe_mask",
             ]
+            clean_dir = os.path.join(child_output, "{subj}", "{sess}")
             for c_str in clean_list:
                 for h_file in glob.glob(f"{{clean_dir}}/**/*{{c_str}}.nii.gz", recursive=True):
                     os.remove(h_file)
@@ -457,7 +462,7 @@ def main():
     current_time = datetime.now()
     slurm_dir = os.path.join(
         afni_dir,
-        f"""parent_out/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
+        f"""output_logs/parent_output/afni_{current_time.strftime("%y-%m-%d_%H:%M")}""",
     )
     if not os.path.exists(slurm_dir):
         os.makedirs(slurm_dir)

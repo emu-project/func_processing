@@ -88,6 +88,7 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     """
     # setup directories
     work_dir = os.path.join(afni_dir, subj, sess)
+    child_outdir = os.path.join(afni_dir, "output_logs", "child_output", subj, sess)
     anat_dir = os.path.join(work_dir, "anat")
     func_dir = os.path.join(work_dir, "func")
     sbatch_dir = os.path.join(work_dir, "sbatch_out")
@@ -101,17 +102,17 @@ def control_preproc(prep_dir, afni_dir, subj, sess, task, tplflow_str, do_blur):
     # blur data
     subj_num = subj.split("-")[-1]
     if do_blur:
-        afni_data = process.blur_epi(work_dir, subj_num, afni_data)
+        afni_data = process.blur_epi(child_outdir, subj_num, afni_data)
 
     # make masks
     afni_data = masks.make_intersect_mask(
-        work_dir, subj_num, afni_data, sess, task, do_blur
+        work_dir, child_outdir, subj_num, afni_data, sess, task, do_blur
     )
-    afni_data = masks.make_tissue_masks(work_dir, subj_num, afni_data)
-    afni_data = masks.make_minimum_masks(work_dir, subj_num, task, afni_data)
+    afni_data = masks.make_tissue_masks(child_outdir, subj_num, afni_data)
+    afni_data = masks.make_minimum_masks(work_dir, child_outdir, subj_num, task, afni_data)
 
     # scale data
-    afni_data = process.scale_epi(work_dir, subj_num, afni_data, do_blur)
+    afni_data = process.scale_epi(child_outdir, subj_num, afni_data, do_blur)
 
     # make mean, deriv, censor motion files
     afni_data = motion.mot_files(work_dir, afni_data, task)
