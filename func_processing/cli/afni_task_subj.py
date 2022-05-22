@@ -19,7 +19,7 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 
 Example
 --------
-code_dir=/home/nmuncy/compute/func_processing/func_processing
+code_dir=/home/mrive301/func_processing/func_processing
 main_outdir=/scratch/madlab/McMakin_EMUR01/derivatives/afni
 sbatch --job-name=runAfniTask \
     --output=${main_outdir}/output_logs/runAfniTask_log \
