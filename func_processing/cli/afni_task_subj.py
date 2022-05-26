@@ -20,9 +20,10 @@ logs/completed_preprocessing.tsv (see cli/run_checks.py).
 Example
 --------
 code_dir=/home/mrive301/func_processing/func_processing
-main_outdir=/scratch/madlab/McMakin_EMUR01/derivatives/afni
+main_outdir=/scratch/madlab/McMakin_EMUR01/derivatives/afni/output_logs
+mkdir -p $main_outdir
 sbatch --job-name=runAfniTask \
-    --output=${main_outdir}/output_logs/runAfniTask_log \
+    --output=${main_outdir}/runAfniTask_log \
     --mem-per-cpu=4000 \
     --partition=IB_44C_512G \
     --account=iacc_madlab \
@@ -154,7 +155,7 @@ def submit_jobs(
             )
             print(f"Finished {subj}/{sess}/{task} with: \\n {{afni_data}}")
 
-        child_output={afni_dir}/output_logs/child_out
+        child_output = f"{afni_dir}/output_logs/child_out"
         if not os.path.exists(child_output):
             os.makedirs(child_output)
 

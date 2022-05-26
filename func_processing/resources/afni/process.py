@@ -74,7 +74,7 @@ def blur_epi(child_outdir, subj_num, afni_data, blur_mult=1.5):
                     {epi_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", f"{child_outdir}"
+                h_cmd, 1, 1, 1, f"{subj_num}b{run_num}", child_outdir
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -161,7 +161,7 @@ def scale_epi(child_outdir, subj_num, afni_data, do_blur):
                     -prefix {epi_scale}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", f"{child_outdir}"
+                h_cmd, 1, 1, 1, f"{subj_num}s{run_num}", child_outdir
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -208,7 +208,10 @@ def reface(subj, sess, t1_file, proj_dir, method):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     t1_in = os.path.join(proj_dir, "dset", subj, sess, "anat", t1_file)
-    t1_out = os.path.join(out_dir, t1_file.replace("_T1w", f"_desc-{method}_T1w"),)
+    t1_out = os.path.join(
+        out_dir,
+        t1_file.replace("_T1w", f"_desc-{method}_T1w"),
+    )
     h_cmd = f"""
         export TMPDIR={out_dir}
 

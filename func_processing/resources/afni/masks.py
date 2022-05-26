@@ -126,7 +126,7 @@ def make_intersect_mask(
                 -prefix {intersect_mask}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}uni", f"{child_outdir}"
+            h_cmd, 1, 1, 1, f"{subj_num}uni", child_outdir
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -216,7 +216,7 @@ def make_tissue_masks(child_outdir, subj_num, afni_data, thresh=0.5):
                     -prefix {mask_file}
             """
             job_name, job_id = submit.submit_hpc_sbatch(
-                h_cmd, 1, 1, 1, f"{subj_num}tiss", f"{child_outdir}"
+                h_cmd, 1, 1, 1, f"{subj_num}tiss", child_outdir
             )
             print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
@@ -320,7 +320,7 @@ def make_minimum_masks(work_dir, child_outdir, subj_num, task, afni_data):
                 -prefix {mask_min}
         """
         job_name, job_id = submit.submit_hpc_sbatch(
-            h_cmd, 1, 1, 1, f"{subj_num}min", f"{child_outdir}"
+            h_cmd, 1, 1, 1, f"{subj_num}min", child_outdir
         )
         print(f"""Finished {job_name} as job {job_id.split(" ")[-1]}""")
 
