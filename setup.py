@@ -8,6 +8,7 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
+            "func_processing=func_processing.entrypoint:main",
             "check=func_processing.cli.checks:main",
             "ashs=func_processing.cli.ashs:main",
             "reface=func_processing.cli.reface:main",
