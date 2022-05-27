@@ -2,8 +2,10 @@
 Pipeline used to take functional data from DICOMs through group-level analyses. 
 
 ## Entry Points
-Following `python setup.py install` or `python setup.py develop`, use the following entry points to trigger cli.
+Following `python setup.py install` or `python setup.py develop`, use the following entry points to trigger help, cli.
 
+- `func_processing` : print out entrypoints below.
+---------
 - `check` : print help, run `cli.checks`, used to determine which participants have which preprocessed files.
 - `ashs` : trigger help of `cli.ashs`, for running Automated Hippocampal Subfield Segmentation.
 - `reface` : trigger help of `cli.reface`, for de/refacing participant T1w files.
